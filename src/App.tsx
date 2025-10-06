@@ -1,10 +1,11 @@
 import React from "react";
+import AppRoutes from "./routes";
 
 const App = () => {
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-blue-800">Hello world!</h1>
-    </div>
+    <>
+      <AppRoutes />
+    </>
   );
 };
 
