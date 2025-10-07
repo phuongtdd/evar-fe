@@ -11,6 +11,7 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { MenuProps } from "antd";
@@ -35,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const menuItems = [
+  const menuItems: MenuProps["items"] = [
     {
       key: "home",
       icon: <HomeOutlined className="text-2xl" />,
@@ -81,21 +82,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  const items: MenuItem[] = menuItems.map((item) => {
-    if (item.type === "divider") {
+  const items: MenuProps["items"] = menuItems.map((item) => {
+    if (!item) return item;
+    if ("type" in item && item.type === "divider") {
       return item;
     }
-
+    const baseLabel = (item as any).label;
     return {
-      ...item,
+      ...(item as any),
       label: collapsed ? (
-        <Tooltip title={item.label} placement="right">
-          <span>{item.label}</span>
+        <Tooltip title={baseLabel} placement="right">
+          <span>{baseLabel}</span>
         </Tooltip>
       ) : (
-        item.label
+        baseLabel
       ),
-    };
+    } as any;
   });
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
@@ -104,6 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "home":
         navigate("/dashboard");
         break;
+
       case "my-room":
         navigate("/my-room");
         break;
