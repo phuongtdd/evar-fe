@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         navigate("/dashboard");
         break;
       case "my-room":
-        navigate("/my-room");
+        navigate("/room");
         break;
       case "pomodoro":
         navigate("/pomodoro");
