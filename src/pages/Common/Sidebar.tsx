@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         break;
 
       case "my-room":
-        navigate("/my-room");
+        navigate("/room");
         break;
       case "pomodoro":
         navigate("/pomodoro");
