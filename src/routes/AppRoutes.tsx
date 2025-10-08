@@ -3,8 +3,9 @@ import { Route, Routes, BrowserRouter } from "react-router-dom";
 import MainLayout from "../pages/Common/MainLayout";
 import Dashboard from "../pages/Dashboard";
 import Promotion from "../pages/Promotion";
-import Room from "../pages/Room";
+import Room from "../pages/Room/RoomContent";
 import NotFound from "../pages/404";
+// import RoomLayout from "../pages/Room";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ const AppRoutes: React.FC = () => {
         <Route path="*" element={<NotFound/>} />
         <Route path="room" element={<Room />} />
       </Route>
-      <Route path="promotion" element={<Promotion />} />
+      <Route path="/promotion" element={<Promotion />} />
     </Routes>
   );
 };

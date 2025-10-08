@@ -53,7 +53,6 @@ const MainLayout: React.FC = () => {
           <Outlet />
           <Footer>demo footer</Footer>
         </Content>
-        
       </Layout>
     </Layout>
   );

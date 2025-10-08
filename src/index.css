@@ -1,16 +1,48 @@
 @import "tailwindcss";
 
 :root {
+  --color-primary-blue: #6392e9;
+  --color-accent-yellow: #ffc107;
+  --color-accent-green: #4caf50;
 
-  --color-primary-blue: #6392E9;
-  --color-accent-yellow: #FFC107;
-  --color-accent-green: #4CAF50;
-
-  --color-white: #FFFFFF;
+  --color-white: #ffffff;
   --color-black: #000000;
   --color-off-black: #222222;
-  --color-gray-dark: #9A9A9A;
-  --color-gray-medium: #AAAAAA;
-  --color-gray-light: #D4D4D4;
-  --color-gray-soft: #E5DBDB;
+  --color-gray-dark: #9a9a9a;
+  --color-gray-medium: #aaaaaa;
+  --color-gray-light: #d4d4d4;
+  --color-gray-soft: #e5dbdb;
+}
+
+#root:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
+.app-fullscreen,
+.app-fullscreen body {
+  overflow: hidden;
+}
+
+.app-fullscreen #header,
+.app-fullscreen #sidebar {
+  display: none !important;
+}
+
+.app-fullscreen #main {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#root,
+#root:fullscreen {
+  background-color: #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  #root,
+  #root:fullscreen {
+    background-color: #e5e7eb;
+  }
 }
