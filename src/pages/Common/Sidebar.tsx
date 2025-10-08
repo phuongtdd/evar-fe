@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Layout, Menu, Tooltip } from "antd";
 import {
   HomeOutlined,
@@ -14,6 +14,7 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { getToken, clearToken } from "../../configs/authen";
 import type { MenuProps } from "antd";
 import MenuOpen from "../../assets/icons/sidebar/MenuOpen.svg";
 import MenuCollapse from "../../assets/icons/sidebar/MenuFold.svg";
@@ -36,7 +37,15 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const menuItems: MenuProps["items"] = [
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!getToken());
+
+  useEffect(() => {
+    const onAuthChanged = () => setIsAuthenticated(!!getToken());
+    window.addEventListener("auth-changed", onAuthChanged);
+    return () => window.removeEventListener("auth-changed", onAuthChanged);
+  }, []);
+
+  const menuItems: MenuItem[] = [
     {
       key: "home",
       icon: <HomeOutlined className="text-2xl" />,
@@ -73,31 +82,37 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Thông tin tài khoản",
     },
     {
-      type: "divider",
+      type: "divider" as const,
     },
-    {
-      key: "logout",
-      icon: <LogoutOutlined className="text-red-500 text-2xl" />,
-      label: <span className="text-red-500">Đăng xuất</span>,
-    },
+    isAuthenticated
+      ? {
+          key: "logout",
+          icon: <LogoutOutlined className="text-red-500 text-2xl" />,
+          label: <span className="text-red-500">Đăng xuất</span>,
+        }
+      : {
+          key: "login",
+          icon: <UserOutlined className="text-2xl" />,
+          label: <span className="text-green-600">Đăng nhập</span>,
+        },
   ];
 
-  const items: MenuProps["items"] = menuItems.map((item) => {
-    if (!item) return item;
-    if ("type" in item && item.type === "divider") {
+  const items: MenuItem[] = menuItems.map((item) => {
+    if (item && item.type === "divider") {
       return item;
     }
-    const baseLabel = (item as any).label;
+
+    const menuItem = item as any;
     return {
-      ...(item as any),
+      ...menuItem,
       label: collapsed ? (
-        <Tooltip title={baseLabel} placement="right">
-          <span>{baseLabel}</span>
+        <Tooltip title={menuItem.label} placement="right">
+          <span>{menuItem.label}</span>
         </Tooltip>
       ) : (
-        baseLabel
+        menuItem.label
       ),
-    } as any;
+    } as MenuItem;
   });
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
@@ -126,7 +141,18 @@ const Sidebar: React.FC<SidebarProps> = ({
         navigate("/account");
         break;
       case "logout":
-        // Xử lý logout, ví dụ: navigate('/login') hoặc clear auth
+        // clear stored auth and redirect to login
+        try {
+          clearToken();
+        } catch (e) {
+          // ignore
+        }
+        // notify other components
+        window.dispatchEvent(new Event("auth-changed"));
+        navigate("/login");
+        break;
+      case "login":
+        navigate("/login");
         break;
       default:
         break;

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "antd";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { Footer } from "antd/es/layout/layout";
 import Header from "./Header";
 
 const { Content } = Layout;
@@ -51,7 +50,6 @@ const MainLayout: React.FC = () => {
         <Header />
         <Content className="overflow-auto">
           <Outlet />
-          <Footer>demo footer</Footer>
         </Content>
       </Layout>
     </Layout>
