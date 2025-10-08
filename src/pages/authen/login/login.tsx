@@ -142,7 +142,7 @@ const Login: React.FC = () => {
                 />
               </div>
 
-              <Container>
+              <Container> 
                 <Row className="justify-content-center">
                   <Col xs={12} sm={10} md={8} lg={6} xl={5}>
                     <Card className="login-card">
@@ -192,7 +192,7 @@ const Login: React.FC = () => {
                           <span>Hoặc</span>
                         </div>
 
-                        <Form onSubmit={handleSubmit}>
+                        <Form onSubmit={handleSubmit}> {/*submit*/}
                           <Form.Group className="mb-3">
                             <Form.Label>Username hoặc Email</Form.Label>
                             <Form.Control
