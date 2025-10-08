@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes, BrowserRouter } from "react-router-dom";
 import MainLayout from "../pages/Common/MainLayout";
 import Dashboard from "../pages/Dashboard";
+import Promotion from "../pages/Promotion";
 import NotFound from "../pages/404";
 
 const AppRoutes: React.FC = () => {
@@ -12,6 +13,7 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="*" element={<NotFound/>} />
       </Route>
+      <Route path="promotion" element={<Promotion />} />
     </Routes>
   );
 };
