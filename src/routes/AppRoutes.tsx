@@ -3,10 +3,11 @@ import { Route, Routes } from "react-router-dom";
 import MainLayout from "../pages/Common/MainLayout";
 import Dashboard from "../pages/Dashboard";
 import Promotion from "../pages/Promotion";
-import Room from "../pages/Room";
+import Room from "../pages/Room/RoomContent";
 import NotFound from "../pages/404";
 import Login from "../pages/authen/login/login";
 import Register from "../pages/authen/register/Register";
+
 
 const AppRoutes: React.FC = () => {
   return (
@@ -20,7 +21,7 @@ const AppRoutes: React.FC = () => {
         <Route path="*" element={<NotFound/>} />
         <Route path="room" element={<Room />} />
       </Route>
-      <Route path="promotion" element={<Promotion />} />
+      <Route path="/promotion" element={<Promotion />} />
     </Routes>
   );
 };

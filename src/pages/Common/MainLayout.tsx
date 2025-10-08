@@ -51,7 +51,6 @@ const MainLayout: React.FC = () => {
         <Content className="overflow-auto">
           <Outlet />
         </Content>
-        
       </Layout>
     </Layout>
   );
