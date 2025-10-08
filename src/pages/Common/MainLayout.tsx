@@ -15,8 +15,8 @@ const MainLayout: React.FC = () => {
     const path = location.pathname;
     if (path === "/" || path === "/dashboard") {
       setSelectedMenu("home");
-    } else if (path === "/my-room") {
-      setSelectedMenu("my-room");
+    } else if (path === "/room") {
+      setSelectedMenu("room");
     } else if (path === "/pomodoro") {
       setSelectedMenu("pomodoro");
     } else if (path === "/chat") {

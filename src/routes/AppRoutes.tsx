@@ -2,6 +2,8 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import MainLayout from "../pages/Common/MainLayout";
 import Dashboard from "../pages/Dashboard";
+import Promotion from "../pages/Promotion";
+import Room from "../pages/Room";
 import NotFound from "../pages/404";
 import Login from "../pages/authen/login/login";
 import Register from "../pages/authen/register/Register";
@@ -16,7 +18,9 @@ const AppRoutes: React.FC = () => {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="*" element={<NotFound/>} />
+        <Route path="room" element={<Room />} />
       </Route>
+      <Route path="promotion" element={<Promotion />} />
     </Routes>
   );
 };

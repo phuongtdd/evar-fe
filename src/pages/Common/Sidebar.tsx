@@ -11,6 +11,7 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../../configs/authen";
@@ -120,8 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "home":
         navigate("/dashboard");
         break;
+
       case "my-room":
-        navigate("/my-room");
+        navigate("/room");
         break;
       case "pomodoro":
         navigate("/pomodoro");
