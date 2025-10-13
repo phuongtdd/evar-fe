@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Trang chủ",
     },
     {
-      key: "my-room",
+      key: "room",
       icon: <PlayCircleOutlined className="text-2xl" />,
       label: "Phòng của tôi",
     },
@@ -122,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         navigate("/dashboard");
         break;
 
-      case "my-room":
+      case "room":
         navigate("/room");
         break;
       case "pomodoro":

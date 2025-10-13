@@ -1,0 +1,64 @@
+import axios from 'axios';
+import type { AxiosRequestConfig, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+
+// Sử dụng logic của bạn để lấy BASE_URL từ biến môi trường của Vite
+// Điều này giúp cấu hình linh hoạt giữa môi trường dev và production
+export const BASE_URL = typeof import.meta !== 'undefined' && (import.meta.env && import.meta.env.VITE_API_BASE)
+    ? import.meta.env.BASE_URL
+    : "http://localhost:8080/api"; // Thêm một fallback URL để an toàn
+
+// Tạo một instance của axios với cấu hình tập trung
+const apiClient = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Cấu hình Interceptor cho REQUEST (Gửi đi)
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Lấy token từ localStorage
+    const token = localStorage.getItem('token');
+
+    // Nếu có token, thêm nó vào headers
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Logging trong môi trường dev
+    if (import.meta.env && import.meta.env.DEV) {
+        console.debug(`[DEV API] ${config.method?.toUpperCase()} ->`, config.url, config.data || '');
+    }
+
+    return config; // Trả về config để request tiếp tục
+  },
+  (error: AxiosError) => {
+    // Xử lý lỗi từ phía request
+    return Promise.reject(error);
+  }
+);
+
+// Cấu hình Interceptor cho RESPONSE (Nhận về)
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Log response trong môi trường dev
+     if (import.meta.env && import.meta.env.DEV) {
+        console.debug(`[DEV API] Response <-`, { url: response.config.url, status: response.status, body: response.data });
+    }
+    return response;
+  },
+  (error: AxiosError) => {
+    // Xử lý lỗi tập trung cho tất cả các response
+    // Ví dụ: Nếu nhận lỗi 401 (Unauthorized), tự động đăng xuất người dùng
+    if (error.response && error.response.status === 401) {
+      console.error("Unauthorized! Redirecting to login...");
+      // localStorage.removeItem('token');
+      // window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+)
+
+export default apiClient;
+

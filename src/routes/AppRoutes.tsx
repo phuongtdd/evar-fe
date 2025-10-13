@@ -3,10 +3,11 @@ import { Route, Routes } from "react-router-dom";
 import MainLayout from "../pages/Common/MainLayout";
 import Dashboard from "../pages/Dashboard";
 import Promotion from "../pages/Promotion";
-import Room from "../pages/Room/RoomContent";
+import Room from "../pages/Room";
 import NotFound from "../pages/404";
 import Login from "../pages/authen/login/login";
 import Register from "../pages/authen/register/Register";
+import RoomUI from "../pages/Room/components/RoomUI";
 
 
 const AppRoutes: React.FC = () => {
@@ -20,6 +21,7 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="*" element={<NotFound/>} />
         <Route path="room" element={<Room />} />
+        <Route path="/study-room" element={<RoomUI />} />
       </Route>
       <Route path="/promotion" element={<Promotion />} />
     </Routes>
