@@ -1,0 +1,317 @@
+/* Register page styles - adapted from login.css */
+
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", sans-serif;
+}
+
+.register-content {
+  flex: 1;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.decorative-element {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.9;
+}
+
+.decorative-element img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
+}
+
+.rocket-1 {
+  top: 10%;
+  left: 8%;
+  width: 180px;
+  height: 180px;
+  animation: float 6s ease-in-out infinite;
+}
+.globe {
+  bottom: 15%;
+  left: 5%;
+  width: 200px;
+  height: 200px;
+  animation: float 7s ease-in-out infinite 1s;
+}
+.candy {
+  top: 20%;
+  right: 10%;
+  width: 220px;
+  height: 220px;
+  animation: float 8s ease-in-out infinite 0.5s;
+}
+.cards {
+  bottom: 45%;
+  left: 20%;
+  width: 160px;
+  height: 160px;
+  animation: float 7s ease-in-out infinite 1.5s;
+}
+.rocket-2 {
+  bottom: 30%;
+  right: 15%;
+  width: 140px;
+  height: 140px;
+  animation: float 6s ease-in-out infinite 2s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+.register-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+  background: white;
+  max-width: 520px;
+}
+
+.register-card .card-body {
+  padding: 2.5rem 2rem;
+}
+
+.register-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.icon-square-img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.register-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+.register-subtitle {
+  font-size: 0.95rem;
+  color: #7e869e;
+  margin-bottom: 0;
+}
+
+.social-login {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+.social-btn {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.social-btn:hover {
+  border-color: #6392e9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 146, 233, 0.2);
+}
+.social-btn img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.social-btn:focus {
+  outline: 3px solid rgba(99, 146, 233, 0.18);
+  outline-offset: 2px;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e5e5;
+}
+.divider span {
+  position: relative;
+  background: white;
+  padding: 0 1rem;
+  color: #a8a8a8;
+  font-size: 0.9rem;
+}
+
+.register-input {
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.register-input:focus {
+  border-color: #6392e9;
+  box-shadow: 0 0 0 3px rgba(99, 146, 233, 0.1);
+  outline: none;
+}
+.register-input::placeholder {
+  color: #bdbdbd;
+}
+
+.password-input {
+  padding-right: 3rem;
+}
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  /* slightly lower than exact center to visually align with input text */
+  top: calc(50% + 0.35rem);
+  transform: translateY(-8%);
+  background: none;
+  border: none;
+  color: #6392e9;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 5; /* sit above native input decorations */
+}
+.password-toggle:hover {
+  color: #4a7fd9;
+}
+
+.agree-terms {
+  font-size: 0.9rem;
+  color: #2d3748;
+}
+
+.register-button {
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #6392e9 0%, #4a7fd9 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  transition: all 0.2s;
+}
+.register-button:hover {
+  background: linear-gradient(135deg, #4a7fd9 0%, #3a6dc9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 146, 233, 0.3);
+}
+.register-button:active {
+  transform: translateY(0);
+}
+
+.signup-text {
+  font-size: 0.9rem;
+  color: #7e869e;
+}
+.signup-link {
+  color: #6392e9;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.signup-link:hover {
+  color: #4a7fd9;
+}
+
+@media (max-width: 991px) {
+  .decorative-element {
+    opacity: 0.6;
+  }
+  .rocket-1,
+  .globe,
+  .candy {
+    width: 140px;
+    height: 140px;
+  }
+  .cards,
+  .rocket-2 {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 767px) {
+  .register-content {
+    padding: 2rem 1rem;
+  }
+  .decorative-element {
+    opacity: 0.4;
+  }
+  .rocket-1,
+  .globe,
+  .candy {
+    width: 100px;
+    height: 100px;
+  }
+  .cards,
+  .rocket-2 {
+    width: 80px;
+    height: 80px;
+  }
+  .register-card .card-body {
+    padding: 2rem 1.5rem !important;
+  }
+  .register-title {
+    font-size: 1.5rem;
+  }
+  .social-btn {
+    width: 50px;
+    height: 50px;
+  }
+  .social-btn img {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 575px) {
+  .decorative-element {
+    display: none;
+  }
+  .register-card {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .register-button {
+    padding: 0.85rem;
+    font-size: 0.98rem;
+  }
+}
