@@ -6,6 +6,7 @@ import { FullscreenExitOutlined, FullscreenOutlined } from "@ant-design/icons";
 import { Spin, Modal, Button } from "antd";
 import { useRoomLogic } from "../hooks/useRoomLogic";
 import ParticipantList from "./ParticipantList";
+import { useEffect, useState } from "react";
 
 const RoomUI: React.FC = () => {
   const {
@@ -27,6 +28,27 @@ const RoomUI: React.FC = () => {
     window.location.href = "/room";
   };
 
+  const [countDown, setCountDown] = useState(10);
+
+  useEffect(() => {
+    if (isRoomDeleted || kickMessage) {
+      let timeLeft = 10;
+      setCountDown(timeLeft);
+
+      const interval = setInterval(() => {
+        timeLeft -= 1;
+        setCountDown(timeLeft);
+
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          handleRedirect();
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isRoomDeleted, kickMessage]);
+
   return (
     // ✨ BƯỚC 3: THAY ĐỔI LAYOUT CHÍNH THÀNH `flex-row`
     <div className="flex flex-row h-[calc(100vh-112px)]">
@@ -41,22 +63,28 @@ const RoomUI: React.FC = () => {
           </Button>,
         ]}
       >
-        <p>Chủ phòng đã kết thúc cuộc họp. Bạn sẽ được chuyển hướng.</p>
+        <p>
+          Chủ phòng đã kết thúc cuộc họp. Bạn sẽ được chuyển hướng sau{" "}
+          <b>{countDown}</b> giây...
+        </p>
       </Modal>
 
       {/*Room member bị kick*/}
       <Modal
         title="Thông báo"
-        open={!!kickMessage} // Hiển thị Modal khi có tin nhắn kick
-        closable={false} // Không cho phép đóng bằng nút X
-        maskClosable={false} // Không cho phép đóng khi bấm ra ngoài
+        open={!!kickMessage}
+        closable={false}
+        maskClosable={false}
         footer={[
           <Button key="ok" type="primary" onClick={handleRedirect}>
             Đã hiểu
           </Button>,
         ]}
       >
-        <p>{kickMessage}</p>
+        <p>
+          {kickMessage} <br />
+          <b>Tự động điều hướng sau {countDown} giây...</b>
+        </p>
       </Modal>
 
       {/* Khu vực video chính */}

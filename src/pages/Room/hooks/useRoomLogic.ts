@@ -8,6 +8,7 @@ import {
   leaveRoomSession,
   getRoomDetail,
   deleteRoom,
+  kickRoomSession
 } from "../services/roomService";
 
 import { useRoomSocket } from "../../../hooks/socket/useCloseRoomSocket";
@@ -41,7 +42,7 @@ export const useRoomLogic = () => {
   const [isOwner, setIsOwner] = useState(false);
   const { isRoomDeleted } = useRoomSocket(roomID);
   const currentUserId = getUserIdFromToken();
-  const { kickMessage } = useKickRoomSocket(currentUserId);
+  const { kickMessage, countDown } = useKickRoomSocket(currentUserId);
 
   useEffect(() => {
     const generatedRoomID =
@@ -131,7 +132,7 @@ export const useRoomLogic = () => {
   const handleKickUser = async (userIdToKick: string) => {
     if (!roomDetails) return;
     try {
-      await leaveRoomSession(userIdToKick);
+      await kickRoomSession(userIdToKick);
       // Zego sẽ tự động kích hoạt onUserLeave, state `participants` sẽ được cập nhật
     } catch (error) {
       // Service đã có message.error, nên ở đây chỉ cần log
