@@ -10,6 +10,9 @@ import {
   deleteRoom,
 } from "../services/roomService";
 
+import { useRoomSocket } from "../../../hooks/socket/useCloseRoomSocket";
+import { useKickRoomSocket } from "../../../hooks/socket/useKickRoomSocket";
+
 import { Room } from "../types";
 
 interface ZegoUser {
@@ -36,6 +39,9 @@ export const useRoomLogic = () => {
   const [participants, setParticipants] = useState<ZegoUser[]>([]);
   const [roomDetails, setRoomDetails] = useState<Room | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const { isRoomDeleted } = useRoomSocket(roomID);
+  const currentUserId = getUserIdFromToken();
+  const { kickMessage } = useKickRoomSocket(currentUserId);
 
   useEffect(() => {
     const generatedRoomID =
@@ -69,8 +75,7 @@ export const useRoomLogic = () => {
       try {
         const roomDetail = await getRoomDetail(generatedRoomID);
         setRoomDetails(roomDetail);
-        setIsOwner(userID === roomDetails?.ownerId);
-        console.log("RoomDetail", roomDetail);
+        setIsOwner(userID === roomDetail?.ownerId);
         await loadZegoScript();
         await initializeZegoRoom({
           container: rootRef.current,
@@ -177,6 +182,8 @@ export const useRoomLogic = () => {
     participants,
     isOwner,
     handleKickUser,
-    roomDetails
+    roomDetails,
+    isRoomDeleted,
+    kickMessage,
   };
 };

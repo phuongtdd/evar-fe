@@ -3,7 +3,7 @@
 
 import type React from "react";
 import { FullscreenExitOutlined, FullscreenOutlined } from "@ant-design/icons";
-import { Spin } from "antd";
+import { Spin, Modal, Button } from "antd";
 import { useRoomLogic } from "../hooks/useRoomLogic";
 import ParticipantList from "./ParticipantList";
 
@@ -18,12 +18,47 @@ const RoomUI: React.FC = () => {
     participants,
     isOwner,
     handleKickUser,
-    roomDetails,  
+    roomDetails,
+    isRoomDeleted,
+    kickMessage,
   } = useRoomLogic();
+
+  const handleRedirect = () => {
+    window.location.href = "/room";
+  };
 
   return (
     // ✨ BƯỚC 3: THAY ĐỔI LAYOUT CHÍNH THÀNH `flex-row`
     <div className="flex flex-row h-[calc(100vh-112px)]">
+      {/*Chủ room đóng room*/}
+      <Modal
+        title="Thông báo"
+        open={isRoomDeleted}
+        closable={false}
+        footer={[
+          <Button key="ok" type="primary" onClick={handleRedirect}>
+            OK
+          </Button>,
+        ]}
+      >
+        <p>Chủ phòng đã kết thúc cuộc họp. Bạn sẽ được chuyển hướng.</p>
+      </Modal>
+
+      {/*Room member bị kick*/}
+      <Modal
+        title="Thông báo"
+        open={!!kickMessage} // Hiển thị Modal khi có tin nhắn kick
+        closable={false} // Không cho phép đóng bằng nút X
+        maskClosable={false} // Không cho phép đóng khi bấm ra ngoài
+        footer={[
+          <Button key="ok" type="primary" onClick={handleRedirect}>
+            Đã hiểu
+          </Button>,
+        ]}
+      >
+        <p>{kickMessage}</p>
+      </Modal>
+
       {/* Khu vực video chính */}
       <div className="flex-1 relative">
         {isLoading && (
@@ -75,7 +110,7 @@ const RoomUI: React.FC = () => {
           className="w-full h-full rounded-lg shadow-lg overflow-hidden"
         ></div>
       </div>
-      {/* ✨ BƯỚC 4: THÊM SIDEBAR DANH SÁCH NGƯỜI THAM GIA */}
+      {/*Sidebar danh sach nguoi tham gia */}
       <div className="w-80 ml-4">
         {roomDetails && (
           <ParticipantList
