@@ -1,8 +1,6 @@
 import axios from 'axios';
 import type { AxiosRequestConfig, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-// Sử dụng logic của bạn để lấy BASE_URL từ biến môi trường của Vite
-// Điều này giúp cấu hình linh hoạt giữa môi trường dev và production
 export const BASE_URL = typeof import.meta !== 'undefined' && (import.meta.env && import.meta.env.VITE_API_BASE)
     ? import.meta.env.BASE_URL
     : "http://localhost:8080/api"; // Thêm một fallback URL để an toàn
