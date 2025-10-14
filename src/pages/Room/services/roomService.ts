@@ -172,7 +172,7 @@ export const joinRoomSession = async (
   }
 };
 
-//Out room hoac bi kick khoi room
+//Out room
 export const leaveRoomSession = async (memberId: string): Promise<void> => {
   try {
     const response = await apiClient.delete(API_ENDPOINT.OUT_ROOM, {
@@ -188,3 +188,21 @@ export const leaveRoomSession = async (memberId: string): Promise<void> => {
     console.error("Error recording user leave:", error);
   }
 };
+
+//Bi kick khoi room
+export const kickRoomSession = async (memberId: string): Promise<void> => {
+  try {
+    const response = await apiClient.delete(API_ENDPOINT.ROOM_KICK, {
+      params: { memberId: memberId },
+    });
+    if (response.status !== 200) {
+      const errorData = response.data;
+      throw new Error(
+        errorData.message || `Error kick room member: ${response.statusText}`
+      );
+    }
+  } catch (error) {
+    console.error("Error recording user leave:", error);
+  }
+};
+

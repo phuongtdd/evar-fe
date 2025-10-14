@@ -8,6 +8,7 @@ export const API_ENDPOINT = {
     MY_ROOM: "/room/me",
     USER: "/users",
     DELETE_ROOM: "/room/delete",
+    ROOM_KICK: "/room-member/kick",
     ALL_ROOMS: "/room/all",
     UPDATE_ROOM: "/room/update",
     JOIN_ROOM: "/room-member",

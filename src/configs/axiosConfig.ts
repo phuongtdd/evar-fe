@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AxiosRequestConfig, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export const BASE_URL = typeof import.meta !== 'undefined' && (import.meta.env && import.meta.env.VITE_API_BASE)
-    ? import.meta.env.BASE_URL
+    ? import.meta.env.VITE_BASE_API_URL
     : "http://localhost:8080/api"; // Thêm một fallback URL để an toàn
 
 // Tạo một instance của axios với cấu hình tập trung
