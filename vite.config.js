@@ -8,11 +8,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5173,
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-      "ee9d79d4b53d.ngrok-free.app"
-    ],
+    allowedHosts: ["localhost", "127.0.0.1", "ee9d79d4b53d.ngrok-free.app"],
     proxy: {
       "/api": {
         target: "http://localhost:8080",
@@ -21,5 +17,8 @@ export default defineConfig({
         rewrite: (path) => path,
       },
     },
+  },
+  define: {
+    global: "globalThis",
   },
 });

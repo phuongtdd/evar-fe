@@ -28,45 +28,46 @@ const ParticipantList: React.FC<ParticipantListProps> = ({
       <Text strong style={{ fontSize: '18px', marginBottom: '12px', display: 'block' }}>
         Người tham gia ({participants.length})
       </Text>
-      <List
-        itemLayout="horizontal"
-        dataSource={participants}
-        renderItem={(user) => (
-          <List.Item
-            actions={[
-              // Điều kiện để hiển thị nút Kick:
-              // 1. Bạn phải là chủ phòng (isOwner)
-              // 2. Người dùng này không phải là chủ phòng
-              isOwner && user.userID !== ownerId ? (
-                <Popconfirm
-                  title={`Xóa ${user.userName}?`}
-                  description="Người này sẽ bị xóa khỏi phòng. Bạn chắc chứ?"
-                  onConfirm={() => onKickUser(user.userID)}
-                  okText="Xóa"
-                  cancelText="Hủy"
-                >
-                  <Button type="primary" danger icon={<LogoutOutlined />} size="small">
-                    Xóa
-                  </Button>
-                </Popconfirm>
-              ) : null,
-            ]}
-          >
-            <List.Item.Meta
-              avatar={<Avatar icon={<UserOutlined />} />}
-              title={
-                <span>
-                  {user.userName}{' '}
-                  {user.userID === ownerId && (
-                    <CrownOutlined style={{ color: '#faad14' }} title="Chủ phòng" />
-                  )}
-                </span>
-              }
-              description={`ID: ${user.userID}`}
-            />
-          </List.Item>
-        )}
-      />
+<List
+  itemLayout="horizontal"
+  dataSource={participants}
+  renderItem={(user) => {
+    
+    return (
+      <List.Item
+        actions={[
+          isOwner && user.userID !== ownerId ? (
+            <Popconfirm
+              title={`Xóa ${user.userName}?`}
+              description="Người này sẽ bị xóa khỏi phòng. Bạn chắc chứ?"
+              onConfirm={() => onKickUser(user.userID)}
+              okText="Xóa"
+              cancelText="Hủy"
+            >
+              <Button type="primary" danger icon={<LogoutOutlined />} size="small">
+                Xóa
+              </Button>
+            </Popconfirm>
+          ) : null,
+        ]}
+      >
+        <List.Item.Meta
+          avatar={<Avatar icon={<UserOutlined />} />}
+          title={
+            <span>
+              {user.userName}{' '}
+              {user.userID === ownerId && (
+                <CrownOutlined style={{ color: '#faad14' }} title="Chủ phòng" />
+              )}``
+            </span>
+          }
+          description={`ID: ${user.userID}`}
+        />
+      </List.Item>
+    );
+  }}
+/>
+
     </div>
   );
 };
