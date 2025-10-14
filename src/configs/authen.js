@@ -1,16 +1,16 @@
 import { post } from "./config";
 
 export const loginByGoogle = (email, name) =>
-  post("/api/auth/google", { email, name });
+  post("/auth/google", { email, name });
 
 export const loginWithUsernameOrEmail = (identifier, password) =>
-  post("/api/auth/login", { identifier, password });
+  post("/auth/login", { identifier, password });
 
 export const loginWithAdmin = (email, password) =>
-  post("/api/auth/login", { email, password });
+  post("/auth/login", { email, password });
 
 export const register = (fullName, email, password) =>
-  post("/api/auth/register", { fullName, email, password });
+  post("/auth/register", { fullName, email, password });
 
 export const logout = () => {
   localStorage.removeItem('token');

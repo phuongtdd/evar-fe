@@ -1,8 +1,7 @@
 // Use Vite env var VITE_API_BASE if provided. If not provided, use relative paths
 // so Vite dev server proxy (if configured) can forward /api requests.
-export const BASE_URL = typeof import.meta !== 'undefined' && (import.meta.env && import.meta.env.VITE_API_BASE)
-    ? import.meta.env.VITE_API_BASE
-    : "";
+const BASE_URL = import.meta.env.VITE_BASE_API_URL || 'http://localhost:8080/api';
+
 
 const buildUrl = (endpoint) => {
     return BASE_URL ? `${BASE_URL}${endpoint}` : endpoint;
