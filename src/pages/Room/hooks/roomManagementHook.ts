@@ -30,7 +30,7 @@ export const useRoomManagement = () => {
             const { user, myRoom } = await getRoomManagementData(userId);
             setUser(user);
             setMyRoom(myRoom);
-            const rooms = await getAllRooms(0, 10); // Giả sử bạn có hàm này để lấy danh sách phòng
+            const rooms = await getAllRooms(0, 10); 
             setDiscoverRooms(rooms);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Đã có lỗi xảy ra khi tải dữ liệu.";

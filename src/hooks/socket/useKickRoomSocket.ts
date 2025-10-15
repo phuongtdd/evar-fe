@@ -35,7 +35,7 @@ export const useKickRoomSocket = (userId: string | null) => {
     if (!userId) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(WEBSOCKET_URL),
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },

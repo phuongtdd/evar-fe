@@ -7,6 +7,7 @@ interface JoinRoomOptions {
   roomID: string;
   userID: string;
   userName: string;
+  fullName: string;
   onJoinRoom: () => void;
   onUserJoin: (users: any[]) => void;
   onUserLeave: (users: any[]) => void;
