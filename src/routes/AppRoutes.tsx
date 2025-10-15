@@ -12,6 +12,7 @@ import QuizzManagement from "../pages/QuizzManagement";
 import CustomQuizManual from "../pages/CustomQuizzes";
 
 
+import Chatmodule from "../pages/RealTimeChat";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -27,6 +28,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/study-room" element={<RoomUI />} />
         <Route path="/create-quiz" element={<QuizzManagement />} />
         <Route path="/create-quiz/custom-quizz" element={<CustomQuizManual />} />
+        <Route path="/chat" element={<Chatmodule />} />
       </Route>
       <Route path="/promotion" element={<Promotion />} />
     </Routes>
