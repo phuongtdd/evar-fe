@@ -90,3 +90,9 @@ export interface Room {
   roomLink?: string;
   ownerName: string;
 }
+
+
+export interface ZegoUser {
+  userID: string;
+  userName: string;
+}
