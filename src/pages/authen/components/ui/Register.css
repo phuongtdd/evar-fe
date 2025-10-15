@@ -124,10 +124,10 @@
   justify-content: center;
 }
 .social-btn {
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 40px;
   border: 1px solid #e5e5e5;
-  border-radius: 12px;
+  border-radius: 8px;
   background: white;
   display: flex;
   align-items: center;
@@ -292,10 +292,7 @@
   .register-title {
     font-size: 1.5rem;
   }
-  .social-btn {
-    width: 50px;
-    height: 50px;
-  }
+
   .social-btn img {
     width: 24px;
     height: 24px;

@@ -14,7 +14,7 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getToken, clearToken } from "../../configs/authen";
+import { getToken, clearToken} from "../authen/services/authService"
 import type { MenuProps } from "antd";
 import MenuOpen from "../../assets/icons/sidebar/MenuOpen.svg";
 import MenuCollapse from "../../assets/icons/sidebar/MenuFold.svg";
@@ -149,10 +149,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         }
         // notify other components
         window.dispatchEvent(new Event("auth-changed"));
-        navigate("/login");
+        navigate("/auth/login");
         break;
       case "login":
-        navigate("/login");
+        navigate("/auth/login");
         break;
       default:
         break;
