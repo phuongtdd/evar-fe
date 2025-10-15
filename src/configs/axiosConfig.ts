@@ -15,12 +15,16 @@ const apiClient = axios.create({
 // Cấu hình Interceptor cho REQUEST (Gửi đi)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Lấy token từ localStorage
-    const token = localStorage.getItem('token');
+     const publicEndpoints = ['/auth/login', '/auth/register', '/api/users'];
+     const isPublicEndpoint = publicEndpoints.some(endpoint => 
+      config.url?.includes(endpoint)
+    );
 
-    // Nếu có token, thêm nó vào headers
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+     if (!isPublicEndpoint) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
     }
 
     // Logging trong môi trường dev

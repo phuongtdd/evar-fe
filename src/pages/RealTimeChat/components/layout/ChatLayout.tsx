@@ -203,7 +203,6 @@ const ChatLayout = () => {
         </div>
       </Modal>
 
-      {/* Rename Modal */}
       <Modal
         isOpen={showRenameModal}
         onClose={() => setShowRenameModal(false)}
