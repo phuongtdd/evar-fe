@@ -1,8 +1,38 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import Book3d from "../../../assets/icons/dashboard/Book3D.svg";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { dashboardService, DashboardStats } from "../services/dashboardService";
 
 const Banner = () => {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalExams: 0,
+    totalQuestions: 0,
+    totalStudyTime: 0,
+    averageScore: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const dashboardStats = await dashboardService.getDashboardStats();
+        setStats(dashboardStats);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const formatStudyTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h${mins}p`;
+  };
+
   return (
     <div>
       {" "}
@@ -21,20 +51,22 @@ const Banner = () => {
         </div>
         <div className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-6 text-[16px]">
-            <span>Thời gian đã học: 12h40p</span>
-            <span>Quiz đã tạo: 5</span>
+            <span>Thời gian đã học: {formatStudyTime(stats.totalStudyTime)}</span>
+            <span>Quiz đã tạo: {stats.totalExams}</span>
           </div>
           <div className="flex gap-3">
             <Button
               type="default"
               icon={<PlusOutlined />}
               className="bg-white border-none"
+              onClick={() => navigate("/room")}
             >
               Tạo phòng
             </Button>
             <Button
               type="default"
-              className="bg-blue-400 text-white border-none"
+              className="!bg-blue-400 text-white !border-none"
+              onClick={() => navigate("/createQuiz-AI")}
             >
               Tạo Quiz với AI
             </Button>
