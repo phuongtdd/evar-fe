@@ -10,6 +10,7 @@ import { createExamService } from "./services/examService";
 import DropdownSelect from "../Quiz/components/ui/DropdownSelect";
 import { subjects, grades } from "../Quiz/mock/mockData";
 import dayjs from 'dayjs';
+import { getUsernameFromToken } from "../../pages/Room/utils/auth";
 
 const CreateExamManual = () => {
   const location = useLocation();
@@ -31,8 +32,10 @@ const CreateExamManual = () => {
 
   const handleEditQuizInfo = () => {
     setIsEditModalVisible(true);
+    const currentUser = getUsernameFromToken() || "Admin";
     form.setFieldsValue({
       ...quizInfo,
+      description: currentUser,
       time: quizInfo?.time ? dayjs(quizInfo.time, 'HH:mm:ss') : dayjs('02:00:00', 'HH:mm:ss')
     });
   };
@@ -228,7 +231,7 @@ const CreateExamManual = () => {
               ]}
               style={{ margin: 0 }}
             >
-              <Input placeholder="Admin" style={{ borderRadius: '4px' }} />
+              <Input placeholder="Admin" style={{ borderRadius: '4px' }} disabled />
             </Form.Item>
 
             <Form.Item

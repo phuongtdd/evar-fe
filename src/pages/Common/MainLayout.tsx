@@ -48,7 +48,7 @@ const MainLayout: React.FC = () => {
       />
       <Layout>
         <Header />
-        <Content className="overflow-auto ">
+        <Content className="overflow-auto !px-5  bg-gray-50">
           <Outlet />
         </Content>
       </Layout>

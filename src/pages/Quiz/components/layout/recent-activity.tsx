@@ -36,12 +36,13 @@ export default function RecentActivity() {
         Hoạt động gần đây :
       </h2>
 
-      <Row gutter={[24, 24]}>
+      <div className="px-4">
+        <Row gutter={[24, 24]}>
         <Col xs={24} lg={12}>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
-              Best Scores by Subject
-            </h3>
+          <div className="bg-[#FFFFFF]  p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4">
+             Đánh giá điểm theo môn
+            </h4>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -77,6 +78,7 @@ export default function RecentActivity() {
           </div>
         </Col>
       </Row>
+      </div>
     </>
   );
 }

@@ -1,10 +1,18 @@
 "use client";
 
-import { Card, Input, Button } from "antd";
-import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
-import QuizItem from "../ui/quiz-item";
+import { Table, Input, Button } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { FilterOutlined } from "@ant-design/icons";
+import { useState, useMemo, useEffect } from "react";
 import { fetchExams, ExamResponse } from "../../services/examService";
+import QuizItem from "../ui/quiz-item";
+import type { GetProps } from "antd";
+
+type SearchProps = GetProps<typeof Input.Search>;
+const { Search } = Input;
+
+const onSearch: SearchProps["onSearch"] = (value, _e, info) =>
+  console.log(info?.source, value);
 
 export default function HistorySection() {
   const [exams, setExams] = useState<ExamResponse[]>([]);
@@ -14,12 +22,10 @@ export default function HistorySection() {
     const loadExams = async () => {
       setLoading(true);
       try {
-        // For history section, we might want to show recent exams or completed ones
-        // For now, showing the first page of exams
         const response = await fetchExams(0, 10);
         setExams(response.data);
       } catch (error) {
-        console.error('Failed to fetch exams for history section:', error);
+        console.error("Failed to fetch exams for history section:", error);
       } finally {
         setLoading(false);
       }
@@ -28,31 +34,69 @@ export default function HistorySection() {
     loadExams();
   }, []);
 
+  const columns: ColumnsType<ExamResponse> = useMemo(
+    () => [
+      {
+        title: "Tên bài thi",
+        dataIndex: "examName",
+        key: "examName",
+        render: (value) => <span className="font-semibold text-gray-900">{value}</span>,
+      },
+      {
+        title: "Môn",
+        dataIndex: "subjectName",
+        key: "subjectName",
+      },
+      {
+        title: "Số câu hỏi",
+        dataIndex: "numOfQuestions",
+        key: "numOfQuestions",
+        align: "center",
+      },
+      {
+        title: "Loại",
+        dataIndex: "examType",
+        key: "examType",
+        render: (value: number) => (value === 1 ? "Thi" : "Luyện tập"),
+      },
+      {
+        title: "Ngày tạo",
+        dataIndex: "createdAt",
+        key: "createdAt",
+        render: (value: string) =>
+          new Date(value).toLocaleDateString("vi-VN"),
+      },
+      {
+        title: "Thao tác",
+        key: "actions",
+        render: (_, exam) => <QuizItem exam={exam} asTableAction />,
+      },
+    ],
+    []
+  );
+
   return (
     <>
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">
-        Lịch sử làm bài
-      </h2>
+      <h4 className="text-[18px] !font-extrabold mb-2">Lịch sử làm bài</h4>
 
-      <div className="flex gap-3 mb-6">
-        <Input
+      <div className="flex gap-3 mb-1">
+        <Search
           placeholder="Tìm kiếm"
-          prefix={<SearchOutlined />}
-          className="flex-1"
+          onSearch={onSearch}
+          enterButton
           style={{ maxWidth: "200px" }}
-        />
-        <Button
-          icon={<SearchOutlined />}
-          className="bg-blue-500 text-white hover:bg-blue-600"
+          className="flex-1"
         />
         <Button icon={<FilterOutlined />} />
       </div>
 
-      <div className="space-y-4">
-        {exams.map((exam) => (
-          <QuizItem key={exam.id} exam={exam} />
-        ))}
-      </div>
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={exams}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
     </>
   );
 }

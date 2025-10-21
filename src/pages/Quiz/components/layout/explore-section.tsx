@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Input, Button, Pagination } from "antd";
+import { Card, Input, Button, Pagination, Segmented } from "antd";
 import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import QuizItem from "../ui/quiz-item";
@@ -11,14 +11,14 @@ export default function ExploreSection() {
   const [exams, setExams] = useState<ExamResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalExams, setTotalExams] = useState(0);
+  const [sortBy, setSortBy] = useState<string | number>("latest");
 
   useEffect(() => {
     const loadExams = async () => {
       setLoading(true);
       try {
-        const response = await fetchExams(currentPage - 1, 10); // API uses 0-based pagination
+        const response = await fetchExams(currentPage - 1, 10); 
         setExams(response.data);
-        // Assuming the API response includes total elements, otherwise we'd need to fetch all
         setTotalExams(response.pageMetadata?.totalElements || response.data.length * 10);
       } catch (error) {
         console.error('Failed to fetch exams for explore section:', error);
@@ -28,24 +28,22 @@ export default function ExploreSection() {
     };
 
     loadExams();
-  }, [currentPage]);
+  }, [currentPage, sortBy]);
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">
+      <h4 className="text-[18px] !font-extrabold mb-2">
         Khám phá thêm
-      </h2>
+      </h4>
 
       <div className="flex gap-3 mb-6">
-        <Input
-          placeholder="Mô tả"
-          className="flex-1"
-          style={{ maxWidth: "150px" }}
-        />
-        <Input
-          placeholder="Bảng hot"
-          className="flex-1"
-          style={{ maxWidth: "150px" }}
+        <Segmented
+          value={sortBy}
+          onChange={setSortBy}
+          options={[
+            { label: "Mới nhất", value: "latest" },
+            { label: "Tương tác cao", value: "trending" },
+          ]}
         />
         <Input
           placeholder="Tìm kiếm"

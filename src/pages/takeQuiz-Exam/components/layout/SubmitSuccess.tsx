@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { Button, Card, Spin } from 'antd';
-import { CheckCircleOutlined, HomeOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useState } from "react";
+import { Button, Card, Spin } from "antd";
+import {
+  CheckCircleOutlined,
+  HomeOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 
 interface SubmitSuccessProps {
   examName?: string;
@@ -11,9 +15,9 @@ interface SubmitSuccessProps {
 
 const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
   examName = "Bài thi",
-  submittedAt = new Date().toLocaleString('vi-VN'),
+  submittedAt = new Date().toLocaleString("vi-VN"),
   onViewResults,
-  onBackToDashboard
+  onBackToDashboard,
 }) => {
   const [isViewingResults, setIsViewingResults] = useState(false);
   const [isGoingHome, setIsGoingHome] = useState(false);
@@ -25,83 +29,100 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     }, 1000);
   };
 
-  const handleBackToDashboard = () => {
-    setIsGoingHome(true);
-    setTimeout(() => {
-      onBackToDashboard?.();
-    }, 1000);
-  };
-
   return (
-    <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <div className="text-center">
-          <div className="mb-6">
-            <CheckCircleOutlined 
-              className="text-[80px] text-green-500"
-            />
-          </div>
-
-          <h1 className="text-[32px] font-bold text-black mb-4">
-            Nộp bài thành công!
-          </h1>
-          
-          <div className="mb-8">
-            <p className="text-[18px] text-gray-600 mb-4">
-              Bạn đã nộp bài thi <strong>"{examName}"</strong> thành công.
-            </p>
-            <p className="text-[16px] text-gray-500">
-              Thời gian nộp bài: {submittedAt}
-            </p>
-          </div>
-
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-              <CheckCircleOutlined className="text-2xl text-green-500" />
+    <>
+      <div className="p-5 flex flex-col items-center justify-center h-screen">
+        <Card className="w-[70%] flex flex-col items-center justify-center">
+          <div className="text-center flex flex-col items-center justify-center gap-3">
+            <div className="mb-8">
+              <p className="text-[24px] text-green-500 mb-4">
+                Bạn đã nộp bài thi thành công.
+              </p>
+              <div className="flex flex-row items-center">
+                <span className="text-[24px]">Kết quả :</span>
+                <span className="text-[54px] mx-auto">
+                  <span>4</span>
+                  <span>/10</span>
+                </span>
+              </div>
+              <p className="text-[16px] text-gray-500">
+                Thời gian nộp bài: {submittedAt}
+              </p>
             </div>
-            <p className="text-[16px] text-green-600 font-medium">
-              Bài thi của bạn đã được ghi nhận và đang được chấm điểm.
-            </p>
-          </div>
 
-          <div className="bg-[#f0f9ff] border border-[#0ea5e9] rounded-[12px] p-4 mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              <EyeOutlined className="text-[#0ea5e9]" />
-              <span className="text-[16px] font-semibold text-[#0ea5e9]">
-                Thông tin tiếp theo:
-              </span>
-            </div>
-            <ul className="text-[14px] text-gray-600 space-y-1 text-left">
-              <li>• Kết quả sẽ được hiển thị ngay lập tức</li>
-              <li>• Bạn có thể xem lại chi tiết các câu trả lời</li>
-              <li>• Kết quả sẽ được lưu vào lịch sử thi của bạn</li>
-              <li>• Bạn có thể làm lại bài thi nếu muốn</li>
-            </ul>
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <Button
-              onClick={handleBackToDashboard}
-              loading={isGoingHome}
-              icon={<HomeOutlined />}
-              className="!bg-gray-500 !hover:bg-gray-600 !text-white rounded-[8px] h-[50px] px-8 text-[18px]"
+            <div
+              className="grid grid-cols-2 
+            !gap-[15.25rem] px-4"
             >
-              {isGoingHome ? 'Đang chuyển...' : 'Về trang chủ'}
-            </Button>
-            {onViewResults && (
-              <Button
-                onClick={handleViewResults}
-                loading={isViewingResults}
-                icon={<EyeOutlined />}
-                className="!bg-[#6392e9] !hover:bg-[#5282d8] text-white rounded-[8px] h-[50px] px-8 text-[18px] font-semibold"
-              >
-                {isViewingResults ? 'Đang tải...' : 'Xem kết quả'}
-              </Button>
-            )}
+              {/* Left Column - Stats */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">
+                    Số câu hỏi :
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    40/50
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">
+                    Số câu đúng :
+                  </span>
+                  <span className="text-lg font-semibold text-green-600">
+                    40
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">
+                    Số câu sai :
+                  </span>
+                  <span className="text-lg font-semibold text-red-600">10</span>
+                </div>
+              </div>
+
+              {/* Right Column - Info */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">bài thi : </span>
+                  <span className="text-gray-900 font-semibold">
+                    {examName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">
+                    Người làm bài :{" "}
+                  </span>
+                  <span className="text-gray-900 font-semibold">
+                    Super Idol desaurung
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-normal">
+                    Thời gian làm bài :{" "}
+                  </span>
+                  <span className="text-gray-900 font-semibold">
+                    20:20:00 / 120:00:00
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              {onViewResults && (
+                <Button
+                  onClick={handleViewResults}
+                  loading={isViewingResults}
+                  icon={<EyeOutlined />}
+                  className="!bg-[#6392e9] !hover:bg-[#5282d8] text-white rounded-[8px] h-[50px] px-8 text-[18px] font-semibold"
+                >
+                  {isViewingResults ? "Đang tải..." : "Chi tiết"}
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </>
   );
 };
 

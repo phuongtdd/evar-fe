@@ -3,6 +3,7 @@ import { CreateExamRequest } from '../types';
 
 export const createExamService = {
   async createExam(examData: CreateExamRequest) {
+    console.log(examData);
     try {
       const response = await apiClient.post('/exam', examData);
       return response.data;

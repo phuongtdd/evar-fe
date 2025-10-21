@@ -1,10 +1,15 @@
-import { Tag, Button } from "antd"
-import { ArrowRightOutlined, EyeOutlined } from "@ant-design/icons"
-import { useNavigate } from "react-router-dom"
-import { exam } from "../../types"
-import { examService } from "../../../takeQuiz-Exam/services/examService"
+import { Button, Divider, Tag } from "antd";
+import { ArrowRightOutlined, EditFilled, EyeOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { exam } from "../../types";
+import { examService } from "../../../takeQuiz-Exam/services/examService";
+import Calendar from "../../../../assets/icons/Calendar_fill.png";
+interface QuizItemProps {
+  exam: exam;
+  asTableAction?: boolean;
+}
 
-export default function QuizItem({ exam }: { exam: exam }) {
+export default function QuizItem({ exam, asTableAction }: QuizItemProps) {
   const navigate = useNavigate();
 
   const handleNavigate = async () => {
@@ -13,52 +18,84 @@ export default function QuizItem({ exam }: { exam: exam }) {
       const examData = examResponse.data;
 
       navigate(`takeQuiz/exam/${exam.id}`, {
-        state: { examData }
+        state: { examData },
       });
     } catch (error) {
-      console.error('Error fetching exam data:', error);
+      console.error("Error fetching exam data:", error);
       navigate(`takeQuiz/exam/${exam.id}`);
     }
+  };
+
+  if (asTableAction) {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          type="primary"
+          danger
+          size="small"
+          icon={<ArrowRightOutlined />}
+          className="!bg-green-500 !hover:bg-green-600 !border-green-500"
+          onClick={handleNavigate}
+        >
+          Làm
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 flex-1">{exam.examName}</h3>
-        <Tag color="blue" className="ml-2">
-          <EyeOutlined /> Chỉnh sửa
-        </Tag>
-      </div>
+    <div className="">
+      <div className="flex flex-row items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <span className="font-bold text-gray-900 text-[24px]">{exam.examName}</span>
+            <Button className="!bg-[#6392E9]/33 !text-[#6392E9] !px-5 !py-1 !rounded-[12px]" icon={<EditFilled/>}></Button>
+          </div>
 
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Môn:</span>
-          <Tag color="blue">{exam.subjectName}</Tag>
+          <div className="flex flex-row item-center w-full gap-4">
+            <div className="flex items-center gap-2">
+              <span className="font-bold">Môn:</span>
+              <Tag className="!font-semibold !text-[#ffffff] !bg-blue-400 !py-1 !px-5 text-[16px] !rounded-[12px] !border-[#6392E9] ">
+                {exam.subjectName}
+              </Tag>
+            </div>
+
+            <div className="flex items-center gap-2 text-[14px]">
+              <span className="font-bold">Số câu hỏi:</span>
+              <span className="font-semibold text-[#6392E9] ">
+                {exam.numOfQuestions}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-bold">Loại:</span>
+              <span className="font-semibold text-[#6392E9] text-[14px]">
+                {exam.examType === 1 ? "Thi" : "Luyện tập"}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Số câu hỏi:</span>
-          <span className="font-semibold text-gray-900">{exam.numOfQuestions}</span>
-        </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <img src={Calendar} alt="" />
+            <span className="text-[14px] text-[#6392E9] font-bold ">
+              {new Date(exam.createdAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Loại:</span>
-          <span className="font-semibold text-gray-900">{exam.examType === 1 ? 'Thi' : 'Luyện tập'}</span>
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm text-gray-600">{new Date(exam.createdAt).toLocaleDateString('vi-VN')}</span>
           <Button
             type="primary"
             danger
-            icon={<ArrowRightOutlined />}
-            className="!bg-green-500 !hover:bg-green-600 !border-green-500"
-            onClick={() => handleNavigate()}
+            className="!bg-[#4CAF50] !hover:bg-green-600 !border-green-500 !font-bold"
+            onClick={handleNavigate}
           >
             Làm
+            <ArrowRightOutlined />
           </Button>
         </div>
       </div>
+      <Divider/>
     </div>
-  )
+  );
 }

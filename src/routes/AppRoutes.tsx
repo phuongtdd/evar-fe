@@ -17,7 +17,8 @@ import CreateExamManual from "../pages/createExam-Manual";
 import TakeQuizExam from "../pages/takeQuiz-Exam";
 import QuizDashboardLayout from "../pages/Quiz";
 import SubmitSuccess from "../pages/takeQuiz-Exam/components/layout/SubmitSuccess";
-// import { QuizExamStep } from "../pages/takeQuiz-Exam/components/layout/Exam";
+import SubjectModule from "../pages/Subject";
+
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -78,6 +79,8 @@ const AppRoutes: React.FC = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
         <Route path="/promotion" element={<Promotion />} />
+        <Route path="/subject" element={<SubjectModule />} />
+        
       </Routes>
     </>
   );

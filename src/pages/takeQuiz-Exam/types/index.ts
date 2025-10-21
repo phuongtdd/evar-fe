@@ -39,6 +39,7 @@ export interface ExamResponse {
 // Component Types
 export interface Answer {
   id: number;
+  answerId: string;
   content: string;
   isCorrect: boolean;
   isSelected?: boolean;
@@ -46,6 +47,7 @@ export interface Answer {
 
 export interface Question {
   id: number;
+  questionId: string;
   content: string;
   questionType: string;
   hardLevel: number;
@@ -64,7 +66,7 @@ export interface ExamState {
   timeLeft: number;
   isExamStarted: boolean;
   isExamCompleted: boolean;
-  userAnswers: { [questionId: number]: number };
+  userAnswers: { [questionId: string]: number };
   markedQuestions: Set<number>;
 }
 
@@ -79,7 +81,7 @@ export interface ExamResults {
   correctAnswers: number;
   score: number;
   timeSpent: number;
-  userAnswers: { [questionId: number]: number };
+  userAnswers: { [questionId: string]: number };
 }
 
 export interface QuestionCardProps {
@@ -137,7 +139,7 @@ export interface ExamResultsProps {
 
 export interface ExamService {
   getExamById: (examId: string) => Promise<ExamResponse>;
-  submitExamAnswers: (examId: string, answers: { [questionId: number]: number }) => Promise<any>;
+  submitExamAnswers: (examId: string, answers: { [questionId: string]: number }) => Promise<any>;
 }
 
 export interface UseExamReturn {

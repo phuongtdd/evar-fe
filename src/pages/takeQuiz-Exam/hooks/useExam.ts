@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ExamState, UseExamReturn, ExamResults, Question } from "../types";
 import { examService } from "../services/examService";
 import { EXAM_CONFIG, EXAM_CONSTANTS } from "../constants";
+import { getUserIdFromToken } from "../../Room/utils/auth";
 
 export const useExam = (examId?: string, initialExamData?: any): UseExamReturn => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     timeLeft: EXAM_CONFIG.DEFAULT_TIME_LIMIT,
     isExamStarted: false,
     isExamCompleted: false,
-    userAnswers: {},
+    userAnswers: {} as { [questionId: string]: number },
     markedQuestions: new Set(),
   });
 
@@ -45,14 +46,16 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         examData = response.data;
       }
 
-      const questions: Question[] = examData.questions.map((q: Question, index: number) => ({
+      const questions: Question[] = examData.questions.map((q: any, index: number) => ({
         id: index + 1,
+        questionId: q.id,
         content: q.content,
         questionType: q.questionType,
         hardLevel: q.hardLevel,
         subjectName: q.subjectName,
-        answers: q.answers.map((answer, answerIndex) => ({
+        answers: q.answers.map((answer: any, answerIndex: number) => ({
           id: answerIndex + 1,
+          answerId: answer.id,
           content: answer.content,
           isCorrect: answer.isCorrect,
           isSelected: false,
@@ -100,7 +103,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
 
         const newUserAnswers = {
           ...prev.userAnswers,
-          [questionId]: answerIndex,
+          [newQuestions[questionIndex].questionId]: answerIndex,
         };
 
         return {
@@ -115,31 +118,31 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
 
   const markQuestion = useCallback((questionId: number) => {
     console.log('=== MARK QUESTION CALLED ===', { questionId });
-    
+
     setExamState(prev => {
       console.log('Previous state:', {
         questionId,
         prevIsMarked: prev.questions.find(q => q.id === questionId)?.isMarked,
         prevMarkedQuestions: Array.from(prev.markedQuestions)
       });
-      
+
       const newQuestions = prev.questions.map(q => ({ ...q }));
       const questionIndex = newQuestions.findIndex(q => q.id === questionId);
-      
+
       if (questionIndex !== -1) {
         const wasMarked = newQuestions[questionIndex].isMarked;
         newQuestions[questionIndex] = {
           ...newQuestions[questionIndex],
           isMarked: !wasMarked
         };
-        
+
         console.log('Question updated:', {
           questionId,
           wasMarked,
           isNowMarked: !wasMarked,
           questionIndex
         });
-        
+
         console.log(`Question ${questionId} ${wasMarked ? 'unmarked' : 'marked'}`, {
           questionId,
           wasMarked,
@@ -150,7 +153,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
 
       const newMarkedQuestions = new Set(prev.markedQuestions);
       const isNowMarked = questionIndex !== -1 ? newQuestions[questionIndex].isMarked : false;
-      
+
       if (isNowMarked) {
         newMarkedQuestions.add(questionId);
         console.log(`Question ${questionId} added to marked questions set`);
@@ -158,19 +161,19 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         newMarkedQuestions.delete(questionId);
         console.log(`Question ${questionId} removed from marked questions set`);
       }
-      
+
       const newState = {
         ...prev,
         questions: newQuestions,
         markedQuestions: newMarkedQuestions
       };
-      
+
       console.log('New state:', {
         questionId,
         newIsMarked: newState.questions.find(q => q.id === questionId)?.isMarked,
         newMarkedQuestions: Array.from(newState.markedQuestions)
       });
-      
+
       return newState;
     });
   }, []);
@@ -191,22 +194,18 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
 
     try {
       const currentState = examState;
-      
-      await examService.submitExamAnswers(examId, currentState.userAnswers);
 
-      const correctAnswers = currentState.questions.reduce((count, question) => {
-        if (question.selectedAnswer !== undefined) {
-          const selectedAnswer = question.answers[question.selectedAnswer];
-          return count + (selectedAnswer?.isCorrect ? 1 : 0);
-        }
-        return count;
-      }, 0);
+      console.log("------------ currentState", currentState)
 
+      // Submit to backend API
+      const submissionResponse = await examService.submitExamAnswers(examId, currentState.userAnswers, currentState.examData);
+
+      // Use backend response for results
       const results: ExamResults = {
         totalQuestions: currentState.questions.length,
         answeredQuestions: Object.keys(currentState.userAnswers).length,
-        correctAnswers,
-        score: Math.round((correctAnswers / currentState.questions.length) * 100),
+        correctAnswers: Math.round((submissionResponse.data.totalScore / 10) * currentState.questions.length), // Assuming max score is 10 per question
+        score: Math.round(submissionResponse.data.totalScore * 10), // Convert to percentage
         timeSpent: EXAM_CONFIG.DEFAULT_TIME_LIMIT - currentState.timeLeft,
         userAnswers: currentState.userAnswers,
       };
@@ -233,7 +232,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
       timeLeft: EXAM_CONFIG.DEFAULT_TIME_LIMIT,
       isExamStarted: false,
       isExamCompleted: false,
-      userAnswers: {},
+      userAnswers: {} as { [questionId: string]: number },
       markedQuestions: new Set(),
     });
     setError(null);
