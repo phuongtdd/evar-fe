@@ -1,4 +1,4 @@
-import { ExamResponse, ExamService } from "../types";
+import { ExamResponse, ExamService, SubmissionDetailResponse } from "../types";
 import apiClient from "../../../configs/axiosConfig";
 import { mockExamData } from "../mock/mockData";
 import { getUserIdFromToken } from "../../../utils/auth";
@@ -112,6 +112,16 @@ class ExamServiceImpl implements ExamService {
     } catch (error) {
       console.error("Error fetching exam results:", error);
       throw new Error("Không thể tải kết quả thi. Vui lòng thử lại.");
+    }
+  }
+
+  async getSubmissionDetails(submissionId: string): Promise<SubmissionDetailResponse> {
+    try {
+      const response = await apiClient.get(`/submission?id=${submissionId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching submission details:", error);
+      throw new Error("Không thể tải chi tiết bài nộp. Vui lòng thử lại.");
     }
   }
 }

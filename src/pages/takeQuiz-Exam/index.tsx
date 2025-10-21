@@ -18,6 +18,7 @@ import SubmitSuccess from './components/layout/SubmitSuccess';
 import { useExam } from './hooks/useExam';
 import { ExamResults as ExamResultsType } from './types';
 import { EXAM_MESSAGES } from './constants';
+import { examService } from './services/examService';
 
 const TakeQuizExam: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -63,6 +64,7 @@ const TakeQuizExam: React.FC = () => {
   const [examResults, setExamResults] = useState<ExamResultsType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   
   // Loading states for transitions
   const [isStartingFaceVerification, setIsStartingFaceVerification] = useState(false);
@@ -106,11 +108,32 @@ const TakeQuizExam: React.FC = () => {
   const handleSubmitExam = async () => {
     setIsSubmitting(true);
     try {
+      // Submit exam and get results
       const results = await submitExam();
-      // Show submit success page first
+      // Extract submission ID from results
+      const subId = results.submissionId || null;
+      setSubmissionId(subId);
+
+      // Fetch submission details immediately if we have a submission ID
+      let submissionDetails = null;
+      if (subId) {
+        try {
+          console.log('Fetching submission details for ID:', subId);
+          submissionDetails = await examService.getSubmissionDetails(subId);
+          console.log('Submission details received:', submissionDetails);
+        } catch (detailErr) {
+          console.warn('Failed to fetch submission details:', detailErr);
+          // Continue without details - they can be fetched later
+        }
+      }
+
+      // Store results with submission details
+      const resultsWithDetails = { ...results, submissionDetails };
+      console.log('Final results with submission details:', resultsWithDetails);
+      setExamResults(resultsWithDetails);
+
+      // Show submit success page
       setShowSubmitSuccess(true);
-      // Store results for later viewing
-      setExamResults(results);
     } catch (err) {
       Modal.error({
         title: 'Lỗi nộp bài',
@@ -153,12 +176,55 @@ const TakeQuizExam: React.FC = () => {
     navigate('/dashboard');
   };
 
-  const handleViewResults = () => {
+  const handleViewResults = async () => {
+    // console.log('handleViewResults called');
+    console.log('Current examResults:', examResults);
+    console.log('Current submissionId:', submissionId);
     setIsTransitioningToResults(true);
+
+    // If we already have submission details, use them
+    if (examResults?.submissionDetails) {
+      console.log('Using existing submission details:', examResults.submissionDetails);
+      setTimeout(() => {
+        setShowSubmitSuccess(false);
+        setIsTransitioningToResults(false);
+      }, 500);
+      return;
+    }
+
+    // Otherwise, fetch them
+    if (!submissionId) {
+      console.log('No submissionId found');
+      Modal.error({
+        title: 'Lỗi',
+        content: 'Không tìm thấy ID bài nộp. Vui lòng thử lại.',
+      });
+      setIsTransitioningToResults(false);
+      return;
+    }
+
+    try {
+      console.log('Fetching submission details for ID:', submissionId);
+      // Fetch detailed submission data from API
+      const submissionDetails = await examService.getSubmissionDetails(submissionId);
+      console.log('Fetched submission details:', submissionDetails);
+      // Store the detailed data for the results component
+      setExamResults(prev => prev ? { ...prev, submissionDetails } : null);
+      console.log('Updated examResults with submission details');
+    } catch (err) {
+      console.error('Error fetching submission details:', err);
+      Modal.error({
+        title: 'Lỗi tải chi tiết',
+        content: err instanceof Error ? err.message : 'Không thể tải chi tiết bài nộp.',
+      });
+      setIsTransitioningToResults(false);
+      return;
+    }
+
     setTimeout(() => {
       setShowSubmitSuccess(false);
       setIsTransitioningToResults(false);
-    }, 1000);
+    }, 500);
   };
 
   const handleBackToDashboardFromSuccess = () => {
@@ -236,6 +302,7 @@ const TakeQuizExam: React.FC = () => {
         submittedAt={new Date().toLocaleString('vi-VN')}
         onViewResults={handleViewResults}
         onBackToDashboard={handleBackToDashboardFromSuccess}
+        submissionDetails={examResults.submissionDetails}
       />
     );
   }
@@ -247,6 +314,7 @@ const TakeQuizExam: React.FC = () => {
         results={examResults}
         onRetake={handleRetakeExam}
         onBackToDashboard={handleBackToDashboard}
+        examState={examState}
       />
     );
   }
