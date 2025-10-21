@@ -12,16 +12,18 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onMarkQuestion,
   isMarked,
 }) => {
+  const isMultiple = question.questionType === '1';
+
   const handleAnswerSelect = (answerIndex: number) => {
-    onAnswerSelect(answerIndex);
+    onAnswerSelect(answerIndex, isMultiple);
   };
 
-  console.log(`QuestionCard ${questionNumber} - isMarked: ${isMarked}`, {
-    questionId: question.id,
-    questionNumber,
-    isMarked,
-    timestamp: new Date().toLocaleTimeString()
-  });
+  // console.log(`QuestionCard ${questionNumber} - isMarked: ${isMarked}`, {
+  //   questionId: question.id,
+  //   questionNumber,
+  //   isMarked,
+  //   timestamp: new Date().toLocaleTimeString()
+  // });
 
   return (
     <div className="bg-white rounded-[12px] border border-[#d5d5d5] p-8">
@@ -85,7 +87,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               key={index}
               answer={answer}
               index={index}
-              isSelected={question.selectedAnswer === index}
+              isSelected={isMultiple
+                ? (question.selectedAnswers?.includes(index) ?? false)
+                : (question.selectedAnswer === index)
+              }
+              isMultiple={isMultiple}
               onSelect={() => handleAnswerSelect(index)}
             />
           </div>

@@ -3,10 +3,11 @@ import { ExamConfig } from '../types';
 export const EXAM_CONFIG: ExamConfig = {
   DEFAULT_TIME_LIMIT: 90 * 60, // 90 minutes in seconds
   QUESTION_TYPES: {
-    '1': 'Trắc nghiệm',
-    '2': 'Tự luận',
+    '1': 'Trắc nghiệm nhiều lựa chọn',
+    '2': 'Trắc nghiệm một lựa chọn',
     '3': 'Đúng/Sai',
-    '4': 'Điền từ'
+    '4': 'Ghép đôi',
+    '5': 'Tự luận'
   },
   DIFFICULTY_LEVELS: {
     1: 'Dễ',

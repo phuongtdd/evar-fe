@@ -55,6 +55,7 @@ export interface Question {
   answers: Answer[];
   questionImg?: string | null;
   selectedAnswer?: number;
+  selectedAnswers?: number[];
   isMarked?: boolean;
   isAnswered?: boolean;
 }
@@ -66,7 +67,7 @@ export interface ExamState {
   timeLeft: number;
   isExamStarted: boolean;
   isExamCompleted: boolean;
-  userAnswers: { [questionId: string]: number };
+  userAnswers: { [questionId: string]: number | number[] };
   markedQuestions: Set<number>;
 }
 
@@ -81,13 +82,13 @@ export interface ExamResults {
   correctAnswers: number;
   score: number;
   timeSpent: number;
-  userAnswers: { [questionId: string]: number };
+  userAnswers: { [questionId: string]: number | number[] };
 }
 
 export interface QuestionCardProps {
   question: Question;
   questionNumber: number;
-  onAnswerSelect: (answerIndex: number) => void;
+  onAnswerSelect: (answerIndex: number, isMultiple?: boolean) => void;
   onMarkQuestion: () => void;
   isMarked: boolean;
 }
@@ -96,6 +97,7 @@ export interface AnswerOptionProps {
   answer: Answer;
   index: number;
   isSelected: boolean;
+  isMultiple?: boolean;
   onSelect: () => void;
 }
 
@@ -145,7 +147,7 @@ export interface ExamService {
 export interface UseExamReturn {
   examState: ExamState;
   startExam: () => void;
-  selectAnswer: (questionId: number, answerIndex: number) => void;
+  selectAnswer: (questionId: number, answerIndex: number, isMultiple?: boolean) => void;
   markQuestion: (questionId: number) => void;
   goToQuestion: (questionIndex: number) => void;
   submitExam: () => Promise<ExamResults>;

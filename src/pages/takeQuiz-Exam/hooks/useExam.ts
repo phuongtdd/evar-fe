@@ -62,6 +62,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         })),
         questionImg: q.questionImg,
         selectedAnswer: undefined,
+        selectedAnswers: [],
         isMarked: false,
         isAnswered: false,
       }));
@@ -89,7 +90,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
   }, []);
 
   const selectAnswer = useCallback(
-    (questionId: number, answerIndex: number) => {
+    (questionId: number, answerIndex: number, isMultiple: boolean = false) => {
       setExamState((prev) => {
         const newQuestions = [...prev.questions];
         const questionIndex = newQuestions.findIndex(
@@ -97,13 +98,34 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         );
 
         if (questionIndex !== -1) {
-          newQuestions[questionIndex].selectedAnswer = answerIndex;
-          newQuestions[questionIndex].isAnswered = true;
+          if (isMultiple) {
+            // Handle multiple choice
+            const currentAnswers = newQuestions[questionIndex].selectedAnswers || [];
+            const isAlreadySelected = currentAnswers.includes(answerIndex);
+
+            if (isAlreadySelected) {
+              // Remove the answer
+              newQuestions[questionIndex].selectedAnswers = currentAnswers.filter(
+                (idx) => idx !== answerIndex
+              );
+            } else {
+              // Add the answer
+              newQuestions[questionIndex].selectedAnswers = [...currentAnswers, answerIndex];
+            }
+
+            newQuestions[questionIndex].isAnswered = newQuestions[questionIndex].selectedAnswers!.length > 0;
+          } else {
+            // Handle single choice
+            newQuestions[questionIndex].selectedAnswer = answerIndex;
+            newQuestions[questionIndex].isAnswered = true;
+          }
         }
 
         const newUserAnswers = {
           ...prev.userAnswers,
-          [newQuestions[questionIndex].questionId]: answerIndex,
+          [newQuestions[questionIndex].questionId]: isMultiple
+            ? newQuestions[questionIndex].selectedAnswers!
+            : answerIndex,
         };
 
         return {
@@ -232,7 +254,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
       timeLeft: EXAM_CONFIG.DEFAULT_TIME_LIMIT,
       isExamStarted: false,
       isExamCompleted: false,
-      userAnswers: {} as { [questionId: string]: number },
+      userAnswers: {} as { [questionId: string]: number | number[] },
       markedQuestions: new Set(),
     });
     setError(null);

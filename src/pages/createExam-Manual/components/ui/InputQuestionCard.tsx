@@ -3,6 +3,7 @@ import { Button, Card, Image, Input, Radio, Select, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useState } from "react";
 import { Question } from "../../types";
+import { QUESTION_TYPES } from "../../constants";
 
 interface InputQuestionCardProps {
   onAddQuestion: (question: Question) => void;
@@ -34,10 +35,55 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
       return;
     }
 
-    const hasValidAnswer = answers.some(answer => answer.content.trim());
-    if (!hasValidAnswer) {
-      message.warning("Vui lòng nhập ít nhất một đáp án!");
-      return;
+    // Validation based on question type
+    if (questionType === QUESTION_TYPES.SINGLE_CHOICE.value) {
+      const hasValidAnswer = answers.some(answer => answer.content.trim());
+      if (!hasValidAnswer) {
+        message.warning("Vui lòng nhập ít nhất một đáp án!");
+        return;
+      }
+
+      // For single choice, check if a correct answer is selected via radio button
+      if (correctAnswerIndex < 0 || correctAnswerIndex > 3) {
+        message.warning("Vui lòng chọn đáp án đúng!");
+        return;
+      }
+    }
+
+    if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE.value) {
+      const hasValidAnswer = answers.some(answer => answer.content.trim());
+      if (!hasValidAnswer) {
+        message.warning("Vui lòng nhập ít nhất một đáp án!");
+        return;
+      }
+
+      // Check if at least one correct answer is selected via checkboxes
+      const hasCorrectAnswer = answers.some(answer => answer.isCorrect);
+      if (!hasCorrectAnswer) {
+        message.warning("Vui lòng chọn ít nhất một đáp án đúng!");
+        return;
+      }
+    }
+
+    if (questionType === QUESTION_TYPES.TRUE_FALSE.value) {
+      // For true/false, just need to select correct answer via radio button
+      if (correctAnswerIndex !== 0 && correctAnswerIndex !== 1) {
+        message.warning("Vui lòng chọn đáp án đúng!");
+        return;
+      }
+    }
+
+    if (questionType === QUESTION_TYPES.MATCH_ANSWER.value) {
+      const hasValidAnswer = answers.some(answer => answer.content.trim());
+      if (!hasValidAnswer) {
+        message.warning("Vui lòng nhập ít nhất một cặp ghép!");
+        return;
+      }
+    }
+
+    // For subjective questions, no answers needed
+    if (questionType === QUESTION_TYPES.SUBJECTIVE_ANSWER.value) {
+      // No validation needed for answers
     }
 
     const newQuestion: Question = {
@@ -47,19 +93,28 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
       questionType: questionType,
       hardLevel: hardLevel,
       quesScore: quesScore,
-      answers: answers.map((answer, index) => ({
-        ...answer,
-        isCorrect: index === correctAnswerIndex
-      })),
+      answers: questionType === QUESTION_TYPES.SUBJECTIVE_ANSWER.value
+        ? [] // No answers for subjective questions
+        : questionType === QUESTION_TYPES.TRUE_FALSE.value
+        ? [
+            { content: "Đúng", isCorrect: correctAnswerIndex === 0 },
+            { content: "Sai", isCorrect: correctAnswerIndex === 1 }
+          ]
+        : answers.map((answer, index) => ({
+            ...answer,
+            isCorrect: questionType === QUESTION_TYPES.SINGLE_CHOICE.value
+              ? index === correctAnswerIndex
+              : answer.isCorrect // For multiple choice, use the checkbox state
+          })),
       hasImage: false,
     };
 
     onAddQuestion(newQuestion);
     message.success("Thêm câu hỏi thành công!");
 
-
     setQuestionNumber(questionNumber + 1);
     setQuestionContent("");
+    setQuestionType("1"); // Reset to default question type
     setAnswers([
       { content: "", isCorrect: false },
       { content: "", isCorrect: false },
@@ -83,6 +138,16 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span>Loại câu hỏi:</span>
+            <Select value={questionType} onChange={setQuestionType} style={{ width: 200 }}>
+              {Object.values(QUESTION_TYPES).map((type) => (
+                <Select.Option key={type.value} value={type.value}>
+                  {type.label}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
           <div className="flex items-center gap-2">
             <span>Độ khó:</span>
             <Select value={hardLevel} onChange={setHardLevel} style={{ width: 100 }}>
@@ -112,33 +177,135 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
         rows={5}
       />
 
-      <div className="mb-4">
-        <span className="font-semibold">Chọn đáp án đúng:</span>
-        <Radio.Group value={correctAnswerIndex} onChange={(e) => setCorrectAnswerIndex(e.target.value)}>
+      {questionType === QUESTION_TYPES.SINGLE_CHOICE.value && (
+        <div className="mb-4">
+          <span className="font-semibold">Chọn đáp án đúng:</span>
+          <Radio.Group value={correctAnswerIndex} onChange={(e) => setCorrectAnswerIndex(e.target.value)}>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {["A", "B", "C", "D"].map((letter, index) => (
+                <Radio key={letter} value={index} className="text-center">
+                  {letter}
+                </Radio>
+              ))}
+            </div>
+          </Radio.Group>
+        </div>
+      )}
+
+      {questionType === QUESTION_TYPES.MULTIPLE_CHOICE.value && (
+        <div className="mb-4">
+          <span className="font-semibold">Chọn các đáp án đúng (có thể nhiều):</span>
           <div className="grid grid-cols-4 gap-2 mt-2">
             {["A", "B", "C", "D"].map((letter, index) => (
-              <Radio key={letter} value={index} className="text-center">
-                {letter}
-              </Radio>
+              <div key={letter} className="flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  id={`answer-${index}`}
+                  checked={answers[index].isCorrect}
+                  onChange={(e) => {
+                    const newAnswers = [...answers];
+                    newAnswers[index] = { ...newAnswers[index], isCorrect: e.target.checked };
+                    setAnswers(newAnswers);
+                  }}
+                  className="mr-2"
+                />
+                <label htmlFor={`answer-${index}`} className="font-semibold cursor-pointer">
+                  {letter}
+                </label>
+              </div>
             ))}
           </div>
-        </Radio.Group>
-      </div>
+        </div>
+      )}
+
+      {questionType === QUESTION_TYPES.TRUE_FALSE.value && (
+        <div className="mb-4">
+          <span className="font-semibold">Chọn đáp án đúng:</span>
+          <Radio.Group value={correctAnswerIndex} onChange={(e) => setCorrectAnswerIndex(e.target.value)}>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <Radio value={0} className="text-center">Đúng</Radio>
+              <Radio value={1} className="text-center">Sai</Radio>
+            </div>
+          </Radio.Group>
+        </div>
+      )}
+
+      {questionType === QUESTION_TYPES.SUBJECTIVE_ANSWER.value && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="font-semibold text-blue-800">Câu hỏi tự luận:</span>
+          <p className="text-blue-700 mt-1">Học sinh sẽ nhập câu trả lời mở. Không cần thiết lập đáp án đúng.</p>
+        </div>
+      )}
+
+      {questionType === QUESTION_TYPES.MATCH_ANSWER.value && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <span className="font-semibold text-green-800">Câu hỏi ghép đôi:</span>
+          <p className="text-green-700 mt-1">Nhập các cặp ghép trong phần đáp án (A-B, C-D, v.v.).</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <div className="col-span-2 space-y-4">
           <div className="space-y-3">
-            {["A", "B", "C", "D"].map((letter, index) => (
-              <div key={letter} className="flex items-center gap-3">
-                <span className="w-8 shrink-0 font-semibold">{letter}</span>
-                <Input
-                  value={answers[index].content}
-                  onChange={(e) => handleAnswerChange(index, e.target.value)}
-                  placeholder={`Nhập đáp án ${letter}...`}
-                  className="flex-1"
-                />
+            {(questionType === QUESTION_TYPES.SINGLE_CHOICE.value ||
+              questionType === QUESTION_TYPES.MULTIPLE_CHOICE.value) && (
+              <>
+                {["A", "B", "C", "D"].map((letter, index) => (
+                  <div key={letter} className="flex items-center gap-3">
+                    <span className="w-8 shrink-0 font-semibold">{letter}</span>
+                    <Input
+                      value={answers[index].content}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      placeholder={`Nhập đáp án ${letter}...`}
+                      className="flex-1"
+                    />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {questionType === QUESTION_TYPES.TRUE_FALSE.value && (
+              <>
+                <div className="flex items-center gap-3">
+                  <span className="w-8 shrink-0 font-semibold">A</span>
+                  <Input
+                    value="Đúng"
+                    disabled
+                    className="flex-1 bg-gray-100"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="w-8 shrink-0 font-semibold">B</span>
+                  <Input
+                    value="Sai"
+                    disabled
+                    className="flex-1 bg-gray-100"
+                  />
+                </div>
+              </>
+            )}
+
+            {questionType === QUESTION_TYPES.SUBJECTIVE_ANSWER.value && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-700">Không cần nhập đáp án mẫu cho câu hỏi tự luận.</p>
               </div>
-            ))}
+            )}
+
+            {questionType === QUESTION_TYPES.MATCH_ANSWER.value && (
+              <>
+                {["A", "B", "C", "D"].map((letter, index) => (
+                  <div key={letter} className="flex items-center gap-3">
+                    <span className="w-8 shrink-0 font-semibold">{letter}</span>
+                    <Input
+                      value={answers[index].content}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      placeholder={`Nhập cặp ghép ${letter} (ví dụ: "Từ A - Nghĩa A")...`}
+                      className="flex-1"
+                    />
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
 

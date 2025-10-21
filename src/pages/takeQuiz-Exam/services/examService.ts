@@ -19,7 +19,7 @@ class ExamServiceImpl implements ExamService {
 
   async submitExamAnswers(
     examId: string,
-    answers: { [questionId: string]: number },
+    answers: { [questionId: string]: number | number[] },
     examData?: any
   ): Promise<any> {
     try {
@@ -41,13 +41,25 @@ class ExamServiceImpl implements ExamService {
         if (!question) {
           throw new Error(`Question with ID ${questionId} not found`);
         }
-        const selectedAnswer = question.answers[answerIndex];
-        if (!selectedAnswer) {
-          throw new Error(`Answer at index ${answerIndex} not found for question ${questionId}`);
+
+        let answerIndices: number[];
+        if (Array.isArray(answerIndex)) {
+          answerIndices = answerIndex;
+        } else {
+          answerIndices = [answerIndex];
         }
+
+        const selectedAnswers = answerIndices.map(idx => {
+          const selectedAnswer = question.answers[idx];
+          if (!selectedAnswer) {
+            throw new Error(`Answer at index ${idx} not found for question ${questionId}`);
+          }
+          return selectedAnswer.id;
+        });
+
         return {
           questionId,
-          answersId: [selectedAnswer.id] // Use actual answer ID from backend
+          answersId: selectedAnswers // Use actual answer IDs from backend
         };
       });
 
@@ -69,7 +81,7 @@ class ExamServiceImpl implements ExamService {
 
   async saveExamProgress(
     examId: string,
-    answers: { [questionId: number]: number },
+    answers: { [questionId: string]: number | number[] },
     currentQuestionIndex: number
   ): Promise<void> {
     try {

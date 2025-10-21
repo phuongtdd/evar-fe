@@ -337,12 +337,12 @@ const TakeQuizExam: React.FC = () => {
     const currentQuestion = examState.questions[examState.currentQuestionIndex];
     const answeredCount = examState.questions.filter(q => q.selectedAnswer !== undefined).length;
     
-    console.log('Current question state:', {
-      questionId: currentQuestion.id,
-      isMarked: currentQuestion.isMarked,
-      markedQuestions: Array.from(examState.markedQuestions),
-      allQuestions: examState.questions.map(q => ({ id: q.id, isMarked: q.isMarked }))
-    });
+    // console.log('Current question state:', {
+    //   questionId: currentQuestion.id,
+    //   isMarked: currentQuestion.isMarked,
+    //   markedQuestions: Array.from(examState.markedQuestions),
+    //   allQuestions: examState.questions.map(q => ({ id: q.id, isMarked: q.isMarked }))
+    // });
 
     return (
       <div className="min-h-screen bg-[#f4f4f4]">
@@ -359,7 +359,7 @@ const TakeQuizExam: React.FC = () => {
               <QuestionCard
                 question={currentQuestion}
                 questionNumber={examState.currentQuestionIndex + 1}
-                onAnswerSelect={(answerIndex) => selectAnswer(currentQuestion.id, answerIndex)}
+                onAnswerSelect={(answerIndex, isMultiple) => selectAnswer(currentQuestion.id, answerIndex, isMultiple)}
                 onMarkQuestion={() => markQuestion(currentQuestion.id)}
                 isMarked={currentQuestion.isMarked ?? false}
               />
