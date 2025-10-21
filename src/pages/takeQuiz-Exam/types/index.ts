@@ -83,6 +83,8 @@ export interface ExamResults {
   score: number;
   timeSpent: number;
   userAnswers: { [questionId: string]: number | number[] };
+  submissionId?: string;
+  submissionDetails?: SubmissionDetailResponse | null;
 }
 
 export interface QuestionCardProps {
@@ -137,6 +139,7 @@ export interface ExamResultsProps {
   results: ExamResults;
   onRetake: () => void;
   onBackToDashboard: () => void;
+  examState?: ExamState;
 }
 
 export interface ExamService {
@@ -161,4 +164,24 @@ export interface ExamConfig {
   QUESTION_TYPES: { [key: string]: string };
   DIFFICULTY_LEVELS: { [key: number]: string };
   EXAM_TYPES: { [key: number]: string };
+}
+
+// Submission Detail API Types
+export interface AnswerResult {
+  answerContent: string;
+  correct: boolean;
+  select: boolean;
+}
+
+export interface QuestionResult {
+  questionContent: string;
+  answers: AnswerResult[];
+}
+
+export interface SubmissionDetailResponse {
+  totalScore: number;
+  timeTry: number;
+  username: string;
+  examName: string;
+  questions: QuestionResult[];
 }

@@ -103,21 +103,22 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
             const currentAnswers = newQuestions[questionIndex].selectedAnswers || [];
             const isAlreadySelected = currentAnswers.includes(answerIndex);
 
-            if (isAlreadySelected) {
-              // Remove the answer
-              newQuestions[questionIndex].selectedAnswers = currentAnswers.filter(
-                (idx) => idx !== answerIndex
-              );
-            } else {
-              // Add the answer
-              newQuestions[questionIndex].selectedAnswers = [...currentAnswers, answerIndex];
-            }
+            const newSelectedAnswers = isAlreadySelected
+              ? currentAnswers.filter((idx) => idx !== answerIndex)
+              : [...currentAnswers, answerIndex];
 
-            newQuestions[questionIndex].isAnswered = newQuestions[questionIndex].selectedAnswers!.length > 0;
+            newQuestions[questionIndex] = {
+              ...newQuestions[questionIndex],
+              selectedAnswers: newSelectedAnswers,
+              isAnswered: newSelectedAnswers.length > 0,
+            };
           } else {
             // Handle single choice
-            newQuestions[questionIndex].selectedAnswer = answerIndex;
-            newQuestions[questionIndex].isAnswered = true;
+            newQuestions[questionIndex] = {
+              ...newQuestions[questionIndex],
+              selectedAnswer: answerIndex,
+              isAnswered: true,
+            };
           }
         }
 
@@ -222,15 +223,40 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
       // Submit to backend API
       const submissionResponse = await examService.submitExamAnswers(examId, currentState.userAnswers, currentState.examData);
 
-      // Use backend response for results
+      console.log('Submission response:', submissionResponse);
+
+      // Calculate correct answers locally by comparing user answers with exam answers
+      let correctCount = 0;
+      for (const question of currentState.questions) {
+        const userAnswer = currentState.userAnswers[question.questionId];
+        if (userAnswer !== undefined) {
+          const selectedIndices = Array.isArray(userAnswer) ? userAnswer : [userAnswer];
+          const correctIndices = question.answers
+            .map((answer, index) => answer.isCorrect ? index : -1)
+            .filter(index => index !== -1);
+
+          // For multiple choice: selected answers must exactly match correct answers
+          // For single choice: selected answer must be in correct answers
+          const isCorrect = question.questionType === 'MULTIPLE_CHOICE'
+            ? selectedIndices.sort().join(',') === correctIndices.sort().join(',')
+            : selectedIndices.length === 1 && correctIndices.includes(selectedIndices[0]);
+
+          if (isCorrect) correctCount++;
+        }
+      }
+
+      // Use backend response for results but calculate correct answers locally
       const results: ExamResults = {
         totalQuestions: currentState.questions.length,
         answeredQuestions: Object.keys(currentState.userAnswers).length,
-        correctAnswers: Math.round((submissionResponse.data.totalScore / 10) * currentState.questions.length), // Assuming max score is 10 per question
-        score: Math.round(submissionResponse.data.totalScore * 10), // Convert to percentage
+        correctAnswers: correctCount,
+        score: Math.round((correctCount / currentState.questions.length) * 100), // Calculate percentage based on correct answers
         timeSpent: EXAM_CONFIG.DEFAULT_TIME_LIMIT - currentState.timeLeft,
         userAnswers: currentState.userAnswers,
+        submissionId: submissionResponse.data.id, // Add submission ID to results
       };
+
+      console.log('Created results object:', results);
 
       setExamState((prev) => ({
         ...prev,

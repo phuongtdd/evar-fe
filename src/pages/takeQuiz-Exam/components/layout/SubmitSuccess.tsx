@@ -11,6 +11,7 @@ interface SubmitSuccessProps {
   submittedAt?: string;
   onViewResults?: () => void;
   onBackToDashboard?: () => void;
+  submissionDetails?: any; // Add submission details prop
 }
 
 const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
@@ -18,15 +19,18 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
   submittedAt = new Date().toLocaleString("vi-VN"),
   onViewResults,
   onBackToDashboard,
+  submissionDetails,
 }) => {
   const [isViewingResults, setIsViewingResults] = useState(false);
   const [isGoingHome, setIsGoingHome] = useState(false);
 
   const handleViewResults = () => {
+    console.log('SubmitSuccess - handleViewResults called');
+    console.log('Submission details in SubmitSuccess:', submissionDetails);
     setIsViewingResults(true);
     setTimeout(() => {
       onViewResults?.();
-    }, 1000);
+    }, 100);
   };
 
   return (
@@ -41,7 +45,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
               <div className="flex flex-row items-center">
                 <span className="text-[24px]">Kết quả :</span>
                 <span className="text-[54px] mx-auto">
-                  <span>4</span>
+                  <span>{submissionDetails ? Math.round(submissionDetails.totalScore * 10) : 4}</span>
                   <span>/10</span>
                 </span>
               </div>
@@ -61,7 +65,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Số câu hỏi :
                   </span>
                   <span className="text-lg font-semibold text-gray-900">
-                    40/50
+                    {submissionDetails ? submissionDetails.questions.length : 40}/50
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -69,14 +73,16 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Số câu đúng :
                   </span>
                   <span className="text-lg font-semibold text-green-600">
-                    40
+                    {submissionDetails ? Math.round(submissionDetails.totalScore * submissionDetails.questions.length / 10) : 40}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-700 font-normal">
                     Số câu sai :
                   </span>
-                  <span className="text-lg font-semibold text-red-600">10</span>
+                  <span className="text-lg font-semibold text-red-600">
+                    {submissionDetails ? submissionDetails.questions.length - Math.round(submissionDetails.totalScore * submissionDetails.questions.length / 10) : 10}
+                  </span>
                 </div>
               </div>
 
@@ -85,7 +91,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                 <div className="flex items-center gap-4">
                   <span className="text-gray-700 font-normal">bài thi : </span>
                   <span className="text-gray-900 font-semibold">
-                    {examName}
+                    {submissionDetails?.examName || examName}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -93,7 +99,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Người làm bài :{" "}
                   </span>
                   <span className="text-gray-900 font-semibold">
-                    Super Idol desaurung
+                    {submissionDetails?.username || "Super Idol desaurung"}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
