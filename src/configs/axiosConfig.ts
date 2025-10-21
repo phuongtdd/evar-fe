@@ -54,8 +54,10 @@ apiClient.interceptors.response.use(
     // Ví dụ: Nếu nhận lỗi 401 (Unauthorized), tự động đăng xuất người dùng
     if (error.response && error.response.status === 401) {
       console.error("Unauthorized! Redirecting to login...");
-      // localStorage.removeItem('token');
-      // window.location.href = '/login';
+      console.log("Hết hạn đăng nhập rồi! Chim cút.");
+      localStorage.removeItem('token');
+      localStorage.removeItem('evartoken_remember');
+      window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }

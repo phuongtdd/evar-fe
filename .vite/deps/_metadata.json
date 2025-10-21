@@ -1,0 +1,139 @@
+{
+  "hash": "db7079f5",
+  "configHash": "58d6cbc7",
+  "lockfileHash": "35f917f6",
+  "browserHash": "c4add1dc",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "c07d6a3e",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "9cd53e77",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "9aa55b5f",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "5f11107f",
+      "needsInterop": false
+    },
+    "antd": {
+      "src": "../../node_modules/antd/es/index.js",
+      "file": "antd.js",
+      "fileHash": "f25480c7",
+      "needsInterop": false
+    },
+    "antd/es/typography/Link": {
+      "src": "../../node_modules/antd/es/typography/Link.js",
+      "file": "antd_es_typography_Link.js",
+      "fileHash": "8e62dc73",
+      "needsInterop": false
+    },
+    "@ant-design/icons": {
+      "src": "../../node_modules/@ant-design/icons/es/index.js",
+      "file": "@ant-design_icons.js",
+      "fileHash": "7e12e5d8",
+      "needsInterop": false
+    },
+    "dayjs": {
+      "src": "../../node_modules/dayjs/dayjs.min.js",
+      "file": "dayjs.js",
+      "fileHash": "81751dd2",
+      "needsInterop": true
+    },
+    "react-bootstrap": {
+      "src": "../../node_modules/react-bootstrap/esm/index.js",
+      "file": "react-bootstrap.js",
+      "fileHash": "7b3c07c9",
+      "needsInterop": false
+    },
+    "react-bootstrap-icons": {
+      "src": "../../node_modules/react-bootstrap-icons/dist/index.js",
+      "file": "react-bootstrap-icons.js",
+      "fileHash": "5fbfffdb",
+      "needsInterop": false
+    },
+    "antd/es/input/TextArea": {
+      "src": "../../node_modules/antd/es/input/TextArea.js",
+      "file": "antd_es_input_TextArea.js",
+      "fileHash": "415ec6ce",
+      "needsInterop": false
+    },
+    "recharts": {
+      "src": "../../node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "d8ffe3d4",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "8d030f2a",
+      "needsInterop": false
+    },
+    "@stomp/stompjs": {
+      "src": "../../node_modules/@stomp/stompjs/esm6/index.js",
+      "file": "@stomp_stompjs.js",
+      "fileHash": "9b8b5cc8",
+      "needsInterop": false
+    },
+    "sockjs-client": {
+      "src": "../../node_modules/sockjs-client/lib/entry.js",
+      "file": "sockjs-client.js",
+      "fileHash": "09bfa6b2",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-L4UMR4YY": {
+      "file": "chunk-L4UMR4YY.js"
+    },
+    "chunk-LONEHXV7": {
+      "file": "chunk-LONEHXV7.js"
+    },
+    "chunk-WWQLIRCT": {
+      "file": "chunk-WWQLIRCT.js"
+    },
+    "chunk-H7Z355TD": {
+      "file": "chunk-H7Z355TD.js"
+    },
+    "chunk-JF7IVAG4": {
+      "file": "chunk-JF7IVAG4.js"
+    },
+    "chunk-3S2UDREY": {
+      "file": "chunk-3S2UDREY.js"
+    },
+    "chunk-CE476FLZ": {
+      "file": "chunk-CE476FLZ.js"
+    },
+    "chunk-TO2TVTC4": {
+      "file": "chunk-TO2TVTC4.js"
+    },
+    "chunk-BZLMKWYM": {
+      "file": "chunk-BZLMKWYM.js"
+    },
+    "chunk-TFC2ZUWF": {
+      "file": "chunk-TFC2ZUWF.js"
+    },
+    "chunk-4BPZ7PBZ": {
+      "file": "chunk-4BPZ7PBZ.js"
+    },
+    "chunk-V3Q5LRIZ": {
+      "file": "chunk-V3Q5LRIZ.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}

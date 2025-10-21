@@ -72,9 +72,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Tạo quiz từ ảnh",
     },
     {
-      key: "test-room",
+      key: "quiz",
       icon: <EditOutlined className="text-2xl"/>,
-      label: "Phòng kiểm tra",
+      label: "Quản lí quiz",
     },
     {
       key: "account",
@@ -132,22 +132,21 @@ const Sidebar: React.FC<SidebarProps> = ({
         navigate("/chat");
         break;
       case "create-quiz":
-        navigate("/create-quiz");
+        window.dispatchEvent(new CustomEvent("reset-quiz-info"));
+        navigate("/createQuiz-AI");
         break;
-      case "test-room":
-        navigate("/test-room");
+      case "quiz":
+        navigate("/quiz");
         break;
       case "account":
         navigate("/account");
         break;
       case "logout":
-        // clear stored auth and redirect to login
         try {
           clearToken();
         } catch (e) {
-          // ignore
+          console.error(e)
         }
-        // notify other components
         window.dispatchEvent(new Event("auth-changed"));
         navigate("/auth/login");
         break;
