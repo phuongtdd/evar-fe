@@ -72,8 +72,9 @@ export default function QuizList({ onCreateQuizClick }: QuizListProps) {
               icon={<PlusOutlined />}
               className="bg-blue-500 hover:bg-blue-600"
               onClick={onCreateQuizClick}
+              disabled
             >
-              Tạo Exam
+              Tạo Quiz
             </Button>
           </div>
           <div className="space-y-4 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">

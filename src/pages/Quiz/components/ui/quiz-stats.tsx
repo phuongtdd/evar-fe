@@ -49,10 +49,10 @@ export default function QuizStats() {
   return (
     <>
       <div className="flex flex-col gap-3">
-        <h4 className="text-[18px] !font-extrabold">Số Exam đã tạo</h4>
+        <h4 className="text-[18px] !font-extrabold">Số Exam trên hệ thống</h4>
         <Card className="shadow-sm">
           <div>
-            <span>Tổng số quiz đã tạo: </span>
+            <span>Tổng số Exam đã có trên hệ thống </span>
             <div className="text-center mb-4">
               <div className="text-4xl font-bold text-gray-900">
                 {totalExams}

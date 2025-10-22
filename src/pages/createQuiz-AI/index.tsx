@@ -16,7 +16,7 @@ import { QuizInfo, CreateQuizRequest } from "./types";
 import QuizInfoModal from "./components/ui/QuizInfoModal";
 import { sampleQuestions } from "./mock/mockData";
 import UploadDragger from "./components/ui/UploadDragger";
-import BackButton from "./components/ui/BackButton";
+import BackButton from "../Common/BackButton";
 import { createQuizAIService } from "./services/quizService";
 
 interface LayoutProps {
@@ -163,7 +163,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">
                     Tạo Quiz với AI OCR
                   </h1>
-                  <BackButton />
+                  <BackButton url={'/dashboard'} />
                   <p className="text-gray-600 mb-8 mt-5">
                     Sử dụng AI để tăng tốc quá trình tạo Quiz từ file pdf, ảnh
                     png...

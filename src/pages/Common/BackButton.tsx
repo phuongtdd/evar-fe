@@ -3,14 +3,18 @@ import { Button } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const BackButton = () => {
+interface BackBtnProps {
+  url: string;
+}
+
+const BackButton = ({ url }: BackBtnProps) => {
   const navigate = useNavigate();
   return (
     <>
       <Button
         icon={<ArrowLeftOutlined />}
         type="primary"
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate(url)}
       >
         <span>Về trang quản lí</span>
       </Button>

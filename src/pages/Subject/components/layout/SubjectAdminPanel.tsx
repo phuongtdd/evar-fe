@@ -25,6 +25,7 @@ import { generateMockSubjects } from "../../mock"
 import { SubjectChart } from "./SubjectChart"
 import { formatDate } from "../../utils/utils"
 import { subjectService, type SubjectRequest, type SubjectUpdateRequest } from "../../services/subjectService"
+import BackButton from "../../../Common/BackButton"
 
 export const SubjectAdminPanel: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([])
@@ -221,7 +222,6 @@ export const SubjectAdminPanel: React.FC = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      {/* Phần Tiêu đề */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -229,11 +229,11 @@ export const SubjectAdminPanel: React.FC = () => {
               Quản lý Môn học
             </h1>
             <p className="text-slate-600 text-lg">Quản lý và theo dõi tất cả các môn học với phân tích chuyên sâu</p>
+            <BackButton url={"/admin"}/>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs
         defaultActiveKey="1"
         className="subject-tabs"
@@ -321,7 +321,7 @@ export const SubjectAdminPanel: React.FC = () => {
         ]}
       />
 
-      {/* Modal Thêm/Sửa */}
+
       <Modal
         title={
           <span className="text-xl font-bold text-slate-900">{editingId ? "Sửa Môn học" : "Tạo Môn học Mới"}</span>

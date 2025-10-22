@@ -19,6 +19,10 @@ import TakeQuizExam from "../pages/takeQuiz-Exam";
 import QuizDashboardLayout from "../pages/Quiz";
 import SubmitSuccess from "../pages/takeQuiz-Exam/components/layout/SubmitSuccess";
 import SubjectModule from "../pages/Subject";
+import CreateQuizManual from "../pages/createQuiz-manual";
+import { ExamAdminPanel } from "../pages/ExamManage";
+import AdminDashboard from "../pages/admin/index";
+
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -54,7 +58,7 @@ const AppRoutes: React.FC = () => {
             <Route index element={<QuizDashboardLayout />} />
 
             <Route path="create">
-              <Route path="create-manual" element={<CreateExamManual />} />
+              <Route path="create-manual" element={<CreateQuizManual />} />
               <Route path="create-AI" element={<CreateQuiz />} />
             </Route>
 
@@ -65,7 +69,7 @@ const AppRoutes: React.FC = () => {
               <Route path="submit-success" element={<SubmitSuccess />} />
             </Route>
           </Route>
-          {/* <Route path="/test" element={<QuizExamStep />} /> */}
+
           <Route path="/chat" element={<Chatmodule />} />
           <Route path="/account" element={<UserProfile />} />
 
@@ -78,9 +82,15 @@ const AppRoutes: React.FC = () => {
             element={<SavedQuizSuccess showMessage={showMessage} />}
           />
         </Route>
+
+        <Route path="/admin">
+          <Route index element={<AdminDashboard />}/>
+          <Route path="manage-subject" element={<SubjectModule />} />
+          <Route path="manage-exam" element={<ExamAdminPanel/>}/>
+          <Route path="create-exam" element={<CreateExamManual/>}/>
+        </Route>
         <Route path="*" element={<NotFound />} />
         <Route path="/promotion" element={<Promotion />} />
-        <Route path="/subject" element={<SubjectModule />} />
       </Routes>
     </>
   );
