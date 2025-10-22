@@ -133,6 +133,7 @@ export interface ExamSubmissionProps {
   onSubmit: () => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  isVisible: boolean;
 }
 
 export interface ExamResultsProps {

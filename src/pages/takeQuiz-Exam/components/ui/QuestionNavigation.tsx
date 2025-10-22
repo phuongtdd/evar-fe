@@ -10,7 +10,7 @@ const QuestionNavigation: React.FC<QuestionNavigationProps> = ({
   onSubmitExam,
 }) => {
   const answeredCount = questions.filter(
-    (q) => q.selectedAnswer !== undefined
+    (q) => q.isAnswered
   ).length;
   const markedCount = questions.filter((q) => q.isMarked).length;
 
@@ -45,7 +45,7 @@ const QuestionNavigation: React.FC<QuestionNavigationProps> = ({
                 key={question.id}
                 onClick={() => onQuestionSelect(idx)}
                 className={`aspect-square !rounded-2xl font-bold text-[16px] transition-all duration-200 ${
-                  question.selectedAnswer !== undefined
+                  question.isAnswered
                     ? "bg-[#6392e9] text-white"
                     : question.isMarked
                     ? "bg-[#ffc107] text-white"

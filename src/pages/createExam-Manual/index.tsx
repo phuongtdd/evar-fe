@@ -82,7 +82,7 @@ const CreateExamManual = () => {
       const examData: CreateExamRequest = {
         examName: quizInfo.title,
         examType: 1,
-        subjectId: "1f7e5f03-d326-488c-b471-ea4cbce3f651", // This should be mapped from quizInfo.subject
+        subjectId: "1f7e5f03-d326-488c-b471-ea4cbce3f651",
         description: quizInfo.description,
         numOfQuestions: questions.length,
         questions: questions.map(q => ({
@@ -90,7 +90,7 @@ const CreateExamManual = () => {
           content: q.content,
           questionType: q.questionType,
           hardLevel: q.hardLevel,
-          quesScore: q.quesScore || 1.0, // Default score if not set
+          quesScore: q.quesScore || 1.0, 
           answers: q.answers.map(a => ({
             isCorrect: a.isCorrect,
             content: a.content
@@ -101,7 +101,6 @@ const CreateExamManual = () => {
       const result = await createExamService.createExam(examData);
       message.success("Tạo đề thi thành công!");
       console.log("Exam created:", result);
-      // Redirect to quiz dashboard after successful creation
       setTimeout(() => {
         navigate("/quiz");
       }, 1500);

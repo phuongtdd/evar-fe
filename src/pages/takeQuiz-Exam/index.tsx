@@ -3,13 +3,11 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Spin, Alert, Modal } from 'antd';
 import { ArrowLeftOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-// Components
 import ExamHeader from './components/ui/ExamHeader';
 import QuestionCard from './components/ui/QuestionCard';
 import QuestionNavigation from './components/ui/QuestionNavigation';
 import ExamTimer from './components/ui/ExamTimer';
-import ExamSubmission from './components/ui/ExamSubmission';
-import ExamResults from './components/ui/ExamResults';
+import ExamSubmission from './components/ui/ExamSubmisionModal';
 import { FaceVerificationStep } from './components/layout/FaceVerify';
 import { VerifySuccess } from './components/layout/VerifySuccess';
 import { VerifyFailed } from './components/layout/VerifyFailed';
@@ -65,16 +63,15 @@ const TakeQuizExam: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [isProcessingSubmission, setIsProcessingSubmission] = useState(false);
   
-  // Loading states for transitions
   const [isStartingFaceVerification, setIsStartingFaceVerification] = useState(false);
   const [isTransitioningToExam, setIsTransitioningToExam] = useState(false);
   const [isTransitioningToResults, setIsTransitioningToResults] = useState(false);
 
-  // Handle face verification
   const handleFaceVerificationStart = () => {
     setIsStartingFaceVerification(true);
-    // Simulate loading time for starting face verification
     setTimeout(() => {
       setShowFaceVerification(true);
       setIsStartingFaceVerification(false);
@@ -104,17 +101,19 @@ const TakeQuizExam: React.FC = () => {
     navigate('/dashboard');
   };
 
-  // Handle exam submission
-  const handleSubmitExam = async () => {
+  const handleShowSubmissionModal = () => {
+    setShowSubmissionModal(true);
+  };
+
+  const handleConfirmSubmission = async () => {
+    setShowSubmissionModal(false);
     setIsSubmitting(true);
+    setIsProcessingSubmission(true);
     try {
-      // Submit exam and get results
       const results = await submitExam();
-      // Extract submission ID from results
       const subId = results.submissionId || null;
       setSubmissionId(subId);
 
-      // Fetch submission details immediately if we have a submission ID
       let submissionDetails = null;
       if (subId) {
         try {
@@ -123,34 +122,38 @@ const TakeQuizExam: React.FC = () => {
           console.log('Submission details received:', submissionDetails);
         } catch (detailErr) {
           console.warn('Failed to fetch submission details:', detailErr);
-          // Continue without details - they can be fetched later
         }
       }
 
-      // Store results with submission details
       const resultsWithDetails = { ...results, submissionDetails };
       console.log('Final results with submission details:', resultsWithDetails);
       setExamResults(resultsWithDetails);
 
-      // Show submit success page
-      setShowSubmitSuccess(true);
+      setTimeout(() => {
+        setShowSubmitSuccess(true);
+        setIsProcessingSubmission(false);
+      }, 1000);
     } catch (err) {
       Modal.error({
         title: 'Lỗi nộp bài',
         content: err instanceof Error ? err.message : EXAM_MESSAGES.SUBMIT_ERROR,
       });
+      setIsProcessingSubmission(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle time up
+  const handleCancelSubmission = () => {
+    setShowSubmissionModal(false);
+  };
+
   const handleTimeUp = () => {
     Modal.warning({
       title: 'Hết thời gian',
       content: EXAM_MESSAGES.TIME_UP,
       onOk: () => {
-        handleSubmitExam();
+        handleConfirmSubmission();
       },
     });
   };
@@ -182,7 +185,6 @@ const TakeQuizExam: React.FC = () => {
     console.log('Current submissionId:', submissionId);
     setIsTransitioningToResults(true);
 
-    // If we already have submission details, use them
     if (examResults?.submissionDetails) {
       console.log('Using existing submission details:', examResults.submissionDetails);
       setTimeout(() => {
@@ -192,7 +194,6 @@ const TakeQuizExam: React.FC = () => {
       return;
     }
 
-    // Otherwise, fetch them
     if (!submissionId) {
       console.log('No submissionId found');
       Modal.error({
@@ -205,10 +206,8 @@ const TakeQuizExam: React.FC = () => {
 
     try {
       console.log('Fetching submission details for ID:', submissionId);
-      // Fetch detailed submission data from API
       const submissionDetails = await examService.getSubmissionDetails(submissionId);
       console.log('Fetched submission details:', submissionDetails);
-      // Store the detailed data for the results component
       setExamResults(prev => prev ? { ...prev, submissionDetails } : null);
       console.log('Updated examResults with submission details');
     } catch (err) {
@@ -275,6 +274,18 @@ const TakeQuizExam: React.FC = () => {
     );
   }
 
+  if (isProcessingSubmission) {
+    return (
+      <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center">
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="mt-4 text-[18px] text-gray-600">Đang xử lý bài nộp...</p>
+          <p className="mt-2 text-[14px] text-gray-500">Vui lòng chờ trong giây lát</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center p-4">
@@ -303,21 +314,11 @@ const TakeQuizExam: React.FC = () => {
         onViewResults={handleViewResults}
         onBackToDashboard={handleBackToDashboardFromSuccess}
         submissionDetails={examResults.submissionDetails}
+        totalQuestions={examState.questions?.length || examResults.totalQuestions}
       />
     );
   }
 
-  // Show exam results
-  if (examResults && !showSubmitSuccess) {
-    return (
-      <ExamResults
-        results={examResults}
-        onRetake={handleRetakeExam}
-        onBackToDashboard={handleBackToDashboard}
-        examState={examState}
-      />
-    );
-  }
 
   if (showFaceVerification) {
     if (faceVerificationStatus === 'success') {
@@ -403,7 +404,7 @@ const TakeQuizExam: React.FC = () => {
 
   if (examState.isExamStarted && examState.examData && examState.questions.length > 0) {
     const currentQuestion = examState.questions[examState.currentQuestionIndex];
-    const answeredCount = examState.questions.filter(q => q.selectedAnswer !== undefined).length;
+    const answeredCount = examState.questions.filter(q => q.isAnswered).length;
     
     // console.log('Current question state:', {
     //   questionId: currentQuestion.id,
@@ -459,15 +460,16 @@ const TakeQuizExam: React.FC = () => {
               questions={examState.questions}
               currentQuestionIndex={examState.currentQuestionIndex}
               onQuestionSelect={goToQuestion}
-              onSubmitExam={handleSubmitExam}
+              onSubmitExam={handleShowSubmissionModal}
             />
           </div>
           </div>
 
           <ExamSubmission
-            onSubmit={handleSubmitExam}
-            onCancel={() => navigate('/dashboard')}
+            onSubmit={handleConfirmSubmission}
+            onCancel={handleCancelSubmission}
             isSubmitting={isSubmitting}
+            isVisible={showSubmissionModal}
           />
         </div>
       </div>

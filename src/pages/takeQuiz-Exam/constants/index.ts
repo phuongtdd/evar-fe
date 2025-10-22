@@ -1,7 +1,7 @@
 import { ExamConfig } from '../types';
 
 export const EXAM_CONFIG: ExamConfig = {
-  DEFAULT_TIME_LIMIT: 90 * 60, // 90 minutes in seconds
+  DEFAULT_TIME_LIMIT: 90 * 60,
   QUESTION_TYPES: {
     '1': 'Trắc nghiệm nhiều lựa chọn',
     '2': 'Trắc nghiệm một lựa chọn',
@@ -24,13 +24,13 @@ export const EXAM_CONFIG: ExamConfig = {
 };
 
 export const EXAM_CONSTANTS = {
-  TIMER_INTERVAL: 1000, // 1 second
-  AUTO_SAVE_INTERVAL: 30000, // 30 seconds
-  WARNING_TIME_THRESHOLD: 300, // 5 minutes
-  CRITICAL_TIME_THRESHOLD: 60, // 1 minute
+  TIMER_INTERVAL: 1000, 
+  AUTO_SAVE_INTERVAL: 30000,
+  WARNING_TIME_THRESHOLD: 300, 
+  CRITICAL_TIME_THRESHOLD: 60, 
   MAX_ATTEMPTS: 3,
-  FACE_VERIFICATION_TIMEOUT: 30000, // 30 seconds
-  SUBMISSION_CONFIRMATION_TIMEOUT: 10000 // 10 seconds
+  FACE_VERIFICATION_TIMEOUT: 30000, 
+  SUBMISSION_CONFIRMATION_TIMEOUT: 10000 
 };
 
 export const EXAM_MESSAGES = {
