@@ -11,6 +11,7 @@ import CustomQuizManual from "../pages/CustomQuizzes";
 
 import Chatmodule from "../pages/RealTimeChat";
 import AuthPage from "../pages/authen";
+import UserProfile from "../pages/userProfile";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const AppRoutes: React.FC = () => {
           element={<CustomQuizManual />}
         />
         <Route path="/chat" element={<Chatmodule />} />
+        <Route path="/account" element={<UserProfile />} />
       </Route>
       <Route path="*" element={<NotFound />} />
       <Route path="/promotion" element={<Promotion />} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Layout, Menu, Tooltip } from "antd";
 import {
   HomeOutlined,
@@ -11,13 +11,15 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  TagOutlined,
+  LeftOutlined,
+  RightOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getToken, clearToken} from "../authen/services/authService"
+import { getToken, clearToken } from "../authen/services/authService";
 import type { MenuProps } from "antd";
-import MenuOpen from "../../assets/icons/sidebar/MenuOpen.svg";
-import MenuCollapse from "../../assets/icons/sidebar/MenuFold.svg";
+import Logo from "../../assets/icons/logo/EVar_logo.png";
+import "./Sidebar.css";
+
 const { Sider } = Layout;
 
 interface SidebarProps {
@@ -35,6 +37,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   collapsed,
   onToggle,
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!getToken());
@@ -160,41 +164,74 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      trigger={null}
-      width={240}
-      className="bg-white shadow-sm"
-      onCollapse={onToggle}
-      collapsedWidth={80}
-      theme="light"
+    <div 
+      className="sidebar-container relative h-screen flex group"
+      ref={sidebarRef}
     >
-      <div className="flex flex-col h-full">
-        <div className="p-6 flex items-center justify-center border-b border-gray-200">
-          <div
-            className="w-6 flex items-center justify-center border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={onToggle}
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        width={220}  /* Giảm từ 250px xuống 220px */
+        className="h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300"
+      >
+        {/* Logo with hover effect */}
+        <div 
+          className="relative flex items-center justify-between pt-10 pb-4 px-4 h-20 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+          onClick={onToggle}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className="flex items-center justify-center w-full">
+            <div className="flex items-center justify-center">
+              <div 
+                className="transition-all duration-300 ease-in-out"
+                style={{
+                  width: collapsed ? '80px' : '110px',
+                  height: collapsed ? '80px' : '110px',
+                  minWidth: collapsed ? '80px' : '110px',
+                  minHeight: collapsed ? '80px' : '110px',
+                  transition: 'all 0.3s ease-in-out'
+                }}
+              >
+                <img 
+                  src={Logo} 
+                  alt="EVar Logo" 
+                  className="w-full h-full object-contain"
+                  style={{
+                    transition: 'all 0.3s ease-in-out'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Collapse/Expand arrow - Only show on hover */}
+          <div 
+            className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ${
+              isHovered ? 'opacity-100' : 'opacity-0'
+            }`}
           >
             {collapsed ? (
-              <img src={MenuOpen} alt="iconSidebar" />
+              <RightOutlined className="text-gray-500 text-sm" />
             ) : (
-              <img src={MenuCollapse} alt="iconSidebar" />
+              <LeftOutlined className="text-gray-500 text-sm" />
             )}
           </div>
         </div>
-        <Menu
-          theme="light"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          defaultSelectedKeys={["dashboard"]}
-          onClick={handleMenuClick}
-          items={items}
-          className="border-none bg-gray-50 flex-1"
-          style={{ fontSize: "15px" }}
-        />
-      </div>
-    </Sider>
+        <div className="flex flex-col h-full">
+          <Menu
+            theme="light"
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            onClick={handleMenuClick}
+            items={items}
+            className="flex-1 border-none pt-2"
+          />
+        </div>
+      </Sider>
+
+    </div>
   );
 };
 
