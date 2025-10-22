@@ -7,7 +7,8 @@ import {
 import { Badge, Button, Card } from "antd";
 import Live from "../../../assets/icons/dashboard/Scan_alt_2.svg";
 import { Room } from "../types";
-
+import User from "../../../assets/icons/dashboard/group_add_fill.png";
+import Timer from "../../../assets/icons/dashboard/Alarmclock_fill.png";
 type Props = {
   room: Room;
 };
@@ -19,10 +20,10 @@ const CustomCard = ({ room }: Props) => {
         key={room.id}
         className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all relative overflow-visible !p-[20px]"
       >
-        <div className="absolute top-4 left-10 max-w-[140px]">
-          <div className="flex items-center gap-1 bg-[#4CAF50] text-white px-3 py-1 rounded-[12px] text-xs font-medium">
+        <div className="absolute top-6 left-10 ">
+          <div className="flex items-center gap-1 bg-[#4CAF50] text-white px-3 py-1 rounded-[12px] text-xs font-medium flex flex-row item-center">
             <img src={Live} alt="live img" />
-            Đang hoạt động
+            <span className="font-bold text-[14px] flex-shrink-0">Đang hoạt động</span>
           </div>
         </div>
 
@@ -31,20 +32,23 @@ const CustomCard = ({ room }: Props) => {
             Nhóm học Toán nâng cao
           </h3>
           <div className="mb-4">
-            <p className="text-sm text-gray-500 mb-1">
+            <p className="text-sm text-[#9A9A9A] mb-1">
               Người sở hữu:{" "}
-              <span className="text-blue-600 font-medium">Ai mà biết</span>
+              <span className="text-blue-600 font-semibold text-[14px]">Ai mà biết</span>
             </p>
           </div>
 
           <div className="flex items-center gap-4 mb-[100px]">
             <span className="flex items-center gap-1.5 text-sm text-gray-700">
-              <UserOutlined className="text-blue-600" />
-              <span className="font-medium">5 người</span>
+              {/* <UserOutlined className="text-blue-600" />
+               */}
+               <img src={User} alt="" />
+              <span className="font-bold text-[14px]">5 người</span>
             </span>
             <span className="flex items-center gap-1.5 text-sm text-gray-700">
-              <ClockCircleOutlined className="text-amber-500" />
-              <span className="font-medium">60 phút</span>
+              {/* <ClockCircleOutlined className="text-amber-500" /> */}
+              <img src={Timer} alt="" />
+              <span className="font-bold text-[14px]">60 phút</span>
             </span>
           </div>
 
