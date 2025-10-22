@@ -39,17 +39,19 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Layout className="h-screen">
+    <Layout className="h-screen overflow-hidden">
       <Sidebar
         selectedKey={selectedMenu}
         onMenuSelect={handleMenuSelect}
         collapsed={collapsed}
         onToggle={toggleSidebar}
       />
-      <Layout>
-        <Header />
-        <Content className="overflow-auto !px-5  bg-gray-50">
-          <Outlet />
+      <Layout className="h-full flex flex-col">
+        <Header activeMenu={selectedMenu} />
+        <Content className="flex-1 overflow-auto">
+          <div style={{zoom: 0.8}}>
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>

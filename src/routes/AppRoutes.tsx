@@ -9,6 +9,7 @@ import RoomUI from "../pages/Room/components/RoomUI";
 
 import Chatmodule from "../pages/RealTimeChat";
 import AuthPage from "../pages/authen";
+import UserProfile from "../pages/userProfile";
 import CreateQuiz from "../pages/createQuiz-AI";
 import QuizCreated from "../pages/createQuiz-AI/components/layout/QuizCreated";
 import { message } from "antd";
@@ -18,7 +19,6 @@ import TakeQuizExam from "../pages/takeQuiz-Exam";
 import QuizDashboardLayout from "../pages/Quiz";
 import SubmitSuccess from "../pages/takeQuiz-Exam/components/layout/SubmitSuccess";
 import SubjectModule from "../pages/Subject";
-
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -67,6 +67,7 @@ const AppRoutes: React.FC = () => {
           </Route>
           {/* <Route path="/test" element={<QuizExamStep />} /> */}
           <Route path="/chat" element={<Chatmodule />} />
+          <Route path="/account" element={<UserProfile />} />
 
           <Route path="/createQuiz-AI" element={<CreateQuiz />}>
             <Route index element={<div />} />
@@ -80,7 +81,6 @@ const AppRoutes: React.FC = () => {
         <Route path="*" element={<NotFound />} />
         <Route path="/promotion" element={<Promotion />} />
         <Route path="/subject" element={<SubjectModule />} />
-        
       </Routes>
     </>
   );
