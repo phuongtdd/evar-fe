@@ -1,0 +1,65 @@
+/* AssessmentCard Component Styles */
+
+.assessment-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.assessment-title {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #33363f;
+}
+
+.assessment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.assessment-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.assessment-label {
+  min-width: 150px;
+  font-size: 14px;
+  color: #666;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.assessment-value {
+  min-width: 50px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Progress bar colors */
+.progress-bar-blue {
+  background: linear-gradient(to right, #6392e9 0%, #6392e9 var(--percentage, 0%), #b0c8f5 var(--percentage, 0%), #b0c8f5 100%);
+}
+
+.progress-bar-green {
+  background: linear-gradient(to right, #4caf50 0%, #4caf50 var(--percentage, 0%), #a5d6a7 var(--percentage, 0%), #a5d6a7 100%);
+}
+
+.progress-bar-yellow {
+  background: linear-gradient(to right, #ffc107 0%, #ffc107 var(--percentage, 0%), #ffe082 var(--percentage, 0%), #ffe082 100%);
+}
+
+.progress-bar-orange {
+  background: linear-gradient(to right, #ff8800 0%, #ff8800 var(--percentage, 0%), #ffb366 var(--percentage, 0%), #ffb366 100%);
+}

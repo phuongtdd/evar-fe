@@ -1,0 +1,140 @@
+/* ProfileCard Component Styles */
+
+.basic-info-section {
+  margin-bottom: 20px;
+}
+
+.profile-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.profile-detail-value.status-active {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+
+.profile-detail-value.status-inactive {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+.basic-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.basic-info-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #33363f;
+}
+
+.edit-button {
+  font-size: 14px;
+  color: #6392e9;
+  cursor: pointer;
+}
+
+.profile-content {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.avatar-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #6392e9;
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background-color: #6392e9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid white;
+}
+
+.profile-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-detail-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-detail-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.profile-detail-value {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.contact-section {
+  border-top: 1px solid #e3e3e3;
+  padding-top: 20px;
+}
+
+.contact-title {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #33363f;
+}
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-icon {
+  font-size: 16px;
+}
+
+.contact-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.contact-value {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}

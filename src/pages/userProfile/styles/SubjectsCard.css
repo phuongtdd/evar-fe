@@ -1,0 +1,45 @@
+/* SubjectsCard Component Styles */
+
+.subjects-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  flex: 1;
+}
+
+.subjects-title {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #33363f;
+}
+
+.subjects-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subject-tag {
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+  display: inline-block;
+}
+
+.subject-tag-more {
+  background-color: #e3e3e3;
+  color: #666;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+  display: inline-block;
+}
