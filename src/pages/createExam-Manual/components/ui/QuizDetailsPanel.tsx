@@ -6,6 +6,7 @@ interface QuizDetailsPanelProps {
   quizInfo?: {
     title: string;
     subject: string;
+    subjectId?: string;
     description: string;
     grade: string;
     time?: string;
@@ -15,6 +16,7 @@ interface QuizDetailsPanelProps {
 }
 
 export default function QuizDetailsPanel({ quizInfo, questionCount = 0, onEdit }: QuizDetailsPanelProps) {
+  console.log("subject : "+quizInfo?.subject)
   return (
     <Card className="shadow-sm border-0 bg-white">
       <div className="space-y-4">

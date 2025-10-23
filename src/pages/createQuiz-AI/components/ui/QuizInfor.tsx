@@ -1,12 +1,27 @@
 import { EditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { Button, Input, Select } from "antd";
-import { useState } from "react";
-import { QuizProps, typeQuiz } from "../../types";
-import { subjects, grades } from "../../mock/mockData";
+import { Button, Input, Select, TimePicker } from "antd";
+import { useEffect, useState } from "react";
+import { QuizProps, typeQuiz, Subject } from "../../types";
+import { subjectService } from "../../../Subject/services/subjectService";
+import { grades } from "../../mock/mockData";
+import dayjs from "dayjs";
 
 const QuizInfor = ({ quiz, onEdit }: QuizProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuiz, setEditedQuiz] = useState<typeQuiz>(quiz);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const { subjects: fetched } = await subjectService.getAllSubjects();
+        setSubjects(fetched);
+      } catch (e) {
+        console.error("Failed to fetch subjects", e);
+      }
+    };
+    fetchSubjects();
+  }, []);
 
   const handleSave = () => {
     onEdit?.(editedQuiz);
@@ -46,8 +61,8 @@ const QuizInfor = ({ quiz, onEdit }: QuizProps) => {
                 className="flex-1"
               >
                 {subjects.map((subject) => (
-                  <Select.Option key={subject.id} value={subject.label}>
-                    {subject.label}
+                  <Select.Option key={subject.id} value={subject.subject_name}>
+                    {subject.subject_name}
                   </Select.Option>
                 ))}
               </Select>
@@ -86,7 +101,7 @@ const QuizInfor = ({ quiz, onEdit }: QuizProps) => {
                 className="flex-1"
               />
             ) : (
-              <span className="text-gray-900 font-medium">{quiz.creator}</span>
+              <span className="text-gray- 900 font-medium">{quiz.creator}</span>
             )}
           </div>
           <div className="flex">
@@ -94,9 +109,10 @@ const QuizInfor = ({ quiz, onEdit }: QuizProps) => {
               Thời gian làm bài :
             </span>
             {isEditing ? (
-              <Input
-                value={editedQuiz.duration}
-                onChange={(e) => handleFieldChange("duration", e.target.value)}
+              <TimePicker
+                value={editedQuiz.duration ? dayjs(editedQuiz.duration, "HH:mm:ss") : undefined}
+                format="HH:mm:ss"
+                onChange={(value) => handleFieldChange("duration", value ? value.format("HH:mm:ss") : "")}
                 className="flex-1"
               />
             ) : (

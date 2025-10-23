@@ -43,9 +43,14 @@ export default function QuizCreated() {
       ) : (
         <div className="space-y-6">
           {results.map((question) => (
-            <>
-              <QuestionCard {...question} />
-            </>
+            <QuestionCard 
+              key={question.id} 
+              question={question} 
+              onDelete={() => {
+                // TODO: Implement delete functionality
+                console.log('Delete question:', question.id);
+              }} 
+            />
           ))}
         </div>
       )}

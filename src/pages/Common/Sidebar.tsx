@@ -12,10 +12,12 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LeftOutlined,
-  RightOutlined
+  RightOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../authen/services/authService";
+import { useRoleAccess } from "../../hooks/useRoleAccess";
 import type { MenuProps } from "antd";
 import Logo from "../../assets/icons/logo/EVar_logo.png";
 import "./Sidebar.css";
@@ -42,6 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!getToken());
+  const { isAdmin } = useRoleAccess();
 
   useEffect(() => {
     const onAuthChanged = () => setIsAuthenticated(!!getToken());
@@ -85,6 +88,14 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <UserOutlined className="text-2xl"/>,
       label: "Thông tin tài khoản",
     },
+    // Admin menu item - only visible to admin users
+    ...(isAdmin ? [{
+      type: "divider" as const,
+    }, {
+      key: "admin",
+      icon: <SettingOutlined className="text-2xl text-purple-600" />,
+      label: <span className="text-purple-600 font-medium">Quản trị hệ thống</span>,
+    }] : []),
     {
       type: "divider" as const,
     },
@@ -144,6 +155,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         break;
       case "account":
         navigate("/account");
+        break;
+      case "admin":
+        navigate("/admin");
         break;
       case "logout":
         try {

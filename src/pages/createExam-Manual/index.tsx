@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import QuizDetailsPanel from "./components/ui/QuizDetailsPanel";
-import { Button, Card, Space, message, Modal, Form, Input, TimePicker } from "antd";
-import { ArrowLeftOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
+import { Button, Space, message, Modal, Form, Input, TimePicker, Select, Spin } from "antd";
+import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import QuestionCard from "./components/ui/QuestionCard";
 import { Question, CreateExamRequest } from "./types";
 import InputQuestionCard from "./components/ui/InputQuestionCard";
 import { createExamService } from "./services/examService";
-import DropdownSelect from "../Quiz/components/ui/DropdownSelect";
-import { subjects, grades } from "../Quiz/mock/mockData";
+import { subjectService } from "../Subject/services/subjectService";
+import type { Subject } from "../Subject/types";
 import dayjs from 'dayjs';
 import { getUsernameFromToken } from "../../pages/Room/utils/auth";
 
@@ -18,24 +18,46 @@ const CreateExamManual = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [form] = Form.useForm();
-
 
   const [quizInfo, setQuizInfo] = useState(location.state?.quizInfo);
 
   useEffect(() => {
+    console.log('Location state:', location.state);
+    console.log('QuizInfo received:', quizInfo);
     if (!quizInfo) {
       message.warning("Vui lòng nhập thông tin bài quiz trước");
-      navigate("/quiz");
+      navigate("/admin/manage-exam");
     }
   }, [quizInfo, navigate]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setSubjectsLoading(true);
+        const { subjects: fetchedSubjects } = await subjectService.getAllSubjects();
+        setSubjects(fetchedSubjects);
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+        message.error('Không thể tải danh sách môn học');
+      } finally {
+        setSubjectsLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   const handleEditQuizInfo = () => {
     setIsEditModalVisible(true);
     const currentUser = getUsernameFromToken() || "Admin";
     form.setFieldsValue({
-      ...quizInfo,
+      title: quizInfo?.title,
+      subjectId: quizInfo?.subjectId,
       description: currentUser,
+      grade: quizInfo?.grade,
       time: quizInfo?.time ? dayjs(quizInfo.time, 'HH:mm:ss') : dayjs('02:00:00', 'HH:mm:ss')
     });
   };
@@ -44,9 +66,14 @@ const CreateExamManual = () => {
     form
       .validateFields()
       .then((values) => {
+        const selectedSubject = subjects.find(s => s.id === values.subjectId);
         const updatedValues = {
-          ...values,
-          time: values.time ? values.time.format('HH:mm:ss') : '02:00:00'
+          ...quizInfo,
+          title: values.title,
+          subject: selectedSubject?.subject_name || quizInfo?.subject,
+          subjectId: values.subjectId,
+          grade: values.grade,
+          time: values.time ? values.time.format('HH:mm:ss') : quizInfo?.time
         };
         setQuizInfo(updatedValues);
         setIsEditModalVisible(false);
@@ -82,7 +109,7 @@ const CreateExamManual = () => {
       const examData: CreateExamRequest = {
         examName: quizInfo.title,
         examType: 1,
-        subjectId: "1f7e5f03-d326-488c-b471-ea4cbce3f651", // This should be mapped from quizInfo.subject
+        subjectId: quizInfo.subjectId || "1f7e5f03-d326-488c-b471-ea4cbce3f651",
         description: quizInfo.description,
         numOfQuestions: questions.length,
         questions: questions.map(q => ({
@@ -90,7 +117,7 @@ const CreateExamManual = () => {
           content: q.content,
           questionType: q.questionType,
           hardLevel: q.hardLevel,
-          quesScore: q.quesScore || 1.0, // Default score if not set
+          quesScore: q.quesScore || 1.0, 
           answers: q.answers.map(a => ({
             isCorrect: a.isCorrect,
             content: a.content
@@ -101,9 +128,8 @@ const CreateExamManual = () => {
       const result = await createExamService.createExam(examData);
       message.success("Tạo đề thi thành công!");
       console.log("Exam created:", result);
-      // Redirect to quiz dashboard after successful creation
       setTimeout(() => {
-        navigate("/quiz");
+        navigate("/admin/manage-exam");
       }, 1500);
     } catch (error) {
       message.error("Có lỗi xảy ra khi tạo đề thi");
@@ -126,6 +152,7 @@ const CreateExamManual = () => {
               type="primary"
               icon={<ArrowLeftOutlined />}
               className="bg-blue-500 hover:bg-blue-600 h-9"
+              onClick={() => navigate("/admin/manage-exam")}
             >
               Về trong quản lí
             </Button>
@@ -211,14 +238,23 @@ const CreateExamManual = () => {
             </Form.Item>
 
             <Form.Item
-              name="subject"
+              name="subjectId"
               label={<span style={{fontWeight: '500'}}>Môn học</span>}
               rules={[
                 { required: true, message: "Chọn môn học" },
               ]}
               style={{ margin: 0 }}
             >
-              <DropdownSelect data={subjects} placeholder="Toán" />
+              <Select
+                placeholder="Chọn môn học"
+                loading={subjectsLoading}
+                options={subjects.map(subject => ({
+                  value: subject.id,
+                  label: subject.subject_name
+                }))}
+                notFoundContent={subjectsLoading ? <Spin size="small" /> : "Không có môn học nào"}
+                style={{ borderRadius: '4px' }}
+              />
             </Form.Item>
           </div>
 
@@ -242,7 +278,15 @@ const CreateExamManual = () => {
               ]}
               style={{ margin: 0 }}
             >
-              <DropdownSelect data={grades} placeholder="12" />
+              <Select
+                placeholder="Chọn lớp"
+                options={[
+                  { value: "10", label: "Lớp 10" },
+                  { value: "11", label: "Lớp 11" },
+                  { value: "12", label: "Lớp 12" },
+                ]}
+                style={{ borderRadius: '4px' }}
+              />
             </Form.Item>
           </div>
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Card, Image, List, Tag } from "antd";
-import { Question } from "../../types";
+import { QuestionCardProps } from "../../types";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -9,7 +9,7 @@ import {
 import ImageUploadOnly from "./ImageuploadOnly";
 import mockImage from "../../../../assets/images/mockImage.png";
 
-const QuestionCard = (question: Question) => {
+const QuestionCard = ({ question, onDelete }: QuestionCardProps) => {
   return (
     <>
       <div
@@ -19,7 +19,7 @@ const QuestionCard = (question: Question) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <Tag color="blue" className="text-base px-3 py-1">
-              {question.id}
+              {question.number || question.id}
             </Tag>
             <span className="text-sm font-medium text-gray-700">
               Câu hỏi số :
@@ -32,7 +32,10 @@ const QuestionCard = (question: Question) => {
             <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">
               <EditOutlined />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
+            <button 
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+              onClick={onDelete}
+            >
               <DeleteOutlined />
             </button>
           </div>
@@ -68,7 +71,7 @@ const QuestionCard = (question: Question) => {
             {question.hasImage ? (
               <div className="w-full border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center relative">
                 <div className="text-center object-cover">
-                  <Image src={question.imageUrl || mockImage} alt="" />
+                  <Image src={question.imageSrc || question.imageUrl || mockImage} alt="" />
                   <div className="absolute bottom-2 right-2">
                     <Button icon={<DeleteOutlined className="!text-red-600" />} className=""></Button>
                   </div>

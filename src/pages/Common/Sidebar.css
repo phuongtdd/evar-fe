@@ -127,6 +127,37 @@
   border-radius: 4px;
 }
 
+/* Admin menu item styling */
+.sidebar-container .ant-menu-item[data-menu-id*="admin"] {
+  background-color: #f8f0ff;
+  border: 1px solid #d9bbff;
+  margin: 8px 4px;
+}
+
+.sidebar-container .ant-menu-item[data-menu-id*="admin"]:hover {
+  background-color: #f0e6ff !important;
+  border-color: #b794f6;
+}
+
+.sidebar-container .ant-menu-item[data-menu-id*="admin"].ant-menu-item-selected {
+  background-color: #e6d7ff !important;
+  border-color: #9f7aea;
+}
+
+.sidebar-container .ant-menu-item[data-menu-id*="admin"] .anticon {
+  color: #805ad5 !important;
+}
+
+.sidebar-container .ant-menu-item[data-menu-id*="admin"]:hover .anticon {
+  color: #6b46c1 !important;
+}
+
+/* Admin divider styling */
+.sidebar-container .ant-menu-item-divider {
+  background-color: #e2e8f0;
+  margin: 8px 0;
+}
+
 /* Điều chỉnh giao diện đáp ứng */
 @media (max-width: 768px) {
   .sidebar-container .ant-layout-sider {

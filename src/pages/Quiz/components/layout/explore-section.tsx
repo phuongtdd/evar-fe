@@ -17,11 +17,13 @@ export default function ExploreSection() {
     const loadExams = async () => {
       setLoading(true);
       try {
-        const response = await fetchExams(currentPage - 1, 10); 
+        const response = await fetchExams(currentPage - 1, 10);
         setExams(response.data);
-        setTotalExams(response.pageMetadata?.totalElements || response.data.length * 10);
+        setTotalExams(
+          response.pageMetadata?.totalElements || response.data.length * 10
+        );
       } catch (error) {
-        console.error('Failed to fetch exams for explore section:', error);
+        console.error("Failed to fetch exams for explore section:", error);
       } finally {
         setLoading(false);
       }
@@ -32,9 +34,7 @@ export default function ExploreSection() {
 
   return (
     <div>
-      <h4 className="text-[18px] !font-extrabold mb-2">
-        Khám phá thêm
-      </h4>
+      <h4 className="text-[18px] !font-extrabold mb-2">Khám phá thêm</h4>
 
       <div className="flex gap-3 mb-6">
         <Segmented
@@ -58,11 +58,11 @@ export default function ExploreSection() {
         <Button icon={<FilterOutlined />} />
       </div>
 
-      <div className="space-y-4">
+      <Card >
         {exams.map((exam) => (
           <QuizItem key={exam.id} exam={exam} />
         ))}
-      </div>
+      </Card>
 
       <div className="flex justify-center mt-6">
         <Pagination

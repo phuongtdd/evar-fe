@@ -1,9 +1,10 @@
 import { CameraOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Button, Card, Image, Input, Radio, Select, message } from "antd";
+import { Button, Card, Image, Input, Radio, Select, message, Upload } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useState } from "react";
 import { Question } from "../../types";
 import { QUESTION_TYPES } from "../../constants";
+import { uploadImageToImgBB } from "../../../../utils/ImageUpload";
 
 interface InputQuestionCardProps {
   onAddQuestion: (question: Question) => void;
@@ -22,6 +23,8 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
     { content: "", isCorrect: false },
   ]);
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -106,7 +109,9 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
               ? index === correctAnswerIndex
               : answer.isCorrect // For multiple choice, use the checkbox state
           })),
-      hasImage: false,
+      hasImage: !!uploadedImage,
+      imageSrc: uploadedImage || undefined,
+      questionImg: uploadedImage || undefined,
     };
 
     onAddQuestion(newQuestion);
@@ -122,6 +127,7 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
       { content: "", isCorrect: false },
     ]);
     setCorrectAnswerIndex(0);
+    setUploadedImage(null);
   };
 
   return (
@@ -313,16 +319,62 @@ export default function InputQuestionCard({ onAddQuestion }: InputQuestionCardPr
           <div className="border border-gray-200 rounded-lg p-4 h-full flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <span>Hình ảnh</span>
-              <Image className="!text-white !w-5 !h-5 !bg-sky-600" />
+              <CameraOutlined className="!text-white !w-5 !h-5 !bg-sky-600" />
             </div>
 
-            <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-3 min-h-[200px] cursor-pointer hover:bg-gray-50 transition-colors">
-              <span className="text-gray-400">Nhấn để thêm ảnh</span>
-            </div>
+            {uploadedImage ? (
+              <div className="flex-1 flex flex-col items-center justify-center mb-3 min-h-[200px]">
+                <Image
+                  src={uploadedImage}
+                  alt="Uploaded question image"
+                  width={140}
+                  height={140}
+                  className="rounded mb-2"
+                />
+                <Button
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => setUploadedImage(null)}
+                >
+                  Xóa ảnh
+                </Button>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-3 min-h-[200px] cursor-pointer hover:bg-gray-50 transition-colors">
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={async (file) => {
+                    setUploading(true);
+                    try {
+                      const imageUrl = await uploadImageToImgBB(file);
+                      setUploadedImage(imageUrl);
+                      message.success("Tải ảnh lên thành công!");
+                    } catch (error) {
+                      message.error("Tải ảnh lên thất bại. Vui lòng thử lại.");
+                      console.error("Upload error:", error);
+                    } finally {
+                      setUploading(false);
+                    }
+                    return false; // Prevent default upload behavior
+                  }}
+                >
+                  <div className="text-center">
+                    <CameraOutlined className="text-2xl text-gray-400 mb-2" />
+                    <p className="text-gray-400 text-sm">
+                      {uploading ? "Đang tải lên..." : "Nhấn để thêm ảnh"}
+                    </p>
+                  </div>
+                </Upload>
+              </div>
+            )}
 
-            <Button className="w-full" icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
+            {!uploadedImage && (
+              <Button className="w-full" icon={<DeleteOutlined />} disabled>
+                Xóa
+              </Button>
+            )}
           </div>
         </div>
       </div>

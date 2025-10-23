@@ -5,8 +5,8 @@ import { Select } from "antd";
 interface DropdownSelectProps<T> {
   data: T[];
   placeholder: string;
-  onChange?: (value: string) => void;
-  value?: string;
+  onChange?: (value: number) => void;
+  value?: number;
 }
 
 const DropdownSelect = <T extends { id: number; value: string; label: string }>({
@@ -22,7 +22,7 @@ const DropdownSelect = <T extends { id: number; value: string; label: string }>(
     allowClear
   >
     {data.map((item) => (
-      <Select.Option key={item.id} value={item.value}>
+      <Select.Option key={item.id} value={item.id}>
         {item.label}
       </Select.Option>
     ))}

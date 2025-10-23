@@ -12,12 +12,14 @@ import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useQuizContext } from "./context/QuizContext";
 import QuizInfor from "./components/ui/QuizInfor";
-import { QuizInfo, CreateQuizRequest } from "./types";
+import { QuizInfo, CreateQuizRequest, typeQuiz } from "./types";
 import QuizInfoModal from "./components/ui/QuizInfoModal";
 import { sampleQuestions } from "./mock/mockData";
 import UploadDragger from "./components/ui/UploadDragger";
-import BackButton from "./components/ui/BackButton";
+import BackButton from "../Common/BackButton";
 import { createQuizAIService } from "./services/quizService";
+import { subjectService } from "../Subject/services/subjectService";
+import { Subject } from "./types";
 
 interface LayoutProps {
   children?: ReactNode;
@@ -38,16 +40,16 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
     results,
   } = useQuizContext();
 
-  const [form] = Form.useForm<QuizInfo>();
   const [isCreating, setIsCreating] = useState(false);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
-  const [quizData, setQuizData] = useState({
-    name: "Đề thi thpt quốc gia môn Toán",
-    subject: "Toán",
-    questionCount: 50,
-    creator: "Admin",
-    duration: "00:90:00",
-    grade: 12,
+  const [quizData, setQuizData] = useState<typeQuiz>({
+    name: "",
+    subject: "",
+    questionCount: 0,
+    creator: "",
+    duration: "02:00:00",
+    grade: "",
   });
 
   useEffect(() => {
@@ -55,6 +57,20 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
       setIsQuizInfoModalVisible(true);
     }
   }, [quizInfo, setIsQuizInfoModalVisible]);
+
+  // Fetch subjects when component mounts
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const { subjects: fetchedSubjects } = await subjectService.getAllSubjects();
+        setSubjects(fetchedSubjects);
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   const handleStartProcess = () => {
     setFileUploaded(true);
@@ -74,6 +90,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleEditQuizInfo = (updatedQuiz: any) => {
     setQuizData(updatedQuiz);
+    // Update quizInfo if needed, but since QuizInfor is for display, maybe not necessary
   };
 
   const handleCreateQuiz = async () => {
@@ -91,16 +108,21 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
     try {
       const quizData: CreateQuizRequest = {
         examName: quizInfo.examName,
-        examType: 2, // AI mode
-        subjectId: quizInfo.subjectId,
+        examType: quizInfo.examType || 2,
+        subjectId: parseInt(quizInfo.subjectId),
         description: quizInfo.description,
         numOfQuestions: results.length,
-        questions: results.map(q => ({
+        questions: results.map((q) => ({
+          questionImg: q.questionImg,
           content: q.content,
           questionType: q.questionType,
           hardLevel: q.hardLevel,
-          answers: q.answers
-        }))
+          quesScore: q.quesScore || 1.0,
+          answers: q.answers.map((a) => ({
+            isCorrect: a.isCorrect,
+            content: a.content,
+          })),
+        })),
       };
 
       const result = await createQuizAIService.createQuiz(quizData);
@@ -114,30 +136,24 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
     }
   };
 
-  const handleModalOk = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        form.resetFields();
-        setQuizInfo(values);
-        setQuizData({
-          name: values.examName || "Đề thi thpt quốc gia môn Toán",
-          subject: "Toán",
-          questionCount: 50,
-          creator: "Admin",
-          duration: "00:90:00",
-          grade: 12,
-        });
-        setIsQuizInfoModalVisible(false);
-      })
-      .catch((info) => {
-        console.log("Validate Failed:", info);
-      });
+  const handleModalOk = (values: QuizInfo) => {
+    setQuizInfo(values);
+    const selectedSubject = subjects.find((s) => s.id === values.subjectId);
+    setQuizData({
+      name: values.examName || "",
+      subject: selectedSubject?.subject_name || values.subjectId || "",
+      questionCount: 0,
+      creator: values.description || "",
+      duration: values.time || "02:00:00",
+      grade: values.grade || "",
+    });
+    // The modal will set its own visibility to false; ensure our local view switches as well
+    setVisible(false);
   };
 
   const handleModalCancel = () => {
     message.error("Không thể tạo Quiz");
-    navigate("/dashboard");
+   window.history.back()
   };
 
   const [visible, setVisible] = useState<boolean>(true);
@@ -163,7 +179,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">
                     Tạo Quiz với AI OCR
                   </h1>
-                  <BackButton />
+                  <BackButton url={"/dashboard"} />
                   <p className="text-gray-600 mb-8 mt-5">
                     Sử dụng AI để tăng tốc quá trình tạo Quiz từ file pdf, ảnh
                     png...
@@ -175,7 +191,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                       onRemove={handleRemoveFile}
                     />
                   </div>
-                  
+
                   {fileUploaded && results.length > 0 && (
                     <div className="mb-6">
                       <Button
@@ -190,7 +206,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                       </Button>
                     </div>
                   )}
-                  
+
                   <Outlet />
                   {children}
                 </div>

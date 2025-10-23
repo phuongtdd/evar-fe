@@ -49,7 +49,7 @@ const MainLayout: React.FC = () => {
       <Layout className="h-full flex flex-col">
         <Header activeMenu={selectedMenu} />
         <Content className="flex-1 overflow-auto">
-          <div style={{zoom: 0.8}}>
+          <div style={{zoom: 0.8}} className="!px-12">
             <Outlet />
           </div>
         </Content>

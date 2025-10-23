@@ -7,7 +7,7 @@ const QuizContext = createContext<QuizState | null>(null)
 export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const [fileUploaded, setFileUploaded] = useState(false)
   const [uploadedFile, setUploadedFile] = useState({ name: "", size: "" })
-  const [results, setResults] = useState<Question[]>([]) // Explicitly type as Question[]
+  const [results, setResults] = useState<Question[]>([]) 
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null)
   const [isQuizInfoModalVisible, setIsQuizInfoModalVisible] = useState(false)
 
