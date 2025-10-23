@@ -70,17 +70,7 @@ export function ExamTable({ exams, loading = false, onEdit, onDelete, onView, on
       width: 100,
       render: (count: number) => <span className="font-semibold text-slate-700">{count || 0}</span>,
     },
-    {
-      title: "Passing Score",
-      dataIndex: "passingScore",
-      key: "passingScore",
-      width: 120,
-      render: (score: number) => (
-        <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-          {score || 0}%
-        </span>
-      ),
-    },
+      
     {
       title: "Status",
       dataIndex: "status",

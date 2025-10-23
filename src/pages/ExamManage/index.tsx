@@ -27,7 +27,6 @@ export function ExamAdminPanel() {
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null)
   const [questionsManagerExam, setQuestionsManagerExam] = useState<Exam | null>(null)
 
-  // Hàm lấy danh sách bài thi
   const fetchExams = async (showLoading = true) => {
     try {
       if (showLoading) {
@@ -46,7 +45,6 @@ export function ExamAdminPanel() {
     }
   }
 
-  // Lấy bài thi khi component mount
   useEffect(() => {
     fetchExams()
   }, [])
@@ -62,7 +60,6 @@ export function ExamAdminPanel() {
 
   const handleExamInfoSubmit = (examInfo: any) => {
     console.log('Nhận thông tin bài thi trong ExamManage:', examInfo);
-    // Điều hướng đến create-exam với thông tin bài thi
     const quizInfo = {
       title: examInfo.examName,
       subject: examInfo.subject,
@@ -103,7 +100,6 @@ export function ExamAdminPanel() {
       const updatedExam = { ...questionsManagerExam, questions: updatedQuestions }
       setQuestionsManagerExam(updatedExam)
       
-      // Update the exam in the main list
       setExams(prevExams => prevExams.map(exam => 
         exam.id === questionsManagerExam.id ? updatedExam : exam
       ))
@@ -115,7 +111,6 @@ export function ExamAdminPanel() {
       await examService.deleteExam(id)
       setExams(exams.filter((exam) => exam.id !== id))
       message.success("Xóa bài thi thành công")
-      // Làm mới danh sách để đảm bảo tính nhất quán dữ liệu
       fetchExams(false)
     } catch (error) {
       console.error('Lỗi khi xóa bài thi:', error)
@@ -126,7 +121,6 @@ export function ExamAdminPanel() {
   const handleSaveExam = async (formData: Omit<Exam, "id" | "createdAt" | "updatedAt">) => {
     try {
       if (editingExam) {
-        // Cập nhật bài thi hiện tại
         const updatedExam = await examService.updateExam(editingExam.id, {
           examName: formData.examName,
           examType: formData.examType,
@@ -144,7 +138,6 @@ export function ExamAdminPanel() {
         )
         message.success("Cập nhật bài thi thành công")
       } else {
-        // Tạo bài thi mới
         const createData = {
           examName: formData.examName,
           examType: formData.examType,

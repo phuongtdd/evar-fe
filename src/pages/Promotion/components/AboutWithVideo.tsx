@@ -1,6 +1,30 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { AspectRatio } from "react-bootstrap-icons";
 
 const AboutWithVideo: React.FC = () => {
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [showSecondVideo, setShowSecondVideo] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle user interaction to enable autoplay
+  const handleUserInteraction = () => {
+    setHasUserInteracted(true);
+    setShowSecondVideo(true);
+  };
+
+  // Add click listener to enable autoplay
+  useEffect(() => {
+    const handleClick = () => handleUserInteraction();
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
+
+  // Handle video load errors
+  const handleVideoError = () => {
+    setVideoError(true);
+  };
+
   return (
     <section className="relative bg-[#f4f4f4] py-20 px-4 lg:py-16 md:py-12 sm:py-8">
       {/* Background virtual office environment */}
@@ -22,52 +46,43 @@ const AboutWithVideo: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative w-full h-[1090px] bg-transparent">
-        <div className="bg-[#f4f4f4] absolute left-0  w-[10%] h-full"></div>
-        <div className="bg-[#f4f4f4] absolute right-0  w-[10%] h-full"></div>
-        <iframe
-          src="https://player.cloudinary.com/embed/?cloud_name=dxt8ylemj&public_id=waves_p5cxyt&autoplay_mode=on-scroll&loop=true&picture_in_picture_toggle=true&controls=false"
-          className="w-full h-full pointer-events-none"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
-        ></iframe>
+      <div>
+        <div className="relative w-full aspect-[16/9] bg-transparent overflow-hidden">
+          <div className="flex flex-col items-center justify-center mx-auto w-full absolute top-7">
+            <h2 className="mb-6 text-5xl font-bold leading-tight text-black lg:text-4xl md:text-3xl sm:text-2xl">
+              Work together. Like in the office.
+            </h2>
+
+            <p className="mx-auto mb-16 max-w-2xl text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm text-center">
+              Create customized virtual office spaces for any department or
+              event with high quality audio and video conferencing.
+            </p>
+          </div>
+          <iframe
+            src="https://player.cloudinary.com/embed/?cloud_name=dxt8ylemj&public_id=1023_z75tj3&profile=hihihi"
+            width="640"
+            height="360"
+            style={{ height: "auto", width: "100%", aspectRatio: "16/9" }}
+            allow="autoplay; fullscreen; encrypted-media;"
+            allowFullScreen
+          />
+
+          <div className="absolute inset-0 bg-transparent z-20 pointer-events-auto" />
+
+          <div className="absolute left-0 top-0 h-full w-[200px] bg-[#f4f4f4] z-10" />
+          <div className="absolute right-0 top-0 h-full w-[200px] bg-[#f4f4f4] z-10" />
+          
+        </div>
       </div>
 
       <div className="container relative z-10 mx-auto max-w-7xl">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-6 text-5xl font-bold leading-tight text-black lg:text-4xl md:text-3xl sm:text-2xl">
-            Work together. Like in the office.
-          </h2>
-          <p className="mx-auto mb-16 max-w-2xl text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm">
-            Create customized virtual office spaces for any department or event
-            with high quality audio and video conferencing.
-          </p>
-
-          {/* Video Conferencing Interface */}
-          <div className="relative mx-auto mb-16 max-w-4xl">
-            {/* Main video call container */}
-            {/* <div className="relative mx-auto aspect-video max-w-4xl overflow-hidden rounded-xl bg-gray-900 shadow-2xl">
-            
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200">
-               
-               <iframe src=""/>
-
-               
-
-              
-              </div>
-            </div> */}
-          </div>
-          {/* Description paragraph */}
           <p className="mx-auto mb-12 max-w-3xl text-center text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm">
             Collaborating with remote teams is easy in your virtual office
             environment. Enjoy real-time communication within your workspace
             without additional software hassle.
           </p>
-
-          {/* Features section */}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-12">
-            {/* Feature 1: Customize workspace */}
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-blue-100">
                 <svg
@@ -91,7 +106,6 @@ const AboutWithVideo: React.FC = () => {
               </p>
             </div>
 
-            {/* Feature 2: Audio and video calls */}
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-blue-100">
                 <svg
@@ -111,7 +125,6 @@ const AboutWithVideo: React.FC = () => {
               </p>
             </div>
 
-            {/* Feature 3: Invite guests */}
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-blue-100">
                 <svg

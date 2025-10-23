@@ -6,21 +6,21 @@
  */
 export const getUserIdFromToken = (): string | null => {
   const token = localStorage.getItem("token")
-  console.log("🎫 Token từ localStorage:", token ? "Có token" : "Không có token")
+  console.log(" Token từ localStorage:", token ? "Có token" : "Không có token")
   
   if (!token) {
-    console.warn("⚠️ Không tìm thấy token trong localStorage")
+    console.warn(" Không tìm thấy token trong localStorage")
     return null
   }
 
   try {
     const payload = token.split('.')[1]
     const decoded = JSON.parse(atob(payload))
-    console.log("🔓 Decoded token:", decoded)
-    console.log("🆔 UserId từ token:", decoded.userId)
+    // console.log("🔓 Decoded token:", decoded)
+    // console.log("🆔 UserId từ token:", decoded.userId)
     return decoded.userId || null
   } catch (error) {
-    console.error("❌ Lỗi giải mã token:", error)
+    console.error(" Lỗi giải mã token:", error)
     return null
   }
 }

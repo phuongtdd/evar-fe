@@ -18,18 +18,18 @@ export const useUserProfile = (id?: string) => {
         setError(null) // Reset error trước khi fetch
         
         const userId = id || getUserIdFromToken() || ""
-        console.log("🔍 UserId từ token:", userId)
+        console.log(" UserId từ token:", userId)
         
         if (!userId) {
           throw new Error("Không tìm thấy user id trong token. Vui lòng đăng nhập lại.")
         }
         
-        console.log("📡 Đang gọi API getUserById với id:", userId)
+        console.log("Đang gọi API getUserById với id:", userId)
         const data = await getUserById(userId)
-        console.log("✅ Nhận được dữ liệu:", data)
+        console.log("Nhận được dữ liệu:", data)
         setProfile(data)
       } catch (err: any) {
-        console.error("❌ Lỗi trong useUserProfile:", err)
+        console.error(" Lỗi trong useUserProfile:", err)
         const errorMessage = err?.response?.data?.message || err?.message || "Tải hồ sơ người dùng thất bại"
         setError(errorMessage)
       } finally {

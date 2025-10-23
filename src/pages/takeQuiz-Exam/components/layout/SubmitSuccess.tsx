@@ -13,7 +13,9 @@ interface SubmitSuccessProps {
   onViewResults?: () => void;
   onBackToDashboard?: () => void;
   submissionDetails?: any; 
-  totalQuestions?: number; 
+  totalQuestions?: number;
+  examResults?: any; // Thêm examResults để lấy thông tin thời gian và điểm
+  examData?: any; // Thêm examData để lấy thời gian giới hạn
 }
 
 const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
@@ -23,6 +25,8 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
   onBackToDashboard,
   submissionDetails,
   totalQuestions = 10,
+  examResults,
+  examData,
 }) => {
   const [isViewingResults, setIsViewingResults] = useState(false);
   const [isGoingHome, setIsGoingHome] = useState(false);
@@ -49,6 +53,55 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
   const handleImageClick = (imageUrl: string) => {
     setPreviewImageUrl(imageUrl);
     setPreviewVisible(true);
+  };
+
+  // Tính toán số câu đúng/sai dựa trên logic mới
+  const calculateCorrectAnswers = () => {
+    if (!submissionDetails?.questions) return 0;
+    
+    let correctCount = 0;
+    submissionDetails.questions.forEach((question: any) => {
+      const correctAnswers = question.answers.filter((answer: any) => answer.correct);
+      const userSelectedAnswers = question.answers.filter((answer: any) => answer.select);
+      
+      // Tất cả đáp án đúng phải được chọn và không có đáp án sai nào được chọn
+      const allCorrectSelected = correctAnswers.every((answer: any) => answer.select);
+      const noWrongSelected = question.answers.every((answer: any) => 
+        !answer.correct ? !answer.select : true
+      );
+      
+      if (allCorrectSelected && noWrongSelected) {
+        correctCount++;
+      }
+    });
+    
+    return correctCount;
+  };
+
+  // Tính toán thời gian làm bài
+  const getTimeSpent = () => {
+    if (examResults?.timeSpent) {
+      return examResults.timeSpent;
+    }
+    // Fallback: tính từ thời gian bắt đầu và kết thúc
+    return 0;
+  };
+
+  // Format thời gian
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Lấy thời gian giới hạn của bài thi
+  const getTimeLimit = () => {
+    if (examData?.timeLimit) {
+      return examData.timeLimit;
+    }
+    // Default time limit từ constants
+    return 90 * 60; // 90 phút
   };
 
   // Initialize image loading states when submission details change
@@ -126,7 +179,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                 <span className="text-[24px]">Kết quả :</span>
                 <span className="text-[54px] mx-auto">
                   <span>
-                    {submissionDetails ? submissionDetails.totalScore : 4}
+                    {calculateCorrectAnswers()}
                   </span>
                   <span>/{totalQuestions}</span>
                 </span>
@@ -157,9 +210,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Số câu đúng :
                   </span>
                   <span className="text-lg font-semibold text-green-600">
-                    {submissionDetails
-                      ? submissionDetails.totalScore
-                      : 40}
+                    {calculateCorrectAnswers()}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
@@ -167,9 +218,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Số câu sai :
                   </span>
                   <span className="text-lg font-semibold text-red-600">
-                    {submissionDetails
-                      ? submissionDetails.questions.length - submissionDetails.totalScore
-                      : 10}
+                    {totalQuestions - calculateCorrectAnswers()}
                   </span>
                 </div>
               </div>
@@ -195,7 +244,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     Thời gian làm bài :{" "}
                   </span>
                   <span className="text-gray-900 font-semibold">
-                    20:20:00 / 120:00:00
+                    {formatTime(getTimeSpent())} / {formatTime(getTimeLimit())}
                   </span>
                 </div>
               </div>
@@ -240,15 +289,23 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
                   {submissionDetails.questions.map(
                     (question: any, index: number) => {
-                      const isCorrect = question.answers.some(
-                        (answer: any) => answer.correct && answer.select
-                      );
-                      const userSelectedAnswer = question.answers.find(
+                      const userSelectedAnswers = question.answers.filter(
                         (answer: any) => answer.select
                       );
-                      const correctAnswer = question.answers.find(
+                      const correctAnswers = question.answers.filter(
                         (answer: any) => answer.correct
                       );
+                      
+                      // Logic kiểm tra đúng cho multiple choice:
+                      // 1. Tất cả đáp án đúng phải được chọn
+                      // 2. Không có đáp án sai nào được chọn
+                      const allCorrectAnswersSelected = correctAnswers.every(
+                        (answer: any) => answer.select
+                      );
+                      const noWrongAnswersSelected = question.answers.every(
+                        (answer: any) => !answer.correct ? !answer.select : true
+                      );
+                      const isCorrect = allCorrectAnswersSelected && noWrongAnswersSelected;
 
                       return (
                         <div
@@ -264,9 +321,9 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                               {index + 1}
                             </Badge>
                             {isCorrect ? (
-                              <CheckCircleOutlined className="text-green-500 text-2xl" />
+                              <CheckCircleOutlined className="!text-green-500 text-2xl" />
                             ) : (
-                              <CloseCircleOutlined className="text-red-500 text-2xl" />
+                              <CloseCircleOutlined className="!text-red-500 text-2xl" />
                             )}
                           </div>
 
@@ -296,7 +353,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
               <img
                 src={question.questionImg}
                 alt="Question image"
-                className={`max-w-full h-auto rounded-[8px] border !border-[#d5d5d5] transition-opacity duration-300 ${
+                className={`w-[220px] h-auto rounded-[8px] border !border-[#d5d5d5] transition-opacity duration-300 ${
                   imageLoadingStates[index] || imageErrorStates[index] ? 'opacity-0 absolute' : 'opacity-100 image-loaded'
                 } ${!imageErrorStates[index] ? 'cursor-pointer hover:opacity-80' : ''}`}
                 onLoad={() => handleImageLoad(index)}
@@ -318,25 +375,24 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                             {question.questionContent}
                           </div>
 
-                          {userSelectedAnswer && (
+                          {userSelectedAnswers.length > 0 && (
                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-[8px]">
                               <p className="text-[16px] font-semibold text-blue-800">
                                 Lựa chọn của bạn:{" "}
-                                {String.fromCharCode(
-                                  65 +
-                                    question.answers.indexOf(userSelectedAnswer)
-                                )}
+                                {userSelectedAnswers.map((selectedAnswer: any, idx: number) => 
+                                  String.fromCharCode(65 + question.answers.indexOf(selectedAnswer))
+                                ).join(", ")}
                               </p>
                             </div>
                           )}
 
-                          {!isCorrect && correctAnswer && (
+                          {!isCorrect && correctAnswers.length > 0 && (
                             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-[8px]">
                               <p className="text-[16px] font-semibold text-green-800">
                                 Đáp án đúng:{" "}
-                                {String.fromCharCode(
-                                  65 + question.answers.indexOf(correctAnswer)
-                                )}
+                                {correctAnswers.map((correctAnswer: any, idx: number) => 
+                                  String.fromCharCode(65 + question.answers.indexOf(correctAnswer))
+                                ).join(", ")}
                               </p>
                             </div>
                           )}

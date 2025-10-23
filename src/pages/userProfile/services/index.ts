@@ -24,14 +24,14 @@ const mapUserApiToProfile = (id: string, api: UserApiModel): UserProfile => {
 export const getUserById = async (id: string): Promise<UserProfile> => {
   try {
     const url = `${API_ENDPOINT.getUser}?id=${id}`
-    console.log("🌐 Gọi API:", url)
+    // console.log("🌐 Gọi API:", url)
     
     const res = await apiClient.get<ApiEnvelope<UserApiModel>>(API_ENDPOINT.getUser, {
       params: { id },
     })
     
-    console.log("📦 Response status:", res.status)
-    console.log("📦 Response data:", res.data)
+    console.log("Response status:", res.status)
+    console.log("Response data:", res.data)
     
     if (res.status !== 200) {
       throw new Error(res.statusText || "Request failed")
@@ -44,13 +44,13 @@ export const getUserById = async (id: string): Promise<UserProfile> => {
     }
     
     const mappedProfile = mapUserApiToProfile(id, payload.data)
-    console.log("🔄 Mapped profile:", mappedProfile)
+    console.log(" Mapped profile:", mappedProfile)
     
     return mappedProfile
   } catch (error: any) {
-    console.error("❌ Failed to fetch user by id:", error)
-    console.error("❌ Error response:", error?.response)
-    console.error("❌ Error message:", error?.message)
+    console.error(" Failed to fetch user by id:", error)
+    console.error("Error response:", error?.response)
+    console.error(" Error message:", error?.message)
     throw error
   }
 }
@@ -62,7 +62,7 @@ export const uploadImageToImgbb = async (file: File): Promise<string> => {
     formData.append('image', file)
     formData.append('key', IMGBB_API_KEY)
 
-    console.log("📤 Uploading image to IMGBB...")
+    console.log(" Uploading image to IMGBB...")
     
     const response = await fetch(IMGBB_UPLOAD_URL, {
       method: 'POST',
@@ -79,10 +79,10 @@ export const uploadImageToImgbb = async (file: File): Promise<string> => {
       throw new Error('Upload failed: IMGBB API returned error')
     }
 
-    console.log("✅ Image uploaded successfully:", data.data.url)
+    console.log(" Image uploaded successfully:", data.data.url)
     return data.data.url
   } catch (error: any) {
-    console.error("❌ Failed to upload image:", error)
+    console.error("Failed to upload image:", error)
     throw error
   }
 }
@@ -90,14 +90,14 @@ export const uploadImageToImgbb = async (file: File): Promise<string> => {
 // Update user profile
 export const updateUserProfile = async (updateData: UpdateUserRequest): Promise<UserProfile> => {
   try {
-    console.log("🔄 Updating user profile:", updateData)
+    console.log(" Updating user profile:", updateData)
     
     const response = await apiClient.put<ApiEnvelope<UserApiModel>>(
       API_ENDPOINT.updateUser,
       updateData
     )
     
-    console.log("📦 Update response:", response.data)
+    console.log(" Update response:", response.data)
     
     if (response.status !== 200) {
       throw new Error(response.statusText || "Update failed")
@@ -109,11 +109,11 @@ export const updateUserProfile = async (updateData: UpdateUserRequest): Promise<
     }
     
     const mappedProfile = mapUserApiToProfile(updateData.id, payload.data)
-    console.log("✅ Profile updated successfully:", mappedProfile)
+    console.log(" Profile updated successfully:", mappedProfile)
     
     return mappedProfile
   } catch (error: any) {
-    console.error("❌ Failed to update user profile:", error)
+    console.error(" Failed to update user profile:", error)
     throw error
   }
 }

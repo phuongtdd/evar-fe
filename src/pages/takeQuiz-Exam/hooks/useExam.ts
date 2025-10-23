@@ -71,7 +71,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         ...prev,
         examData,
         questions,
-        timeLeft: EXAM_CONFIG.DEFAULT_TIME_LIMIT,
+        timeLeft: examData.duration ? examData.duration * 60 : EXAM_CONFIG.DEFAULT_TIME_LIMIT, // Convert minutes to seconds
       }));
     } catch (err) {
       setError(
@@ -251,7 +251,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         answeredQuestions: Object.keys(currentState.userAnswers).length,
         correctAnswers: correctCount,
         score: Math.round((correctCount / currentState.questions.length) * 100), // Calculate percentage based on correct answers
-        timeSpent: EXAM_CONFIG.DEFAULT_TIME_LIMIT - currentState.timeLeft,
+        timeSpent: (currentState.examData?.duration ? currentState.examData.duration * 60 : EXAM_CONFIG.DEFAULT_TIME_LIMIT) - currentState.timeLeft,
         userAnswers: currentState.userAnswers,
         submissionId: submissionResponse.data.id, // Add submission ID to results
       };

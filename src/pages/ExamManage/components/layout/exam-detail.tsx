@@ -41,11 +41,7 @@ export function ExamDetail({ exam }: ExamDetailProps) {
         <Descriptions.Item label="Number of Questions" span={1}>
           <span className="font-medium">{exam.numOfQuestions}</span>
         </Descriptions.Item>
-        <Descriptions.Item label="Passing Score" span={1}>
-          <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-            {exam.passingScore}%
-          </span>
-        </Descriptions.Item>
+
         <Descriptions.Item label="Created Date" span={1}>
           <span className="text-slate-600">{new Date(exam.createdAt).toLocaleDateString()}</span>
         </Descriptions.Item>
@@ -74,11 +70,6 @@ export function ExamDetail({ exam }: ExamDetailProps) {
           <p className="text-sm text-slate-600">Questions</p>
           <p className="mt-1 text-2xl font-bold text-purple-600">{exam.numOfQuestions}</p>
           <p className="text-xs text-slate-500">total</p>
-        </div>
-        <div className="rounded-lg bg-green-50 p-4">
-          <p className="text-sm text-slate-600">Pass Score</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{exam.passingScore}%</p>
-          <p className="text-xs text-slate-500">required</p>
         </div>
       </div>
     </div>
