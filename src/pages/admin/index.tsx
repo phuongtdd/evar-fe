@@ -1,11 +1,13 @@
 import React from 'react';
-import AdminLayout from './components/AdminLayout';
-import DashboardCards from './components/DashboardCards';
+import AdminLayout from './components/layout/AdminLayout';
+import DashboardCards from './components/ui/DashboardCards';
 
 const AdminDashboard: React.FC = () => {
     return (
         <AdminLayout>
-            <DashboardCards />
+            <div className="space-y-6">
+                <DashboardCards />
+            </div>
         </AdminLayout>
     );
 };

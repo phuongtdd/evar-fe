@@ -25,9 +25,9 @@ apiClient.interceptors.request.use(
       const token = localStorage.getItem('token');
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
-        console.log('🔑 Token được gửi kèm request:', token.substring(0, 20) + '...');
+        // console.log('🔑 Token được gửi kèm request:', token.substring(0, 20) + '...');
       } else {
-        console.warn('⚠️ Không có token để gửi kèm request');
+        console.warn(' Không có token để gửi kèm request');
       }
     }
 

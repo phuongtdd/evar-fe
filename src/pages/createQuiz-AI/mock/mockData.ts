@@ -1,50 +1,53 @@
 import { Grade, Subject } from "../types";
 
-import { Grade, Subject } from "../types";
 
 export const sampleQuestions = [
   {
     id: 1,
+    number: 1,
     content: "Cho hàm số $$ y = f(x) $$ liên tục, nhận giá trị dương trên đoạn $$ [a; b] $$. Xét hình phẳng $$ (H) $$ giới hạn bởi đồ thị hàm số $$ y = f(x) $$, trục hoành và hai đường thẳng $$ x = a, x = b $$. Khối tròn xoay được tạo thành khi quay hình phẳng $$ (H) $$ quanh trục $$ Ox $$ có thể tích là:",
-    questionType: 1,
+    questionType: "multiple_choice",
     hardLevel: 2,
+    quesScore: 1.0,
     answers: [
-      { isCorrect: 1, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: true, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
     ],
     hasImage: false,
   },
   {
     id: 2,
+    number: 2,
     content: "Cho hàm số $$ y = f(x) $$ liên tục, nhận giá trị dương trên đoạn $$ [a; b] $$. Xét hình phẳng $$ (H) $$ giới hạn bởi đồ thị hàm số $$ y = f(x) $$, trục hoành và hai đường thẳng $$ x = a, x = b $$. Khối tròn xoay được tạo thành khi quay hình phẳng $$ (H) $$ quanh trục $$ Ox $$ có thể tích là:",
-    questionType: 1,
+    questionType: "multiple_choice",
     hardLevel: 3,
+    quesScore: 1.0,
     answers: [
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
-      { isCorrect: 1, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
+      { isCorrect: true, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
     ],
     hasImage: true,
-    imageUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Quiz%20module%20-%20create%20Quiz-%20%20AI%20mode%20-%202-D9sfYujZX2PE5W4izxLBDBhmONACeD.png",
+    imageSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Quiz%20module%20-%20create%20Quiz-%20%20AI%20mode%20-%202-D9sfYujZX2PE5W4izxLBDBhmONACeD.png",
   },
   {
     id: 3,
+    number: 3,
     content: "Cho hàm số $$ y = f(x) $$ liên tục, nhận giá trị dương trên đoạn $$ [a; b] $$. Xét hình phẳng $$ (H) $$ giới hạn bởi đồ thị hàm số $$ y = f(x) $$, trục hoành và hai đường thẳng $$ x = a, x = b $$. Khối tròn xoay được tạo thành khi quay hình phẳng $$ (H) $$ quanh trục $$ Ox $$ có thể tích là:",
-    questionType: 1,
+    questionType: "multiple_choice",
     hardLevel: 1,
+    quesScore: 1.0,
     answers: [
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
-      { isCorrect: 1, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
-      { isCorrect: 0, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dx $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxy $$" },
+      { isCorrect: true, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
+      { isCorrect: false, content: "$$ V = \\pi \\int_{a}^{b} f(x) dxiy $$" },
     ],
     hasImage: true,
-    imageUrl:
-      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Quiz%20module%20-%20create%20Quiz-%20%20AI%20mode%20-%202-D9sfYujZX2PE5W4izxLBDBhmONACeD.png",
+    imageSrc: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Quiz%20module%20-%20create%20Quiz-%20%20AI%20mode%20-%202-D9sfYujZX2PE5W4izxLBDBhmONACeD.png",
   },
 ];
 

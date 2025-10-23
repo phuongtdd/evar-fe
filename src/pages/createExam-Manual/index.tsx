@@ -33,7 +33,6 @@ const CreateExamManual = () => {
     }
   }, [quizInfo, navigate]);
 
-  // Fetch subjects when component mounts
   useEffect(() => {
     const fetchSubjects = async () => {
       try {

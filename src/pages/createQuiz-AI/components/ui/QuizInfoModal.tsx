@@ -1,8 +1,8 @@
-import React from "react";
-import { Modal, Form, Input, Button } from "antd";
-import { QuizInfo } from "../../types";
-import DropdownSelect from "./DropdownSelect";
-import { grades, subjects } from "../../mock/mockData";
+import React, { useEffect, useState } from "react";
+import { Modal, Form, Input, Button, Select, Spin } from "antd";
+import { QuizInfo, Subject } from "../../types";
+import { subjectService } from "../../../Subject/services/subjectService";
+import { getUsernameFromToken } from "../../../../utils/auth";
 import { CloseOutlined } from "@ant-design/icons";
 
 interface QuizInfoModalProps {
@@ -21,28 +21,56 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
   initialValues,
 }) => {
   const [form] = Form.useForm<QuizInfo>();
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
 
-  // Set initial values when modal opens
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setSubjectsLoading(true);
+        const { subjects: fetchedSubjects } = await subjectService.getAllSubjects();
+        setSubjects(fetchedSubjects);
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      } finally {
+        setSubjectsLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
   React.useEffect(() => {
     if (visible && initialValues) {
       form.setFieldsValue(initialValues);
+    } else if (visible) {
+      const currentUser = getUsernameFromToken() || "Admin";
+      form.setFieldsValue({
+        description: currentUser,
+      });
     }
   }, [visible, initialValues, form]);
 
   const handleOk = () => {
     form
       .validateFields()
-      .then((values) => {
+      .then(() => {
+        const allValues = form.getFieldsValue(true);
+        const currentUser = getUsernameFromToken() || "Admin";
+        const payload = {
+          ...allValues,
+          description: allValues.description || currentUser,
+          examType: 2, 
+        } as QuizInfo;
         form.resetFields();
-        onOk(values);
-        setVisible(false); // Đóng modal
+        onOk(payload);
+        setVisible(false);
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
       });
   };
   
-  // Style cho nút theo hình ảnh
   const cancelButtonStyle: React.CSSProperties = {
     border: '1px solid #d9d9d9', 
     color: '#595959', 
@@ -51,7 +79,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
   };
 
   const nextButtonStyle: React.CSSProperties = {
-    backgroundColor: '#6969ff', // Màu xanh tím tương tự hình ảnh
+    backgroundColor: '#6969ff', 
     borderColor: '#6969ff',
     color: 'white',
     borderRadius: '6px',
@@ -63,10 +91,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
       title={<h2 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: 0 }}>Tạo bài Quiz mới</h2>}
       open={visible}
       onCancel={onCancel}
-      width={600} // Điều chỉnh kích thước modal để phù hợp
-      destroyOnClose
-      
-      // Tùy chỉnh Footer để khớp với giao diện Hủy và Tiếp theo
+      width={600}      
       footer={[
         <Button key="cancel" onClick={onCancel} style={cancelButtonStyle}>
           Hủy
@@ -90,42 +115,48 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
       >
         
         <div style={{ display: 'grid', gridTemplateColumns: '64% 1fr', gap: '24px', marginBottom: '16px' }}>
-            
+
             <Form.Item
-              name="title"
+              name="examName"
               label={<span style={{fontWeight: '500'}}>Tên bài quiz</span>}
               rules={[
                 { required: true, message: "Nhập tên bài Quiz" },
               ]}
-              style={{ margin: 0 }} 
+              style={{ margin: 0 }}
             >
               <Input placeholder="Nhập tên bài Quiz..." style={{ borderRadius: '4px' }} />
             </Form.Item>
-            
-          
+
+
             <Form.Item
-              name="subject"
+              name="subjectId"
               label={<span style={{fontWeight: '500'}}>Môn học</span>}
               rules={[
                 { required: true, message: "Chọn môn học" },
               ]}
               style={{ margin: 0 }}
             >
-              <DropdownSelect data={subjects} placeholder="Toán" />
+              <Select
+                placeholder="Chọn môn học"
+                loading={subjectsLoading}
+                options={subjects.map(subject => ({
+                  value: subject.id,
+                  label: subject.subject_name
+                }))}
+                notFoundContent={subjectsLoading ? <Spin size="small" /> : "Không có môn học nào"}
+                style={{ borderRadius: '4px' }}
+              />
             </Form.Item>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '64% 1fr', gap: '24px' }}>
-            
+
             <Form.Item
               name="description"
               label={<span style={{fontWeight: '500'}}>Người tạo</span>}
-              rules={[
-                { required: true, message: "Người tạo" },
-              ]}
-              style={{ margin: 0 }} 
+              style={{ margin: 0 }}
             >
-              <Input placeholder="Admin" style={{ borderRadius: '4px' }} />
+              <Input placeholder="Admin" style={{ borderRadius: '4px' }} disabled />
             </Form.Item>
 
             <Form.Item
@@ -136,7 +167,15 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
               ]}
               style={{ margin: 0 }}
             >
-              <DropdownSelect data={grades} placeholder="12" />
+              <Select
+                placeholder="Chọn lớp"
+                options={[
+                  { value: "10", label: "Lớp 10" },
+                  { value: "11", label: "Lớp 11" },
+                  { value: "12", label: "Lớp 12" },
+                ]}
+                style={{ borderRadius: '4px' }}
+              />
             </Form.Item>
         </div>
         

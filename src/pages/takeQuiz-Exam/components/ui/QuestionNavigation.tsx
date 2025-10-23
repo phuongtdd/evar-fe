@@ -38,9 +38,6 @@ const QuestionNavigation: React.FC<QuestionNavigationProps> = ({
           {questions.map((question, idx) => (
 
             <>
-              {/* {console.log("currentQuestion : " + question.id)}
-              {console.log("ismark? : " + question.isMarked)} */}
-
               <button
                 key={question.id}
                 onClick={() => onQuestionSelect(idx)}

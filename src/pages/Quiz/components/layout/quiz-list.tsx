@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Button, Input, Pagination, Row, Col } from "antd";
+import { Card, Button, Input, Pagination, Row, Col, Tooltip } from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
@@ -67,7 +67,8 @@ export default function QuizList({ onCreateQuizClick }: QuizListProps) {
               <Button icon={<FilterOutlined />} />
             </div>
 
-            <Button
+           <Tooltip title={"Đang phát triển"}>
+           <Button
               type="primary"
               icon={<PlusOutlined />}
               className="bg-blue-500 hover:bg-blue-600"
@@ -76,6 +77,7 @@ export default function QuizList({ onCreateQuizClick }: QuizListProps) {
             >
               Tạo Quiz
             </Button>
+           </Tooltip>
           </div>
           <div className="space-y-4 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             {exams.map((exam) => (

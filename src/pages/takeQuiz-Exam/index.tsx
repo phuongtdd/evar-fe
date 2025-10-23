@@ -1,29 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Spin, Alert, Modal } from 'antd';
-import { ArrowLeftOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { Button, Spin, Alert, Modal } from "antd";
+import {
+  ArrowLeftOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 
-import ExamHeader from './components/ui/ExamHeader';
-import QuestionCard from './components/ui/QuestionCard';
-import QuestionNavigation from './components/ui/QuestionNavigation';
-import ExamTimer from './components/ui/ExamTimer';
-import ExamSubmission from './components/ui/ExamSubmisionModal';
-import { FaceVerificationStep } from './components/layout/FaceVerify';
-import { VerifySuccess } from './components/layout/VerifySuccess';
-import { VerifyFailed } from './components/layout/VerifyFailed';
-import SubmitSuccess from './components/layout/SubmitSuccess';
+import ExamHeader from "./components/ui/ExamHeader";
+import QuestionCard from "./components/ui/QuestionCard";
+import QuestionNavigation from "./components/ui/QuestionNavigation";
+import ExamTimer from "./components/ui/ExamTimer";
+import ExamSubmission from "./components/ui/ExamSubmisionModal";
+import { FaceVerificationStep } from "./components/layout/FaceVerify";
+import { VerifySuccess } from "./components/layout/VerifySuccess";
+import { VerifyFailed } from "./components/layout/VerifyFailed";
+import SubmitSuccess from "./components/layout/SubmitSuccess";
 
-import { useExam } from './hooks/useExam';
-import { ExamResults as ExamResultsType } from './types';
-import { EXAM_MESSAGES } from './constants';
-import { examService } from './services/examService';
+import { useExam } from "./hooks/useExam";
+import { ExamResults as ExamResultsType } from "./types";
+import { EXAM_MESSAGES } from "./constants";
+import { examService } from "./services/examService";
 
 const TakeQuizExam: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const initialExamData = location.state?.examData;
-
 
   if (!examId) {
     return (
@@ -35,7 +37,7 @@ const TakeQuizExam: React.FC = () => {
             type="error"
             showIcon
             action={
-              <Button size="small" onClick={() => navigate('/dashboard')}>
+              <Button size="small" onClick={() => navigate("/dashboard")}>
                 Về trang chủ
               </Button>
             }
@@ -44,7 +46,7 @@ const TakeQuizExam: React.FC = () => {
       </div>
     );
   }
-  
+
   const {
     examState,
     startExam,
@@ -54,21 +56,25 @@ const TakeQuizExam: React.FC = () => {
     submitExam,
     resetExam,
     isLoading,
-    error
+    error,
   } = useExam(examId, initialExamData);
 
   const [showFaceVerification, setShowFaceVerification] = useState(false);
-  const [faceVerificationStatus, setFaceVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+  const [faceVerificationStatus, setFaceVerificationStatus] = useState<
+    "pending" | "success" | "failed"
+  >("pending");
   const [examResults, setExamResults] = useState<ExamResultsType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [isProcessingSubmission, setIsProcessingSubmission] = useState(false);
-  
-  const [isStartingFaceVerification, setIsStartingFaceVerification] = useState(false);
+
+  const [isStartingFaceVerification, setIsStartingFaceVerification] =
+    useState(false);
   const [isTransitioningToExam, setIsTransitioningToExam] = useState(false);
-  const [isTransitioningToResults, setIsTransitioningToResults] = useState(false);
+  const [isTransitioningToResults, setIsTransitioningToResults] =
+    useState(false);
 
   const handleFaceVerificationStart = () => {
     setIsStartingFaceVerification(true);
@@ -79,7 +85,7 @@ const TakeQuizExam: React.FC = () => {
   };
 
   const handleFaceVerificationSuccess = () => {
-    setFaceVerificationStatus('success');
+    setFaceVerificationStatus("success");
     setIsTransitioningToExam(true);
     setTimeout(() => {
       setShowFaceVerification(false);
@@ -89,16 +95,16 @@ const TakeQuizExam: React.FC = () => {
   };
 
   const handleFaceVerificationFailed = () => {
-    setFaceVerificationStatus('failed');
+    setFaceVerificationStatus("failed");
     setTimeout(() => {
       setShowFaceVerification(false);
-      navigate('/dashboard');
+      window.history.back();
     }, 3000);
   };
 
   const handleFaceVerificationCancel = () => {
     setShowFaceVerification(false);
-    navigate('/dashboard');
+    window.history.back();
   };
 
   const handleShowSubmissionModal = () => {
@@ -117,16 +123,16 @@ const TakeQuizExam: React.FC = () => {
       let submissionDetails = null;
       if (subId) {
         try {
-          console.log('Fetching submission details for ID:', subId);
+          console.log("Fetching submission details for ID:", subId);
           submissionDetails = await examService.getSubmissionDetails(subId);
-          console.log('Submission details received:', submissionDetails);
+          console.log("Submission details received:", submissionDetails);
         } catch (detailErr) {
-          console.warn('Failed to fetch submission details:', detailErr);
+          console.warn("Failed to fetch submission details:", detailErr);
         }
       }
 
       const resultsWithDetails = { ...results, submissionDetails };
-      console.log('Final results with submission details:', resultsWithDetails);
+      console.log("Final results with submission details:", resultsWithDetails);
       setExamResults(resultsWithDetails);
 
       setTimeout(() => {
@@ -135,8 +141,9 @@ const TakeQuizExam: React.FC = () => {
       }, 1000);
     } catch (err) {
       Modal.error({
-        title: 'Lỗi nộp bài',
-        content: err instanceof Error ? err.message : EXAM_MESSAGES.SUBMIT_ERROR,
+        title: "Lỗi nộp bài",
+        content:
+          err instanceof Error ? err.message : EXAM_MESSAGES.SUBMIT_ERROR,
       });
       setIsProcessingSubmission(false);
     } finally {
@@ -150,7 +157,7 @@ const TakeQuizExam: React.FC = () => {
 
   const handleTimeUp = () => {
     Modal.warning({
-      title: 'Hết thời gian',
+      title: "Hết thời gian",
       content: EXAM_MESSAGES.TIME_UP,
       onOk: () => {
         handleConfirmSubmission();
@@ -163,30 +170,35 @@ const TakeQuizExam: React.FC = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Handle retake exam
   const handleRetakeExam = () => {
     resetExam();
     setExamResults(null);
-    setFaceVerificationStatus('pending');
+    setFaceVerificationStatus("pending");
     setShowSubmitSuccess(false);
-    setShowFaceVerification(true); 
+    setShowFaceVerification(true);
   };
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleViewResults = async () => {
     // console.log('handleViewResults called');
-    console.log('Current examResults:', examResults);
-    console.log('Current submissionId:', submissionId);
+    console.log("Current examResults:", examResults);
+    console.log("Current submissionId:", submissionId);
     setIsTransitioningToResults(true);
 
     if (examResults?.submissionDetails) {
-      console.log('Using existing submission details:', examResults.submissionDetails);
+      console.log(
+        "Using existing submission details:",
+        examResults.submissionDetails
+      );
       setTimeout(() => {
         setShowSubmitSuccess(false);
         setIsTransitioningToResults(false);
@@ -195,26 +207,31 @@ const TakeQuizExam: React.FC = () => {
     }
 
     if (!submissionId) {
-      console.log('No submissionId found');
+      console.log("No submissionId found");
       Modal.error({
-        title: 'Lỗi',
-        content: 'Không tìm thấy ID bài nộp. Vui lòng thử lại.',
+        title: "Lỗi",
+        content: "Không tìm thấy ID bài nộp. Vui lòng thử lại.",
       });
       setIsTransitioningToResults(false);
       return;
     }
 
     try {
-      console.log('Fetching submission details for ID:', submissionId);
-      const submissionDetails = await examService.getSubmissionDetails(submissionId);
-      console.log('Fetched submission details:', submissionDetails);
-      setExamResults(prev => prev ? { ...prev, submissionDetails } : null);
-      console.log('Updated examResults with submission details');
+      console.log("Fetching submission details for ID:", submissionId);
+      const submissionDetails = await examService.getSubmissionDetails(
+        submissionId
+      );
+      console.log("Fetched submission details:", submissionDetails);
+      setExamResults((prev) => (prev ? { ...prev, submissionDetails } : null));
+      console.log("Updated examResults with submission details");
     } catch (err) {
-      console.error('Error fetching submission details:', err);
+      console.error("Error fetching submission details:", err);
       Modal.error({
-        title: 'Lỗi tải chi tiết',
-        content: err instanceof Error ? err.message : 'Không thể tải chi tiết bài nộp.',
+        title: "Lỗi tải chi tiết",
+        content:
+          err instanceof Error
+            ? err.message
+            : "Không thể tải chi tiết bài nộp.",
       });
       setIsTransitioningToResults(false);
       return;
@@ -227,7 +244,7 @@ const TakeQuizExam: React.FC = () => {
   };
 
   const handleBackToDashboardFromSuccess = () => {
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   if (isLoading) {
@@ -246,7 +263,9 @@ const TakeQuizExam: React.FC = () => {
       <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center">
         <div className="text-center">
           <Spin size="large" />
-          <p className="mt-4 text-[18px] text-gray-600">Đang khởi tạo xác thực khuôn mặt...</p>
+          <p className="mt-4 text-[18px] text-gray-600">
+            Đang khởi tạo xác thực khuôn mặt...
+          </p>
         </div>
       </div>
     );
@@ -257,7 +276,9 @@ const TakeQuizExam: React.FC = () => {
       <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center">
         <div className="text-center">
           <Spin size="large" />
-          <p className="mt-4 text-[18px] text-gray-600">Đang chuẩn bị bài thi...</p>
+          <p className="mt-4 text-[18px] text-gray-600">
+            Đang chuẩn bị bài thi...
+          </p>
         </div>
       </div>
     );
@@ -279,8 +300,12 @@ const TakeQuizExam: React.FC = () => {
       <div className="min-h-screen bg-[#f4f4f4] flex items-center justify-center">
         <div className="text-center">
           <Spin size="large" />
-          <p className="mt-4 text-[18px] text-gray-600">Đang xử lý bài nộp...</p>
-          <p className="mt-2 text-[14px] text-gray-500">Vui lòng chờ trong giây lát</p>
+          <p className="mt-4 text-[18px] text-gray-600">
+            Đang xử lý bài nộp...
+          </p>
+          <p className="mt-2 text-[14px] text-gray-500">
+            Vui lòng chờ trong giây lát
+          </p>
         </div>
       </div>
     );
@@ -310,21 +335,22 @@ const TakeQuizExam: React.FC = () => {
     return (
       <SubmitSuccess
         examName={examState.examData?.examName}
-        submittedAt={new Date().toLocaleString('vi-VN')}
+        submittedAt={new Date().toLocaleString("vi-VN")}
         onViewResults={handleViewResults}
         onBackToDashboard={handleBackToDashboardFromSuccess}
         submissionDetails={examResults.submissionDetails}
-        totalQuestions={examState.questions?.length || examResults.totalQuestions}
+        totalQuestions={
+          examState.questions?.length || examResults.totalQuestions
+        }
       />
     );
   }
 
-
   if (showFaceVerification) {
-    if (faceVerificationStatus === 'success') {
+    if (faceVerificationStatus === "success") {
       return <VerifySuccess />;
     }
-    if (faceVerificationStatus === 'failed') {
+    if (faceVerificationStatus === "failed") {
       return <VerifyFailed />;
     }
     return (
@@ -343,16 +369,20 @@ const TakeQuizExam: React.FC = () => {
             <h1 className="text-[32px] font-bold text-black mb-4">
               {examState.examData.examName}
             </h1>
-            
+
             <div className="bg-[#f8f9ff] rounded-[12px] p-6 mb-6">
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Môn học:</span>
-                  <span className="font-semibold">{examState.examData.subjectName}</span>
+                  <span className="font-semibold">
+                    {examState.examData.subjectName}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Số câu hỏi:</span>
-                  <span className="font-semibold">{examState.examData.numOfQuestions}</span>
+                  <span className="font-semibold">
+                    {examState.examData.numOfQuestions}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Thời gian:</span>
@@ -382,7 +412,7 @@ const TakeQuizExam: React.FC = () => {
 
             <div className="flex justify-center gap-4">
               <Button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => window.history.back()}
                 icon={<ArrowLeftOutlined />}
                 className="!bg-gray-500 !hover:bg-gray-600 !text-white rounded-[8px] h-[50px] px-8 text-[18px]"
               >
@@ -393,7 +423,9 @@ const TakeQuizExam: React.FC = () => {
                 loading={isStartingFaceVerification}
                 className="!bg-[#6392e9] !hover:bg-[#5282d8] !text-white rounded-[8px] h-[50px] px-8 text-[18px] font-semibold"
               >
-                {isStartingFaceVerification ? 'Đang khởi tạo...' : 'Bắt đầu thi'}
+                {isStartingFaceVerification
+                  ? "Đang khởi tạo..."
+                  : "Bắt đầu thi"}
               </Button>
             </div>
           </div>
@@ -402,10 +434,16 @@ const TakeQuizExam: React.FC = () => {
     );
   }
 
-  if (examState.isExamStarted && examState.examData && examState.questions.length > 0) {
+  if (
+    examState.isExamStarted &&
+    examState.examData &&
+    examState.questions.length > 0
+  ) {
     const currentQuestion = examState.questions[examState.currentQuestionIndex];
-    const answeredCount = examState.questions.filter(q => q.isAnswered).length;
-    
+    const answeredCount = examState.questions.filter(
+      (q) => q.isAnswered
+    ).length;
+
     // console.log('Current question state:', {
     //   questionId: currentQuestion.id,
     //   isMarked: currentQuestion.isMarked,
@@ -428,21 +466,37 @@ const TakeQuizExam: React.FC = () => {
               <QuestionCard
                 question={currentQuestion}
                 questionNumber={examState.currentQuestionIndex + 1}
-                onAnswerSelect={(answerIndex, isMultiple) => selectAnswer(currentQuestion.id, answerIndex, isMultiple)}
+                onAnswerSelect={(answerIndex, isMultiple) =>
+                  selectAnswer(currentQuestion.id, answerIndex, isMultiple)
+                }
                 onMarkQuestion={() => markQuestion(currentQuestion.id)}
                 isMarked={currentQuestion.isMarked ?? false}
               />
               <div className="flex justify-between mt-6">
                 <Button
-                  onClick={() => goToQuestion(Math.max(0, examState.currentQuestionIndex - 1))}
+                  onClick={() =>
+                    goToQuestion(
+                      Math.max(0, examState.currentQuestionIndex - 1)
+                    )
+                  }
                   disabled={examState.currentQuestionIndex === 0}
                   className="!bg-[#6392e9] !hover:bg-[#5282d8] !text-white rounded-[8px] !px-8 h-[43px]"
                 >
                   Trước
                 </Button>
                 <Button
-                  onClick={() => goToQuestion(Math.min(examState.questions.length - 1, examState.currentQuestionIndex + 1))}
-                  disabled={examState.currentQuestionIndex === examState.questions.length - 1}
+                  onClick={() =>
+                    goToQuestion(
+                      Math.min(
+                        examState.questions.length - 1,
+                        examState.currentQuestionIndex + 1
+                      )
+                    )
+                  }
+                  disabled={
+                    examState.currentQuestionIndex ===
+                    examState.questions.length - 1
+                  }
                   className="!bg-[#6392e9] !hover:bg-[#5282d8] !text-white rounded-[8px] !px-8 h-[43px]"
                 >
                   Sau
@@ -450,19 +504,22 @@ const TakeQuizExam: React.FC = () => {
               </div>
             </div>
 
-          <div>
+            <div>
+              <div className="mb-6 flex flex-col item-center">
+                <ExamTimer
+                  timeLeft={examState.timeLeft}
+                  onTimeUp={handleTimeUp}
+                  subjectName={examState.examData.subjectName}
+                />
+              </div>
 
-          <div className="mb-6 flex flex-col item-center">
-            <ExamTimer timeLeft={examState.timeLeft} onTimeUp={handleTimeUp} subjectName={examState.examData.subjectName} />
-          </div>
-
-            <QuestionNavigation
-              questions={examState.questions}
-              currentQuestionIndex={examState.currentQuestionIndex}
-              onQuestionSelect={goToQuestion}
-              onSubmitExam={handleShowSubmissionModal}
-            />
-          </div>
+              <QuestionNavigation
+                questions={examState.questions}
+                currentQuestionIndex={examState.currentQuestionIndex}
+                onQuestionSelect={goToQuestion}
+                onSubmitExam={handleShowSubmissionModal}
+              />
+            </div>
           </div>
 
           <ExamSubmission

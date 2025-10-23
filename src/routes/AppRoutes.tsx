@@ -22,6 +22,7 @@ import SubjectModule from "../pages/Subject";
 import CreateQuizManual from "../pages/createQuiz-manual";
 import { ExamAdminPanel } from "../pages/ExamManage";
 import AdminDashboard from "../pages/admin/index";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 interface NotifyMessageProps {
@@ -43,12 +44,37 @@ const AppRoutes: React.FC = () => {
     <>
       {contextHolder}
       <Routes>
-        <Route path="/auth" element={<AuthPage />}>
+        {/* Public Routes - No authentication required */}
+        <Route 
+          path="/auth" 
+          element={
+            <ProtectedRoute access="public">
+              <AuthPage />
+            </ProtectedRoute>
+          }
+        >
           <Route path="login" element={<AuthPage />} />
           <Route path="register" element={<AuthPage />} />
         </Route>
 
-        <Route path="/" element={<MainLayout />}>
+        <Route 
+          path="/promotion" 
+          element={
+            <ProtectedRoute access="public">
+              <Promotion />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Routes - Require authentication (ROLE_USER) */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute access="protected">
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="room" element={<Room />} />
@@ -83,14 +109,23 @@ const AppRoutes: React.FC = () => {
           />
         </Route>
 
-        <Route path="/admin">
+        {/* Admin Routes - Require ROLE_ADMIN */}
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute access="admin">
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />}/>
           <Route path="manage-subject" element={<SubjectModule />} />
           <Route path="manage-exam" element={<ExamAdminPanel/>}/>
           <Route path="create-exam" element={<CreateExamManual/>}/>
         </Route>
+
+        {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
-        <Route path="/promotion" element={<Promotion />} />
       </Routes>
     </>
   );
