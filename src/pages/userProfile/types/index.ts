@@ -80,3 +80,62 @@ export interface UserApiModel {
   status: number
   person: PersonApiModel
 }
+
+// Interface cho request update user
+export interface UpdateUserRequest {
+  id: string
+  password?: string
+  person: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+    dob?: string
+    email?: string
+    gender?: string
+    avatarUrl?: string
+    provinceCode?: string
+    wardCode?: string
+    address?: string
+    description?: string
+  }
+}
+
+// Interface cho response từ IMGBB API
+export interface ImgbbResponse {
+  data: {
+    id: string
+    title: string
+    url_viewer: string
+    url: string
+    display_url: string
+    width: number
+    height: number
+    size: number
+    time: string
+    expiration: string
+    image: {
+      filename: string
+      name: string
+      mime: string
+      extension: string
+      url: string
+    }
+    thumb: {
+      filename: string
+      name: string
+      mime: string
+      extension: string
+      url: string
+    }
+    medium: {
+      filename: string
+      name: string
+      mime: string
+      extension: string
+      url: string
+    }
+    delete_url: string
+  }
+  success: boolean
+  status: number
+}

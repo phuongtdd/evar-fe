@@ -1,6 +1,9 @@
-import React from 'react';
-import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
-import type { UserProfile } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { Modal, Button, Form, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { UserProfile, UpdateUserRequest } from '../types';
+import { uploadImageToImgbb, updateUserProfile } from '../services';
+import { getUserIdFromToken } from '../utils/auth';
 import '../styles/EditProfileModal.css';
 
 interface EditProfileModalProps {
@@ -12,6 +15,12 @@ interface EditProfileModalProps {
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profile, onSave }) => {
   const [formData, setFormData] = React.useState<UserProfile>({ ...profile });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -21,11 +30,123 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    onHide();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Chỉ được phép tải lên file ảnh (JPEG, PNG, GIF, WebP)');
+        return;
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setError('Kích thước file không được vượt quá 5MB');
+        return;
+      }
+
+      // Lưu file để upload sau
+      setSelectedFile(file);
+      setError(null);
+
+      // Tạo preview ngay lập tức
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input để có thể chọn cùng file nếu cần
+    e.target.value = '';
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+
+      const userId = getUserIdFromToken();
+      if (!userId) {
+        throw new Error('Không tìm thấy thông tin người dùng');
+      }
+
+      // Tách tên thành firstName và lastName
+      const nameParts = formData.name.split(' ');
+      const lastName = nameParts[nameParts.length - 1] || '';
+      const firstName = nameParts.slice(0, -1).join(' ') || '';
+
+      // Tạo update request - chỉ gửi những trường đã thay đổi
+      const updateData: UpdateUserRequest = {
+        id: userId,
+        person: {}
+      };
+
+      // Chỉ thêm những trường đã thay đổi so với profile gốc
+      if (firstName !== profile.name.split(' ').slice(0, -1).join(' ')) {
+        updateData.person.firstName = firstName;
+      }
+      if (lastName !== profile.name.split(' ').pop()) {
+        updateData.person.lastName = lastName;
+      }
+      if (formData.dateOfBirth !== profile.dateOfBirth) {
+        updateData.person.dob = formData.dateOfBirth;
+      }
+      if (formData.gender !== profile.gender) {
+        updateData.person.gender = formData.gender;
+      }
+      if (formData.email !== profile.email) {
+        updateData.person.email = formData.email;
+      }
+      if (formData.phone !== profile.phone) {
+        updateData.person.phone = formData.phone;
+      }
+      if (formData.address !== profile.address) {
+        updateData.person.address = formData.address;
+      }
+
+      // Nếu có file ảnh được chọn, upload lên IMGBB trước
+      if (selectedFile) {
+        try {
+          const imageUrl = await uploadImageToImgbb(selectedFile);
+          updateData.person.avatarUrl = imageUrl;
+        } catch (uploadError: any) {
+          throw new Error(`Lỗi upload ảnh: ${uploadError.message}`);
+        }
+      }
+
+      const updatedProfile = await updateUserProfile(updateData);
+      
+      setSuccess(true);
+      onSave(updatedProfile);
+      
+      // Đóng modal sau 1 giây để user thấy thông báo thành công
+      setTimeout(() => {
+        // Reset state khi đóng modal
+        setSelectedFile(null);
+        setImagePreview('');
+        onHide();
+      }, 1000);
+      
+    } catch (error: any) {
+      setError(`Lỗi cập nhật: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset state khi modal được mở
+  useEffect(() => {
+    if (show) {
+      setSelectedFile(null);
+      setImagePreview('');
+      setError(null);
+      setSuccess(false);
+    }
+  }, [show]);
 
   // Tách tên thành họ và tên
   const nameParts = formData.name.split(' ');
@@ -33,25 +154,73 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
   const firstName = nameParts.slice(0, -1).join(' ') || '';
 
   return (
-    <Modal show={show} onHide={onHide} centered size="lg" className="edit-profile-modal">
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="w-100 text-center fs-5">Chỉnh sửa thông tin cá nhân</Modal.Title>
-      </Modal.Header>
+    <AnimatePresence>
+      {show && (
+        <Modal 
+          show={show} 
+          onHide={onHide} 
+          centered 
+          size="lg" 
+          className="edit-profile-modal"
+          as={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <Modal.Header closeButton className="border-0 pt-3 pe-3" />
       <form onSubmit={handleSubmit}>
-        <Modal.Body className="pt-0">
-          <div className="text-center mb-3">
+        <Modal.Body className="pt-3">
+          {error && (
+            <Alert variant="danger" className="mb-3" onClose={() => setError(null)} dismissible>
+              <i className="fas fa-exclamation-circle me-2"></i>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert variant="success" className="mb-3" onClose={() => setSuccess(false)} dismissible>
+              <i className="fas fa-check-circle me-2"></i>
+              Cập nhật thông tin thành công!
+            </Alert>
+          )}
+          
+          {/* Profile Image Upload */}
+          <div className="text-center mb-4">
             <div className="position-relative d-inline-block">
-              <img 
-                src={formData.avatar || "/placeholder-user.jpg"} 
-                alt={formData.name}
-                className="edit-avatar"
-              />
-              <button type="button" className="btn btn-light btn-sm rounded-circle position-absolute bottom-0 end-0">
-                <i className="fas fa-camera"></i>
-              </button>
+              <div 
+                className="avatar-upload-container"
+                onClick={() => !loading && fileInputRef.current?.click()}
+                style={{ cursor: 'pointer' }}
+              >
+                <img 
+                  src={imagePreview || formData.avatar || "/placeholder-user.jpg"} 
+                  alt={formData.name}
+                  className="edit-avatar"
+                />
+                <div className="avatar-upload-overlay">
+                  <div className="plus-icon-container">
+                    <i className="fas fa-plus"></i>
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="d-none"
+                  disabled={loading}
+                />
+              </div>
             </div>
-            <h6 className="mt-2 mb-0 fw-bold">{formData.name}</h6>
-            <small className="text-muted">ID: {formData.id || 'N/A'}</small>
+            <h6 className="mt-3 mb-0 fw-bold">{formData.name}</h6>
+            {imagePreview && (
+              <div className="mt-2">
+                <small className="text-info">
+                  <i className="fas fa-info-circle me-1"></i>
+                  Ảnh mới sẽ được tải lên khi bạn lưu thay đổi
+                </small>
+              </div>
+            )}
           </div>
 
           <div className="form-section compact-form">
@@ -152,15 +321,24 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
-          <Button variant="outline-secondary" className="px-4" onClick={onHide}>
+          <Button variant="outline-secondary" className="px-4" onClick={onHide} disabled={loading}>
             Hủy
           </Button>
-          <Button variant="primary" type="submit" className="px-4">
-            Lưu thay đổi
+          <Button variant="primary" type="submit" className="px-4" disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner size="sm" className="me-2" />
+                Đang lưu...
+              </>
+            ) : (
+              'Lưu thay đổi'
+            )}
           </Button>
         </Modal.Footer>
       </form>
     </Modal>
+      )}
+    </AnimatePresence>
   );
 };
 

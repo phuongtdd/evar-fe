@@ -18,9 +18,15 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile: initialProfile }) =>
   const firstName = nameParts.slice(0, -1).join(' ') || ''
   
   const handleSaveProfile = (updatedProfile: UserProfile) => {
-    // Here you would typically make an API call to save the changes
     setProfile(updatedProfile);
-    // You can add a success toast/message here
+    
+    // Dispatch custom event để header có thể lắng nghe và cập nhật
+    window.dispatchEvent(new CustomEvent('avatarUpdated', { 
+      detail: { 
+        avatar: updatedProfile.avatar,
+        name: updatedProfile.name
+      } 
+    }));
   };
 
   return (
