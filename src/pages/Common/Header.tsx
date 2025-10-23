@@ -8,10 +8,16 @@ import {
   SettingOutlined,
   QuestionCircleOutlined,
   MoonOutlined,
-  SunOutlined
+  SunOutlined,
+  ClockCircleOutlined,
+  KeyOutlined
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import ChangePasswordModal from './ChangePasswordModal';
+import BuyTimeModal from './BuyTimeModal';
+import { getUserById } from '../userProfile/services';
+import { getUserIdFromToken } from '../userProfile/utils/auth';
 import './Header.css';
 
 interface HeaderProps {
@@ -91,6 +97,10 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
     }
   ]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showBuyTimeModal, setShowBuyTimeModal] = useState(false);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('Người dùng');
   const unreadCount = notifications.filter(n => !n.isRead).length;
   
   const currentPageTitle = getPageTitle(location.pathname);
@@ -120,6 +130,39 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
     return () => clearInterval(timer);
   }, [isPremium, isInMeeting]);
 
+  // Load user profile khi component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const userId = getUserIdFromToken();
+        if (userId) {
+          const userProfile = await getUserById(userId);
+          setUserAvatar(userProfile.avatar || null);
+          setUserName(userProfile.name || 'Người dùng');
+        }
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  // Lắng nghe sự kiện cập nhật avatar
+  useEffect(() => {
+    const handleAvatarUpdate = (event: any) => {
+      setUserAvatar(event.detail.avatar);
+      if (event.detail.name) {
+        setUserName(event.detail.name);
+      }
+    };
+
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+    return () => {
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+    };
+  }, []);
+
   const markAsRead = (id?: number) => {
     if (id) {
       setNotifications(notifications.map(n => 
@@ -147,20 +190,26 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Hồ sơ cá nhân',
+      icon: <UserOutlined className="text-blue-500" />,
+      label: <span className="font-medium">Hồ sơ cá nhân</span>,
       onClick: () => navigate('/profile')
     },
     {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Cài đặt',
-      onClick: () => navigate('/settings')
+      key: 'change-password',
+      icon: <KeyOutlined className="text-green-500" />,
+      label: <span className="font-medium">Đổi mật khẩu</span>,
+      onClick: () => setShowChangePasswordModal(true)
+    },
+    {
+      key: 'buy-time',
+      icon: <ClockCircleOutlined className="text-purple-500" />,
+      label: <span className="font-medium">Mua thêm giờ</span>,
+      onClick: () => setShowBuyTimeModal(true)
     },
     {
       key: 'help',
-      icon: <QuestionCircleOutlined />,
-      label: 'Trợ giúp & Hỗ trợ',
+      icon: <QuestionCircleOutlined className="text-orange-500" />,
+      label: <span className="font-medium">Trợ giúp & Hỗ trợ</span>,
       onClick: () => window.open('https://help.evar.vn', '_blank')
     },
     {
@@ -168,8 +217,8 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
     },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Đăng xuất',
+      icon: <LogoutOutlined className="text-red-500" />,
+      label: <span className="font-medium">Đăng xuất</span>,
       danger: true,
       onClick: () => {
         // Clear user session
@@ -223,7 +272,14 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
           {/* Remaining Meeting Time */}
           <div 
             className="meeting-time flex items-center gap-1 text-sm font-medium"
-            onClick={() => window.location.href = isPremium ? '/premium' : '/upgrade'}
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isPremium) {
+                setShowBuyTimeModal(true);
+              } else {
+                window.location.href = '/premium';
+              }
+            }}
             style={{ 
               cursor: 'pointer',
               color: isInMeeting 
@@ -383,10 +439,11 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
               <Avatar 
                 size={36} 
                 className="user-avatar"
+                src={userAvatar || undefined}
                 icon={<UserOutlined />}
               />
               <div className="user-info hidden md:block">
-                <span className="user-name">Người dùng</span>
+                <span className="user-name">{userName}</span>
                 <span className="user-plan">Free Plan</span>
               </div>
               <DownOutlined className="user-dropdown-arrow" />
@@ -394,6 +451,16 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
           </Dropdown>
         </div>
       </div>
+
+      {/* Modals */}
+      <ChangePasswordModal
+        show={showChangePasswordModal}
+        onHide={() => setShowChangePasswordModal(false)}
+      />
+      <BuyTimeModal
+        show={showBuyTimeModal}
+        onHide={() => setShowBuyTimeModal(false)}
+      />
     </header>
   );
 };

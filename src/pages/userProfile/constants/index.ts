@@ -32,4 +32,10 @@ export const SUBJECTS = {
 export const API_ENDPOINT = {
   // Gọi GET /users?id=<string>
   getUser: "/users",
+  // Gọi PUT /users/update
+  updateUser: "/users/update",
 }
+
+// IMGBB API Configuration
+export const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY || 'your_imgbb_api_key_here'
+export const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload'

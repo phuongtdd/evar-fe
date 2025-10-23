@@ -1,6 +1,6 @@
 import apiClient from "../../../configs/axiosConfig"
-import { API_ENDPOINT } from "../constants"
-import type { ApiEnvelope, UserApiModel, UserProfile, Activity } from "../types"
+import { API_ENDPOINT, IMGBB_API_KEY, IMGBB_UPLOAD_URL } from "../constants"
+import type { ApiEnvelope, UserApiModel, UserProfile, Activity, UpdateUserRequest, ImgbbResponse } from "../types"
 import { mockActivities } from "../mock"
 
 // Chuyển đổi dữ liệu user từ backend sang mô hình dùng cho UI
@@ -51,6 +51,69 @@ export const getUserById = async (id: string): Promise<UserProfile> => {
     console.error("❌ Failed to fetch user by id:", error)
     console.error("❌ Error response:", error?.response)
     console.error("❌ Error message:", error?.message)
+    throw error
+  }
+}
+
+// Upload ảnh lên IMGBB
+export const uploadImageToImgbb = async (file: File): Promise<string> => {
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    formData.append('key', IMGBB_API_KEY)
+
+    console.log("📤 Uploading image to IMGBB...")
+    
+    const response = await fetch(IMGBB_UPLOAD_URL, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`)
+    }
+
+    const data: ImgbbResponse = await response.json()
+    
+    if (!data.success) {
+      throw new Error('Upload failed: IMGBB API returned error')
+    }
+
+    console.log("✅ Image uploaded successfully:", data.data.url)
+    return data.data.url
+  } catch (error: any) {
+    console.error("❌ Failed to upload image:", error)
+    throw error
+  }
+}
+
+// Update user profile
+export const updateUserProfile = async (updateData: UpdateUserRequest): Promise<UserProfile> => {
+  try {
+    console.log("🔄 Updating user profile:", updateData)
+    
+    const response = await apiClient.put<ApiEnvelope<UserApiModel>>(
+      API_ENDPOINT.updateUser,
+      updateData
+    )
+    
+    console.log("📦 Update response:", response.data)
+    
+    if (response.status !== 200) {
+      throw new Error(response.statusText || "Update failed")
+    }
+    
+    const payload = response.data
+    if (payload.code !== 1000) {
+      throw new Error(payload.message || "API returned error")
+    }
+    
+    const mappedProfile = mapUserApiToProfile(updateData.id, payload.data)
+    console.log("✅ Profile updated successfully:", mappedProfile)
+    
+    return mappedProfile
+  } catch (error: any) {
+    console.error("❌ Failed to update user profile:", error)
     throw error
   }
 }
