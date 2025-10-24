@@ -26,7 +26,7 @@ const AboutWithVideo: React.FC = () => {
   };
 
   return (
-    <section className="relative bg-[#f4f4f4] py-20 px-4 lg:py-16 md:py-12 sm:py-8">
+    <section className="relative bg-[#f4f4f4] py-20 px-4 lg:py-16 md:py-12 sm:py-8 mb-[120px]">
       {/* Background virtual office environment */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute left-0 top-0 h-full w-1/3 bg-gradient-to-r from-blue-50/30 to-transparent"></div>
@@ -49,13 +49,13 @@ const AboutWithVideo: React.FC = () => {
       <div>
         <div className="relative w-full aspect-[16/9] bg-transparent overflow-hidden">
           <div className="flex flex-col items-center justify-center mx-auto w-full absolute top-7">
-            <h2 className="mb-6 text-5xl font-bold leading-tight text-black lg:text-4xl md:text-3xl sm:text-2xl">
-              Work together. Like in the office.
+            <h2 className="mb-6 !text-5xl font-bold leading-tight text-black lg:text-4xl md:text-3xl sm:text-2xl">
+              Hữu ích và luôn sẵn sàng
             </h2>
 
             <p className="mx-auto mb-16 max-w-2xl text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm text-center">
-              Create customized virtual office spaces for any department or
-              event with high quality audio and video conferencing.
+              Tạo không gian phòng học ảo tùy chỉnh cho bất kỳ ai hoặc sự kiện
+              nào với chất lượng âm thanh và hình ảnh tốt.
             </p>
           </div>
           <iframe
@@ -71,16 +71,16 @@ const AboutWithVideo: React.FC = () => {
 
           <div className="absolute left-0 top-0 h-full w-[200px] bg-[#f4f4f4] z-10" />
           <div className="absolute right-0 top-0 h-full w-[200px] bg-[#f4f4f4] z-10" />
-          
         </div>
       </div>
 
       <div className="container relative z-10 mx-auto max-w-7xl">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="mx-auto mb-12 max-w-3xl text-center text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm">
-            Collaborating with remote teams is easy in your virtual office
-            environment. Enjoy real-time communication within your workspace
-            without additional software hassle.
+          <p className="mx-auto  !mb-12 max-w-3xl text-center text-lg leading-relaxed text-gray-700 lg:text-base md:text-sm ">
+            Việc cộng tác với các nhóm làm việc từ xa trở nên dễ dàng trong môi
+            trường văn phòng ảo của bạn. Tận hưởng giao tiếp thời gian thực ngay
+            tại không gian làm việc của bạn mà không cần thêm bất kỳ rắc rối nào
+            về phần mềm.
           </p>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-12">
             <div className="text-center">
@@ -98,11 +98,11 @@ const AboutWithVideo: React.FC = () => {
                 </svg>
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Customize workspace
+                Tùy chỉnh không gian làm việc
               </h3>
               <p className="text-gray-600">
-                Create your own offices and meeting rooms to suit your team's
-                needs.
+                Tạo văn phòng và phòng họp của riêng bạn để phù hợp với nhu cầu
+                của đội ngũ.
               </p>
             </div>
 
@@ -117,11 +117,11 @@ const AboutWithVideo: React.FC = () => {
                 </svg>
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Audio and video calls
+                Cuộc gọi âm thanh và video
               </h3>
               <p className="text-gray-600">
-                Collaborate efficiently and seamlessly with high quality virtual
-                conferencing.
+                Hợp tác hiệu quả và liền mạch với chất lượng hội nghị trực tuyến
+                cao cấp.
               </p>
             </div>
 
@@ -136,10 +136,11 @@ const AboutWithVideo: React.FC = () => {
                 </svg>
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Invite guests
+                Mời khách
               </h3>
               <p className="text-gray-600">
-                Meet with guests without ever needing to leave your workspace.
+                Gặp gỡ khách mà không cần phải rời khỏi không gian làm việc của
+                bạn.
               </p>
             </div>
           </div>

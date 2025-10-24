@@ -86,3 +86,9 @@
 .image-loaded {
   animation: imageLoad 0.3s ease-out;
 }
+
+.leva-c_root_3Uqig,
+[class*="leva-c_root"],
+[class*="leva"] {
+  display: none !important;
+}

@@ -13,7 +13,7 @@ interface SubmitSuccessProps {
   submittedAt?: string;
   onViewResults?: () => void;
   onBackToDashboard?: () => void;
-  submissionDetails?: any; 
+  submissionDetails?: any;
   totalQuestions?: number;
   examResults?: any;
   examData?: any;
@@ -35,20 +35,23 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<
     number | null
   >(null);
-  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({});
-  const [imageErrorStates, setImageErrorStates] = useState<{[key: string]: boolean}>({});
+  const [imageLoadingStates, setImageLoadingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [imageErrorStates, setImageErrorStates] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
 
-
   const handleImageLoad = (questionIndex: number) => {
-    setImageLoadingStates(prev => ({ ...prev, [questionIndex]: false }));
-    setImageErrorStates(prev => ({ ...prev, [questionIndex]: false }));
+    setImageLoadingStates((prev) => ({ ...prev, [questionIndex]: false }));
+    setImageErrorStates((prev) => ({ ...prev, [questionIndex]: false }));
   };
 
   const handleImageError = (questionIndex: number) => {
-    setImageLoadingStates(prev => ({ ...prev, [questionIndex]: false }));
-    setImageErrorStates(prev => ({ ...prev, [questionIndex]: true }));
+    setImageLoadingStates((prev) => ({ ...prev, [questionIndex]: false }));
+    setImageErrorStates((prev) => ({ ...prev, [questionIndex]: true }));
   };
 
   const handleImageClick = (imageUrl: string) => {
@@ -58,23 +61,89 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
   const calculateCorrectAnswers = () => {
     if (!submissionDetails?.questions) return 0;
-    
+
     let correctCount = 0;
     submissionDetails.questions.forEach((question: any) => {
-      const correctAnswers = question.answers.filter((answer: any) => answer.correct);
-      const userSelectedAnswers = question.answers.filter((answer: any) => answer.select);
-      
-      const allCorrectSelected = correctAnswers.every((answer: any) => answer.select);
-      const noWrongSelected = question.answers.every((answer: any) => 
+      const correctAnswers = question.answers.filter(
+        (answer: any) => answer.correct
+      );
+      const userSelectedAnswers = question.answers.filter(
+        (answer: any) => answer.select
+      );
+
+      const allCorrectSelected = correctAnswers.every(
+        (answer: any) => answer.select
+      );
+      const noWrongSelected = question.answers.every((answer: any) =>
         !answer.correct ? !answer.select : true
       );
-      
+
       if (allCorrectSelected && noWrongSelected) {
         correctCount++;
       }
     });
-    
+
     return correctCount;
+  };
+
+  const calculateUserScore = () => {
+    if (submissionDetails?.totalScore !== undefined) {
+      console.log('Using submissionDetails.totalScore:', submissionDetails.totalScore);
+      return submissionDetails.totalScore;
+    }
+    
+    if (examResults?.totalScore !== undefined) {
+      console.log('Using examResults.totalScore:', examResults.totalScore);
+      return examResults.totalScore;
+    }
+    
+    if (!submissionDetails?.questions) return 0;
+
+    let userScore = 0;
+    submissionDetails.questions.forEach((question: any) => {
+      const correctAnswers = question.answers.filter(
+        (answer: any) => answer.correct
+      );
+      const userSelectedAnswers = question.answers.filter(
+        (answer: any) => answer.select
+      );
+
+      const allCorrectSelected = correctAnswers.every(
+        (answer: any) => answer.select
+      );
+      const noWrongSelected = question.answers.every((answer: any) =>
+        !answer.correct ? !answer.select : true
+      );
+
+      if (allCorrectSelected && noWrongSelected) {
+        // Add the question's point value (default to 1 if not specified)
+        userScore += question.pointValue || 1;
+      }
+    });
+
+    console.log('Calculated userScore from questions:', userScore);
+    return userScore;
+  };
+
+  const calculateTotalPossiblePoints = () => {
+    // Sử dụng examData để tính tổng điểm có thể đạt được
+    if (examData?.questions) {
+      let totalPoints = 0;
+      examData.questions.forEach((question: any) => {
+        totalPoints += question.quesScore || 1;
+      });
+      return totalPoints;
+    }
+    
+    // Fallback về logic cũ nếu không có examData
+    if (!submissionDetails?.questions) return totalQuestions;
+
+    let totalPoints = 0;
+    submissionDetails.questions.forEach((question: any) => {
+      totalPoints += question.pointValue || 1;
+    });
+
+    return totalPoints;
   };
 
   const getTimeSpent = () => {
@@ -88,28 +157,30 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getTimeLimit = () => {
     if (examData?.timeLimit) {
       return examData.timeLimit;
     }
-    return 90 * 60; 
+    return 90 * 60;
   };
 
   useEffect(() => {
     if (submissionDetails?.questions) {
-      const initialLoadingStates: {[key: string]: boolean} = {};
-      const initialErrorStates: {[key: string]: boolean} = {};
-      
+      const initialLoadingStates: { [key: string]: boolean } = {};
+      const initialErrorStates: { [key: string]: boolean } = {};
+
       submissionDetails.questions.forEach((question: any, index: number) => {
         if (question.questionImg) {
           initialLoadingStates[index] = true;
           initialErrorStates[index] = false;
         }
       });
-      
+
       setImageLoadingStates(initialLoadingStates);
       setImageErrorStates(initialErrorStates);
     }
@@ -134,15 +205,29 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
   const getQuestionStatus = (question: any) => {
     if (!question.answers) return "not-answered";
-    const hasCorrectAnswer = question.answers.some(
-      (answer: any) => answer.correct && answer.select
+
+    const correctAnswers = question.answers.filter(
+      (answer: any) => answer.correct
     );
-    const hasSelectedAnswer = question.answers.some(
+    const userSelectedAnswers = question.answers.filter(
       (answer: any) => answer.select
     );
 
-    if (hasCorrectAnswer) return "correct";
-    if (hasSelectedAnswer) return "wrong";
+    const allCorrectSelected = correctAnswers.every(
+      (answer: any) => answer.select
+    );
+    const noWrongSelected = question.answers.every((answer: any) =>
+      !answer.correct ? !answer.select : true
+    );
+
+    if (allCorrectSelected && noWrongSelected) {
+      return "correct";
+    }
+
+    if (userSelectedAnswers.length > 0) {
+      return "wrong";
+    }
+
     return "not-answered";
   };
 
@@ -163,7 +248,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     <>
       <div className="p-5 flex flex-col items-center justify-center relative">
         <div className="absolute top-12 left-0">
-          <BackButton url="/dashboard"/>
+          <BackButton url="/dashboard" />
         </div>
         <Card className="w-[70%] flex flex-col items-center justify-center">
           <div className="text-center flex flex-col items-center justify-center gap-3">
@@ -174,10 +259,8 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
               <div className="flex flex-row items-center">
                 <span className="text-[24px]">Kết quả :</span>
                 <span className="text-[54px] mx-auto">
-                  <span>
-                    {calculateCorrectAnswers()}
-                  </span>
-                  <span>/{totalQuestions}</span>
+                  <span>{calculateUserScore()}</span>
+                  <span>/{calculateTotalPossiblePoints()}</span>
                 </span>
               </div>
               <p className="text-[16px] text-gray-500">
@@ -216,6 +299,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     {totalQuestions - calculateCorrectAnswers()}
                   </span>
                 </div>
+                
               </div>
 
               {/* Right Column - Info */}
@@ -269,7 +353,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                     onClick={() => setShowQuestionDetails(false)}
                     className="!bg-gray-500 !hover:bg-gray-600 text-white rounded-[8px]"
                   >
-                  Đóng
+                    Đóng
                   </Button>
                 </div>
 
@@ -290,14 +374,16 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                       const correctAnswers = question.answers.filter(
                         (answer: any) => answer.correct
                       );
-                      
+
                       const allCorrectAnswersSelected = correctAnswers.every(
                         (answer: any) => answer.select
                       );
                       const noWrongAnswersSelected = question.answers.every(
-                        (answer: any) => !answer.correct ? !answer.select : true
+                        (answer: any) =>
+                          !answer.correct ? !answer.select : true
                       );
-                      const isCorrect = allCorrectAnswersSelected && noWrongAnswersSelected;
+                      const isCorrect =
+                        allCorrectAnswersSelected && noWrongAnswersSelected;
 
                       return (
                         <div
@@ -319,50 +405,89 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                             )}
                           </div>
 
+                          <span>
+                            Kết luận:
+                            {isCorrect ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded font-medium">
+                                Đúng
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded font-medium">
+                                Sai
+                              </span>
+                            )}
+                          </span>
 
-<div className="w-full flex flex-col items-center justify-center relative">
-       {question.questionImg && (
-        <>
-        <strong className="absolute top-0 left-0">Hình ảnh: </strong>
-          <div className="mt-4 max-width-[300px] relative">
-            {imageLoadingStates[index] && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-[8px] border border-[#d5d5d5] min-h-[200px]">
-                <div className="text-center">
-                  <Spin size="large" />
-                  <p className="mt-2 text-gray-500 text-sm">Đang tải hình ảnh...</p>
-                </div>
-              </div>
-            )}
-            {imageErrorStates[index] && (
-              <div className="flex items-center justify-center bg-gray-100 rounded-[8px] border border-[#d5d5d5] min-h-[200px] p-4">
-                <div className="text-center text-gray-500">
-                  <p className="text-sm">Không thể tải hình ảnh</p>
-                  <p className="text-xs mt-1">Vui lòng kiểm tra kết nối mạng</p>
-                </div>
-              </div>
-            )}
-            <Tooltip title="Nhấn để xem hình ảnh lớn hơn" placement="top">
-              <img
-                src={question.questionImg}
-                alt="Question image"
-                className={`w-[220px] h-auto rounded-[8px] border !border-[#d5d5d5] transition-opacity duration-300 ${
-                  imageLoadingStates[index] || imageErrorStates[index] ? 'opacity-0 absolute' : 'opacity-100 image-loaded'
-                } ${!imageErrorStates[index] ? 'cursor-pointer hover:opacity-80' : ''}`}
-                onLoad={() => handleImageLoad(index)}
-                onError={() => handleImageError(index)}
-                onClick={() => handleImageClick(question.questionImg)}
-                style={{ display: imageLoadingStates[index] || imageErrorStates[index] ? 'none' : 'block' }}
-              />
-            </Tooltip>
-            {!imageErrorStates[index] && !imageLoadingStates[index] && (
-              <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded opacity-0 hover:opacity-100 transition-opacity">
-                <EyeOutlined className="text-sm" />
-              </div>
-            )}
-          </div>
-        </>
-        )}  
-      </div>
+                          <div className="w-full flex flex-col items-center justify-center relative">
+                            {question.questionImg && (
+                              <>
+                                <strong className="absolute top-0 left-0">
+                                  Hình ảnh:{" "}
+                                </strong>
+                                <div className="mt-4 max-width-[200px] relative">
+                                  {imageLoadingStates[index] && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-[8px] border border-[#d5d5d5] min-h-[200px]">
+                                      <div className="text-center">
+                                        <Spin size="large" />
+                                        <p className="mt-2 text-gray-500 text-sm">
+                                          Đang tải hình ảnh...
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {imageErrorStates[index] && (
+                                    <div className="flex items-center justify-center bg-gray-100 rounded-[8px] border border-[#d5d5d5] min-h-[200px] p-4">
+                                      <div className="text-center text-gray-500">
+                                        <p className="text-sm">
+                                          Không thể tải hình ảnh
+                                        </p>
+                                        <p className="text-xs mt-1">
+                                          Vui lòng kiểm tra kết nối mạng
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <Tooltip
+                                    title="Nhấn để xem hình ảnh lớn hơn"
+                                    placement="top"
+                                  >
+                                    <img
+                                      src={question.questionImg}
+                                      alt="Question image"
+                                      className={`w-[220px] h-auto rounded-[8px] border !border-[#d5d5d5] transition-opacity duration-300 ${
+                                        imageLoadingStates[index] ||
+                                        imageErrorStates[index]
+                                          ? "opacity-0 absolute"
+                                          : "opacity-100 image-loaded"
+                                      } ${
+                                        !imageErrorStates[index]
+                                          ? "cursor-pointer hover:opacity-80"
+                                          : ""
+                                      }`}
+                                      onLoad={() => handleImageLoad(index)}
+                                      onError={() => handleImageError(index)}
+                                      onClick={() =>
+                                        handleImageClick(question.questionImg)
+                                      }
+                                      style={{
+                                        display:
+                                          imageLoadingStates[index] ||
+                                          imageErrorStates[index]
+                                            ? "none"
+                                            : "block",
+                                      }}
+                                    />
+                                  </Tooltip>
+                                  {!imageErrorStates[index] &&
+                                    !imageLoadingStates[index] && (
+                                      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded opacity-0 hover:opacity-100 transition-opacity">
+                                        <EyeOutlined className="text-sm" />
+                                      </div>
+                                    )}
+                                </div>
+                              </>
+                            )}
+                          </div>
                           <div className="text-[18px] text-black mb-6 leading-relaxed">
                             {question.questionContent}
                           </div>
@@ -371,9 +496,14 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-[8px]">
                               <p className="text-[16px] font-semibold text-blue-800">
                                 Lựa chọn của bạn:{" "}
-                                {userSelectedAnswers.map((selectedAnswer: any, idx: number) => 
-                                  String.fromCharCode(65 + question.answers.indexOf(selectedAnswer))
-                                ).join(", ")}
+                                {userSelectedAnswers
+                                  .map((selectedAnswer: any, idx: number) =>
+                                    String.fromCharCode(
+                                      65 +
+                                        question.answers.indexOf(selectedAnswer)
+                                    )
+                                  )
+                                  .join(", ")}
                               </p>
                             </div>
                           )}
@@ -382,9 +512,14 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-[8px]">
                               <p className="text-[16px] font-semibold text-green-800">
                                 Đáp án đúng:{" "}
-                                {correctAnswers.map((correctAnswer: any, idx: number) => 
-                                  String.fromCharCode(65 + question.answers.indexOf(correctAnswer))
-                                ).join(", ")}
+                                {correctAnswers
+                                  .map((correctAnswer: any, idx: number) =>
+                                    String.fromCharCode(
+                                      65 +
+                                        question.answers.indexOf(correctAnswer)
+                                    )
+                                  )
+                                  .join(", ")}
                               </p>
                             </div>
                           )}
@@ -436,10 +571,9 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
             <Card className="w-[30%] h-[500px] !p-4">
               <div className="mb-4">
-                  <h3 className="text-lg font-semibold mb-3">Bản đồ câu hỏi</h3>
-                <div className="text-[14px] font-medium w-full justify-end"> 
-                  Số câu hỏi : 
-                  <span>{submissionDetails.questions.length}</span>
+                <h3 className="text-lg font-semibold mb-3">Bản đồ câu hỏi</h3>
+                <div className="text-[14px] font-medium w-full justify-end">
+                  Số câu hỏi :<span>{submissionDetails.questions.length}</span>
                 </div>
                 <div className="flex justify-center gap-6 text-sm my-5">
                   <div className="flex items-center gap-2">
@@ -461,6 +595,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                       (question: any, index: number) => {
                         const status = getQuestionStatus(question);
                         const isSelected = selectedQuestionIndex === index;
+                        
                         return (
                           <button
                             key={index}
@@ -496,7 +631,6 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
           </div>
         )}
 
-        {/* Image Preview Modal */}
         <Modal
           title="Xem hình ảnh câu hỏi"
           open={previewVisible}
@@ -506,7 +640,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
           centered
           className="image-preview-modal"
           styles={{
-            body: { padding: 0, textAlign: 'center' }
+            body: { padding: 0, textAlign: "center" },
           }}
         >
           {previewImageUrl && (
@@ -514,7 +648,7 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
               src={previewImageUrl}
               alt="Question image preview"
               className="max-w-full max-h-[80vh] object-contain"
-              style={{ maxWidth: '90vw' }}
+              style={{ maxWidth: "90vw" }}
             />
           )}
         </Modal>
@@ -525,33 +659,3 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
 export default SubmitSuccess;
 
-
-                          {/* {question.questionImg && (
-                            <div className="mb-6">
-                              <p className="text-[16px] text-[#6392e9] font-bold mb-4">
-                                Hình ảnh:
-                              </p>
-                              <div className="relative bg-white border border-[#d5d5d5] rounded-[8px] p-4">
-                                <img
-                                  src={question.questionImg}
-                                  alt={`Question ${index + 1} image`}
-                                  className="w-full h-auto max-h-96 object-contain"
-                                />
-                                <button className="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded-full p-1">
-                                  <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          )} */}
