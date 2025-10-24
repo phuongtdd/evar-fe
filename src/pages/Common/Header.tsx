@@ -189,10 +189,10 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
 
   const userMenuItems: MenuProps['items'] = [
     {
-      key: 'profile',
+      key: 'account',
       icon: <UserOutlined className="text-blue-500" />,
       label: <span className="font-medium">Hồ sơ cá nhân</span>,
-      onClick: () => navigate('/profile')
+      onClick: () => navigate('/account')
     },
     {
       key: 'change-password',

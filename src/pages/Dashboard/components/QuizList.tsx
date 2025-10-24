@@ -178,16 +178,16 @@ const QuizList = () => {
             <Calendar fullscreen={false} defaultValue={dayjs()} />
           </div>
           <div className="mt-4 space-y-2 flex flex-col gap-3">
-            <div className="bg-[#6392E9] rounded-[12px] !py-6 w-full !px-9 flex flex-row item-center justify-between text-white">
+            <div className="bg-[#6392E9] rounded-[12px] !py-6 w-full !px-9 flex flex-row item-center justify-between text-white !text-[18px]">
               <span className="font-bold">Tổng bài làm:</span>
-              <strong className="font-bold">60</strong>
+              <strong className="font-bold">{exams.length}</strong>
             </div>
             <Button
               type="primary"
               block
-              className="!bg-[#4CAF50] !w-[50%] !rounded-[12px] !py-6 w-full !px-9 flex flex-row item-center justify-between text-white !font-bold text-[18px]"
+              className="!bg-[#4CAF50] !w-[50%] !rounded-[12px] !py-6 w-full !px-9 flex flex-row items-center text-white !font-bold !text-[18px]"
             >
-              Tạo Đề thi
+              Tạo Quiz
               <img src={boxFill} />
             </Button>
           </div>

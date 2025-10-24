@@ -23,7 +23,7 @@ import CreateQuizManual from "../pages/createQuiz-manual";
 import { ExamAdminPanel } from "../pages/ExamManage";
 import AdminDashboard from "../pages/admin/index";
 import ProtectedRoute from "./ProtectedRoute";
-
+import PomodoroModule from "../pages/porodomo";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -44,9 +44,8 @@ const AppRoutes: React.FC = () => {
     <>
       {contextHolder}
       <Routes>
-        {/* Public Routes - No authentication required */}
-        <Route 
-          path="/auth" 
+        <Route
+          path="/auth"
           element={
             <ProtectedRoute access="public">
               <AuthPage />
@@ -57,18 +56,17 @@ const AppRoutes: React.FC = () => {
           <Route path="register" element={<AuthPage />} />
         </Route>
 
-        <Route 
-          path="/promotion" 
+        <Route
+          path="/promotion"
           element={
             <ProtectedRoute access="public">
               <Promotion />
             </ProtectedRoute>
-          } 
+          }
         />
 
-        {/* Protected Routes - Require authentication (ROLE_USER) */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <ProtectedRoute access="protected">
               <MainLayout />
@@ -98,6 +96,7 @@ const AppRoutes: React.FC = () => {
 
           <Route path="/chat" element={<Chatmodule />} />
           <Route path="/account" element={<UserProfile />} />
+          <Route path="/pomodoro" element={<PomodoroModule />} />
 
           <Route path="/createQuiz-AI" element={<CreateQuiz />}>
             <Route index element={<div />} />
@@ -109,22 +108,20 @@ const AppRoutes: React.FC = () => {
           />
         </Route>
 
-        {/* Admin Routes - Require ROLE_ADMIN */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute access="admin">
               <MainLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<AdminDashboard />}/>
+          <Route index element={<AdminDashboard />} />
           <Route path="manage-subject" element={<SubjectModule />} />
-          <Route path="manage-exam" element={<ExamAdminPanel/>}/>
-          <Route path="create-exam" element={<CreateExamManual/>}/>
+          <Route path="manage-exam" element={<ExamAdminPanel />} />
+          <Route path="create-exam" element={<CreateExamManual />} />
         </Route>
 
-        {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

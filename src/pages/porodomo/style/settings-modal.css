@@ -1,0 +1,36 @@
+.settings-modal-wrapper .ant-modal-content {
+  background-color: white !important;
+  border-radius: 8px !important;
+}
+
+.settings-modal-wrapper .ant-modal-header {
+  border: none !important;
+  padding-bottom: 16px !important;
+}
+
+.settings-btn-cancel {
+  height: 40px !important;
+  border: 2px solid rgb(59, 130, 246) !important;
+  color: rgb(59, 130, 246) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  background-color: transparent !important;
+}
+
+.settings-btn-cancel:hover {
+  border-color: rgb(37, 99, 235) !important;
+  color: rgb(37, 99, 235) !important;
+}
+
+.settings-btn-primary {
+  height: 40px !important;
+  background-color: rgb(59, 130, 246) !important;
+  border-color: rgb(59, 130, 246) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+.settings-btn-primary:hover {
+  background-color: rgb(37, 99, 235) !important;
+  border-color: rgb(37, 99, 235) !important;
+}

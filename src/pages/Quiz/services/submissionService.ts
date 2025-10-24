@@ -6,6 +6,7 @@ export interface SubmissionResponse {
   timeTry: number;
   username: string;
   examName: string;
+  examId: string;
   submittedAt: string | null;
 }
 
@@ -38,30 +39,29 @@ export interface SubmissionDetailResponse {
   timeTry: number;
   username: string;
   examName: string;
+  examId: string;
   submittedAt: string | null;
   questions: QuestionResult[];
 }
 
-// Lấy tất cả submissions của user hiện tại
 export const fetchUserSubmissions = async (userId: string): Promise<SubmissionResponse[]> => {
   try {
-    console.log('🔍 Fetching user submissions for userId:', userId);
-    console.log('🔍 API URL:', `/submission/user-all?id=${userId}`);
+    console.log(' Fetching user submissions for userId:', userId);
+    console.log(' API URL:', `/submission/user-all?id=${userId}`);
     const response = await apiClient.get<{ data: SubmissionResponse[]; message: string }>(`/submission/user-all?id=${userId}`);
-    console.log('✅ User submissions response:', response.data);
-    console.log('✅ Raw data from backend:', JSON.stringify(response.data.data, null, 2));
+    console.log('User submissions response:', response.data);
+    console.log('Raw data from backend:', JSON.stringify(response.data.data, null, 2));
     
-    // Check each submission for submittedAt field
     if (response.data.data && response.data.data.length > 0) {
       response.data.data.forEach((submission, index) => {
-        console.log(`📅 Submission ${index} submittedAt:`, submission.submittedAt, 'Type:', typeof submission.submittedAt);
+        console.log(` ${index} submittedAt:`, submission.submittedAt, 'Type:', typeof submission.submittedAt);
       });
     }
     
     return response.data.data;
   } catch (error: any) {
-    console.error('❌ Error fetching user submissions:', error);
-    console.error('❌ Error details:', {
+    console.error(' Error fetching user submissions:', error);
+    console.error(' Error details:', {
       message: error?.response?.data?.message || error?.message,
       status: error?.response?.status,
       statusText: error?.response?.statusText,
