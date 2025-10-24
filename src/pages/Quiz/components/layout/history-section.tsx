@@ -2,11 +2,13 @@
 
 import { Table, Input, Button, Tag, Space, message, Modal } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FilterOutlined, EyeOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { FilterOutlined, EyeOutlined, DeleteOutlined, ExclamationCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchUserSubmissions, SubmissionResponse, deleteSubmission } from "../../services/submissionService";
 import { getUserIdFromToken } from "../../../../utils/auth";
 import SubmissionDetailModal from "../ui/submission-detail-modal";
+import { examService } from "../../../takeQuiz-Exam/services/examService";
 import type { GetProps } from "antd";
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -16,12 +18,14 @@ const onSearch: SearchProps["onSearch"] = (value, _e, info) =>
   console.log(info?.source, value);
 
 export default function HistorySection() {
+  const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<SubmissionResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | null>(null);
+  const [retryingSubmissionId, setRetryingSubmissionId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSubmissions = async () => {
@@ -145,6 +149,46 @@ export default function HistorySection() {
     setSelectedSubmissionId(null);
   };
 
+  const handleRetryExam = async (examId: string, examName: string) => {
+    console.log('🔄 Retry exam clicked:', { examId, examName });
+    setRetryingSubmissionId(examId);
+    
+    try {
+      message.loading({
+        content: `Đang tải thông tin bài thi "${examName}"...`,
+        duration: 0,
+        key: 'retry-exam'
+      });
+
+      // Fetch exam data
+      const examResponse = await examService.getExamById(examId);
+      const examData = examResponse.data;
+
+      message.destroy('retry-exam');
+      message.success({
+        content: `Đang chuyển đến bài thi "${examName}"...`,
+        duration: 2,
+      });
+
+      // Navigate to exam page
+      navigate(`/quiz/takeQuiz/exam/${examId}`, {
+        state: { examData },
+      });
+    } catch (error) {
+      console.error("Error fetching exam data for retry:", error);
+      message.destroy('retry-exam');
+      message.error({
+        content: "Không thể tải thông tin bài thi. Vui lòng thử lại.",
+        duration: 3,
+      });
+      
+      // Fallback: navigate without exam data
+      navigate(`/quiz/takeQuiz/exam/${examId}`);
+    } finally {
+      setRetryingSubmissionId(null);
+    }
+  };
+
   const filteredSubmissions = useMemo(() => {
     if (!searchText) return submissions;
     const filtered = submissions.filter(submission => 
@@ -236,13 +280,21 @@ export default function HistorySection() {
               icon={<EyeOutlined />}
               onClick={() => handleViewSubmission(submission.id, submission.examName)}
               title="Xem chi tiết"
-              disabled={deletingSubmissionId === submission.id}
+              disabled={deletingSubmissionId === submission.id || retryingSubmissionId === submission.examId}
+            />
+            <Button
+              type="text"
+              icon={<RedoOutlined />}
+              onClick={() => handleRetryExam(submission.examId, submission.examName)}
+              title="Làm lại"
+              disabled={deletingSubmissionId === submission.id || retryingSubmissionId === submission.examId}
+              className="text-green-600 hover:text-green-700"
             />
           </Space>
         ),
       },
     ],
-    [deletingSubmissionId]
+    [deletingSubmissionId, retryingSubmissionId]
   );
 
   return (

@@ -1,0 +1,25 @@
+.pomodoro-tabs .ant-tabs-nav {
+  background: transparent !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pomodoro-tabs .ant-tabs-tab {
+  background-color: rgb(209, 213, 219) !important;
+  color: rgb(55, 65, 81) !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  margin: 0 8px !important;
+  padding: 8px 24px !important;
+  font-weight: 500 !important;
+}
+
+.pomodoro-tabs .ant-tabs-tab-active {
+  background-color: rgb(55, 65, 81) !important;
+  color: white !important;
+}
+
+.pomodoro-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}

@@ -1,9 +1,11 @@
 "use client";
 
-import { Modal, Card, Tag, Space, Typography, Divider, Image, Spin, message } from "antd";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { Modal, Card, Tag, Space, Typography, Divider, Image, Spin, message, Button } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchSubmissionDetails, SubmissionDetailResponse } from "../../services/submissionService";
+import { examService } from "../../../takeQuiz-Exam/services/examService";
 
 const { Title, Text } = Typography;
 
@@ -18,8 +20,10 @@ export default function SubmissionDetailModal({
   submissionId, 
   onClose 
 }: SubmissionDetailModalProps) {
+  const navigate = useNavigate();
   const [submission, setSubmission] = useState<SubmissionDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (visible && submissionId) {
@@ -52,12 +56,70 @@ export default function SubmissionDetailModal({
     return "Điểm của bạn";
   };
 
+  const handleRetryExam = async () => {
+    if (!submission?.examId) return;
+    
+    setRetrying(true);
+    try {
+      message.loading({
+        content: `Đang tải thông tin bài thi "${submission.examName}"...`,
+        duration: 0,
+        key: 'retry-exam-modal'
+      });
+
+      // Fetch exam data
+      const examResponse = await examService.getExamById(submission.examId);
+      const examData = examResponse.data;
+
+      message.destroy('retry-exam-modal');
+      message.success({
+        content: `Đang chuyển đến bài thi "${submission.examName}"...`,
+        duration: 2,
+      });
+
+      // Close modal and navigate
+      onClose();
+      navigate(`/quiz/takeQuiz/exam/${submission.examId}`, {
+        state: { examData },
+      });
+    } catch (error) {
+      console.error("Error fetching exam data for retry:", error);
+      message.destroy('retry-exam-modal');
+      message.error({
+        content: "Không thể tải thông tin bài thi. Vui lòng thử lại.",
+        duration: 3,
+      });
+      
+      // Fallback: navigate without exam data
+      onClose();
+      navigate(`/quiz/takeQuiz/exam/${submission.examId}`);
+    } finally {
+      setRetrying(false);
+    }
+  };
+
   return (
     <Modal
       title="Chi tiết bài làm"
       open={visible}
       onCancel={onClose}
-      footer={null}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose}>
+            Đóng
+          </Button>
+          <Button
+            type="primary"
+            icon={<RedoOutlined />}
+            onClick={handleRetryExam}
+            loading={retrying}
+            disabled={!submission?.examId}
+            className="bg-green-500 hover:bg-green-600 border-green-500"
+          >
+            Làm lại
+          </Button>
+        </div>
+      }
       width={800}
       style={{ maxHeight: "80vh" }}
     >

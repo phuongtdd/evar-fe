@@ -6,6 +6,7 @@ import {
   EyeOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
+import BackButton from "../../../Common/BackButton";
 
 interface SubmitSuccessProps {
   examName?: string;
@@ -14,8 +15,8 @@ interface SubmitSuccessProps {
   onBackToDashboard?: () => void;
   submissionDetails?: any; 
   totalQuestions?: number;
-  examResults?: any; // Thêm examResults để lấy thông tin thời gian và điểm
-  examData?: any; // Thêm examData để lấy thời gian giới hạn
+  examResults?: any;
+  examData?: any;
 }
 
 const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
@@ -55,7 +56,6 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     setPreviewVisible(true);
   };
 
-  // Tính toán số câu đúng/sai dựa trên logic mới
   const calculateCorrectAnswers = () => {
     if (!submissionDetails?.questions) return 0;
     
@@ -64,7 +64,6 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
       const correctAnswers = question.answers.filter((answer: any) => answer.correct);
       const userSelectedAnswers = question.answers.filter((answer: any) => answer.select);
       
-      // Tất cả đáp án đúng phải được chọn và không có đáp án sai nào được chọn
       const allCorrectSelected = correctAnswers.every((answer: any) => answer.select);
       const noWrongSelected = question.answers.every((answer: any) => 
         !answer.correct ? !answer.select : true
@@ -78,16 +77,13 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     return correctCount;
   };
 
-  // Tính toán thời gian làm bài
   const getTimeSpent = () => {
     if (examResults?.timeSpent) {
       return examResults.timeSpent;
     }
-    // Fallback: tính từ thời gian bắt đầu và kết thúc
     return 0;
   };
 
-  // Format thời gian
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -95,16 +91,13 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Lấy thời gian giới hạn của bài thi
   const getTimeLimit = () => {
     if (examData?.timeLimit) {
       return examData.timeLimit;
     }
-    // Default time limit từ constants
-    return 90 * 60; // 90 phút
+    return 90 * 60; 
   };
 
-  // Initialize image loading states when submission details change
   useEffect(() => {
     if (submissionDetails?.questions) {
       const initialLoadingStates: {[key: string]: boolean} = {};
@@ -168,7 +161,10 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
 
   return (
     <>
-      <div className="p-5 flex flex-col items-center justify-center">
+      <div className="p-5 flex flex-col items-center justify-center relative">
+        <div className="absolute top-12 left-0">
+          <BackButton url="/dashboard"/>
+        </div>
         <Card className="w-[70%] flex flex-col items-center justify-center">
           <div className="text-center flex flex-col items-center justify-center gap-3">
             <div className="mb-8">
@@ -193,7 +189,6 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
               className="grid grid-cols-2 
             !gap-[15.25rem] px-4"
             >
-              {/* Left Column - Stats */}
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <span className="text-gray-700 font-normal">
@@ -296,9 +291,6 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                         (answer: any) => answer.correct
                       );
                       
-                      // Logic kiểm tra đúng cho multiple choice:
-                      // 1. Tất cả đáp án đúng phải được chọn
-                      // 2. Không có đáp án sai nào được chọn
                       const allCorrectAnswersSelected = correctAnswers.every(
                         (answer: any) => answer.select
                       );
