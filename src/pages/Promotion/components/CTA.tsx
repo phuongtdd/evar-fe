@@ -18,19 +18,19 @@ const CTA: React.FC = () => {
   }, [isInView])
 
   return (
-    <div className="relative overflow-hidden py-20" ref={ref}>
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600" />
+    <div className="relative overflow-hidden py-20 my-[120px]" ref={ref}>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600" />
 
       {/* Animated gradient overlay */}
       <div className="absolute inset-0 opacity-30">
         <div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl"
+          className="absolute top-0 left-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl"
           style={{
             animation: "float 6s ease-in-out infinite",
           }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl"
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl"
           style={{
             animation: "float 6s ease-in-out infinite 1s",
           }}
@@ -50,7 +50,7 @@ const CTA: React.FC = () => {
               }}
               className="inline-block"
             >
-              Sẵn sàng để biến đổi
+              Sẵn sàng để nâng tầm
             </span>
             <br />
             <span
@@ -81,18 +81,13 @@ const CTA: React.FC = () => {
             <Button
               type="primary"
               size="large"
-              className="h-12 px-8 text-base font-semibold rounded-lg bg-white text-blue-600 hover:bg-slate-100 transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="h-12 px-8 text-base font-semibold rounded-lg !bg-white !text-blue-600 !hover:bg-slate-100 transition-all duration-300 hover:shadow-xl hover:scale-105"
               icon={<ArrowRightOutlined />}
               iconPosition="end"
             >
               Bắt đầu ngay
             </Button>
-            <Button
-              size="large"
-              className="h-12 px-8 text-base font-semibold rounded-lg border-2 border-white text-white hover:bg-white/10 transition-all duration-300 hover:shadow-xl"
-            >
-              Tìm hiểu thêm
-            </Button>
+           
           </div>
         </div>
       </SectionContainer>
