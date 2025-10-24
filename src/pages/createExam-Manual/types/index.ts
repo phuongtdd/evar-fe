@@ -27,6 +27,7 @@ export interface CreateExamRequest {
   subjectId: string
   description: string
   numOfQuestions: number
+  duration: number
   questions: {
     questionImg?: string
     content: string

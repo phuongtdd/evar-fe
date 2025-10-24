@@ -5,6 +5,7 @@ export interface exam {
   description: string;
   numOfQuestions: number;
   subjectName: string;
+  duration: number;
   createdAt: string;
   createdBy: string;
   updatedAt: string | null;

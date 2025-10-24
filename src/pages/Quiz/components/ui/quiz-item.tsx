@@ -1,5 +1,5 @@
 import { Button, Divider, Tag } from "antd";
-import { ArrowRightOutlined, EditFilled, EyeOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, EditFilled, EyeOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { exam } from "../../types";
 import { examService } from "../../../takeQuiz-Exam/services/examService";
@@ -71,6 +71,14 @@ export default function QuizItem({ exam, asTableAction }: QuizItemProps) {
               <span className="font-bold">Loại:</span>
               <span className="font-semibold text-[#6392E9] text-[14px]">
                 {exam.examType === 1 ? "Thi" : "Luyện tập"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-[14px]">
+              <ClockCircleOutlined className="text-[#6392E9]" />
+              <span className="font-bold">Thời gian:</span>
+              <span className="font-semibold text-[#6392E9]">
+                {exam.duration ? `${exam.duration} phút` : 'N/A'}
               </span>
             </div>
           </div>

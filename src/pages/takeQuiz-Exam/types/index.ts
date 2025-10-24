@@ -23,6 +23,7 @@ export interface ExamData {
   description: string;
   numOfQuestions: number;
   subjectName: string;
+  duration: number;
   questions: ExamQuestion[];
   createdBy: string;
   updatedBy: string;

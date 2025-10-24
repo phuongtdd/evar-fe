@@ -18,7 +18,7 @@ import SubmitSuccess from "./components/layout/SubmitSuccess";
 
 import { useExam } from "./hooks/useExam";
 import { ExamResults as ExamResultsType } from "./types";
-import { EXAM_MESSAGES } from "./constants";
+import { EXAM_MESSAGES, EXAM_CONFIG } from "./constants";
 import { examService } from "./services/examService";
 
 const TakeQuizExam: React.FC = () => {
@@ -342,6 +342,8 @@ const TakeQuizExam: React.FC = () => {
         totalQuestions={
           examState.questions?.length || examResults.totalQuestions
         }
+        examResults={examResults}
+        examData={examState.examData}
       />
     );
   }
@@ -386,11 +388,15 @@ const TakeQuizExam: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Thời gian:</span>
-                  <span className="font-semibold">90 phút</span>
+                  <span className="font-semibold">
+                    {examState.examData.duration ? `${examState.examData.duration} phút` : '90 phút'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Loại thi:</span>
-                  <span className="font-semibold">Thi chính thức</span>
+                  <span className="font-semibold">
+                    {EXAM_CONFIG.EXAM_TYPES[examState.examData.examType] || 'Thi chính thức'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -404,7 +410,7 @@ const TakeQuizExam: React.FC = () => {
               </div>
               <ul className="text-[14px] text-gray-600 space-y-1 text-left">
                 <li>• Bạn sẽ cần xác thực khuôn mặt trước khi bắt đầu thi</li>
-                <li>• Thời gian làm bài là 90 phút</li>
+                <li>• Thời gian làm bài là {examState.examData.duration ? `${examState.examData.duration} phút` : '90 phút'}</li>
                 <li>• Không được phép tra cứu tài liệu trong quá trình thi</li>
                 <li>• Hệ thống sẽ tự động nộp bài khi hết thời gian</li>
               </ul>

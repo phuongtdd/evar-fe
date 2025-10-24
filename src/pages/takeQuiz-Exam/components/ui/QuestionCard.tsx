@@ -74,7 +74,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
        {question.questionImg && (
         <>
         <strong className="absolute top-0 left-0">Hình ảnh: </strong>
-          <div className="mt-4 max-width-[300px] relative">
+          <div className="mt-4 w-[320px] relative">
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-[8px] border border-[#d5d5d5] min-h-[200px]">
                 <div className="text-center">

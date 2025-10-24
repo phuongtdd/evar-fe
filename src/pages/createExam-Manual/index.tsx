@@ -106,12 +106,20 @@ const CreateExamManual = () => {
 
     setIsCreating(true);
     try {
+      // Convert time from "HH:mm:ss" format to minutes
+      const convertTimeToMinutes = (timeString: string): number => {
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        const totalMinutes = hours * 60 + minutes + (seconds > 0 ? 1 : 0); // Round up if there are seconds
+        return Math.max(totalMinutes, 1); // Ensure minimum 1 minute
+      };
+
       const examData: CreateExamRequest = {
         examName: quizInfo.title,
         examType: 1,
         subjectId: quizInfo.subjectId || "1f7e5f03-d326-488c-b471-ea4cbce3f651",
         description: quizInfo.description,
         numOfQuestions: questions.length,
+        duration: quizInfo.time ? convertTimeToMinutes(quizInfo.time) : 120, // Default 2 hours (120 minutes) if no time specified
         questions: questions.map(q => ({
           questionImg: q.questionImg,
           content: q.content,
