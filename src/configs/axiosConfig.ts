@@ -15,7 +15,8 @@ const apiClient = axios.create({
 // Cấu hình Interceptor cho REQUEST (Gửi đi)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-     const publicEndpoints = ['/auth/login', '/auth/register', '/api/users'];
+    // Chỉ login và register là public, /users cần authentication
+    const publicEndpoints = ['/auth/login', '/auth/register'];
      const isPublicEndpoint = publicEndpoints.some(endpoint => 
       config.url?.includes(endpoint)
     );
@@ -24,6 +25,9 @@ apiClient.interceptors.request.use(
       const token = localStorage.getItem('token');
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
+        // console.log('🔑 Token được gửi kèm request:', token.substring(0, 20) + '...');
+      } else {
+        console.warn(' Không có token để gửi kèm request');
       }
     }
 
@@ -54,8 +58,10 @@ apiClient.interceptors.response.use(
     // Ví dụ: Nếu nhận lỗi 401 (Unauthorized), tự động đăng xuất người dùng
     if (error.response && error.response.status === 401) {
       console.error("Unauthorized! Redirecting to login...");
-      // localStorage.removeItem('token');
-      // window.location.href = '/login';
+      console.log("Hết hạn đăng nhập rồi! Chim cút.");
+      localStorage.removeItem('token');
+      localStorage.removeItem('evartoken_remember');
+      window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }

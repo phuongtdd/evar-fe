@@ -52,7 +52,16 @@ export default function RoomManagementPage() {
   };
 
   if (loading) {
-    return <Spin fullscreen tip="Đang tải dữ liệu phòng học..." />;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-md">
+        <div className="text-center bg-white/30 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+          <Spin size="large" />
+          <p className="mt-4 text-lg font-semibold text-gray-800">
+            Đang tải dữ liệu phòng học...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

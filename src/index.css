@@ -14,11 +14,11 @@
   --color-gray-soft: #e5dbdb;
 }
 
-#root:fullscreen {
+/* #root:fullscreen {
   width: 100vw;
   height: 100vh;
   border-radius: 0;
-}
+} */
 
 .app-fullscreen,
 .app-fullscreen body {
@@ -45,4 +45,50 @@
   #root:fullscreen {
     background-color: #e5e7eb;
   }
+}
+
+/* Image Preview Modal Styles */
+.image-preview-modal .ant-modal-content {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 12px;
+}
+
+.image-preview-modal .ant-modal-header {
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-preview-modal .ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.image-preview-modal .ant-modal-close {
+  color: white;
+}
+
+.image-preview-modal .ant-modal-close:hover {
+  color: #6392e9;
+}
+
+/* Image loading animation */
+@keyframes imageLoad {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-loaded {
+  animation: imageLoad 0.3s ease-out;
+}
+
+.leva-c_root_3Uqig,
+[class*="leva-c_root"],
+[class*="leva"] {
+  display: none !important;
 }

@@ -1,0 +1,24 @@
+/* MainLayout Component Styles */
+.main-layout {
+  padding: 30px;
+  background-color: #f3f3f3;
+  min-height: 100vh;
+}
+
+.top-section {
+  margin-bottom: 30px;
+}
+
+.stats-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+
+
+/* Activities section styles can be added here if needed */
