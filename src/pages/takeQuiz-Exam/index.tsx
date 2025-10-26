@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button, Spin, Alert, Modal } from "antd";
 import {
@@ -11,6 +11,7 @@ import QuestionCard from "./components/ui/QuestionCard";
 import QuestionNavigation from "./components/ui/QuestionNavigation";
 import ExamTimer from "./components/ui/ExamTimer";
 import ExamSubmission from "./components/ui/ExamSubmisionModal";
+import AntiCheatWarningModal from "./components/ui/AntiCheatWarningModal";
 import { FaceVerificationStep } from "./components/layout/FaceVerify";
 import { VerifySuccess } from "./components/layout/VerifySuccess";
 import { VerifyFailed } from "./components/layout/VerifyFailed";
@@ -26,6 +27,9 @@ const TakeQuizExam: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const initialExamData = location.state?.examData;
+
+  const [showAutoSubmitModal, setShowAutoSubmitModal] = useState(false);
+  const [autoSubmitCountdown, setAutoSubmitCountdown] = useState(3);
 
   if (!examId) {
     return (
@@ -55,6 +59,8 @@ const TakeQuizExam: React.FC = () => {
     goToQuestion,
     submitExam,
     resetExam,
+    incrementCopyPasteAttempts,
+    incrementTabSwitches,
     isLoading,
     error,
   } = useExam(examId, initialExamData);
@@ -76,6 +82,12 @@ const TakeQuizExam: React.FC = () => {
   const [isTransitioningToResults, setIsTransitioningToResults] =
     useState(false);
 
+  const [showAntiCheatModal, setShowAntiCheatModal] = useState(false);
+  const [antiCheatType, setAntiCheatType] = useState<
+    "copy-paste" | "tab-switch"
+  >("copy-paste");
+  const hasAutoSubmittedRef = React.useRef(false);
+
   const handleFaceVerificationStart = () => {
     setIsStartingFaceVerification(true);
     setTimeout(() => {
@@ -90,6 +102,7 @@ const TakeQuizExam: React.FC = () => {
     setTimeout(() => {
       setShowFaceVerification(false);
       setIsTransitioningToExam(false);
+      hasAutoSubmittedRef.current = false; // Reset khi bắt đầu thi mới
       startExam();
     }, 2000);
   };
@@ -111,7 +124,7 @@ const TakeQuizExam: React.FC = () => {
     setShowSubmissionModal(true);
   };
 
-  const handleConfirmSubmission = async () => {
+  const handleConfirmSubmission = useCallback(async () => {
     setShowSubmissionModal(false);
     setIsSubmitting(true);
     setIsProcessingSubmission(true);
@@ -149,7 +162,7 @@ const TakeQuizExam: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [submitExam]);
 
   const handleCancelSubmission = () => {
     setShowSubmissionModal(false);
@@ -245,6 +258,132 @@ const TakeQuizExam: React.FC = () => {
 
   const handleBackToDashboardFromSuccess = () => {
     navigate("/dashboard");
+  };
+
+  // Handle copy-paste detection
+  useEffect(() => {
+    // Không detect nếu đang hiển thị modal auto-submit
+    if (
+      !examState.isExamStarted ||
+      examState.isExamCompleted ||
+      showAutoSubmitModal
+    )
+      return;
+
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      incrementCopyPasteAttempts();
+      setAntiCheatType("copy-paste");
+      setShowAntiCheatModal(true);
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      incrementCopyPasteAttempts();
+      setAntiCheatType("copy-paste");
+      setShowAntiCheatModal(true);
+    };
+
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("paste", handlePaste);
+
+    return () => {
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [
+    examState.isExamStarted,
+    examState.isExamCompleted,
+    showAutoSubmitModal,
+    incrementCopyPasteAttempts,
+  ]);
+
+  // Handle tab switch detection
+  useEffect(() => {
+    // Không detect nếu đang hiển thị modal auto-submit
+    if (
+      !examState.isExamStarted ||
+      examState.isExamCompleted ||
+      showAutoSubmitModal
+    )
+      return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User switched away from the tab
+        return;
+      } else {
+        // User came back to the tab
+        incrementTabSwitches();
+        setAntiCheatType("tab-switch");
+        setShowAntiCheatModal(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [
+    examState.isExamStarted,
+    examState.isExamCompleted,
+    showAutoSubmitModal,
+    incrementTabSwitches,
+  ]);
+
+  // Auto-submit when tab switches reach 3
+  useEffect(() => {
+    // Chỉ check khi numTabSwitches thay đổi và đạt đúng 3
+    if (
+      examState.numTabSwitches === 3 &&
+      examState.isExamStarted &&
+      !examState.isExamCompleted &&
+      !hasAutoSubmittedRef.current
+    ) {
+      hasAutoSubmittedRef.current = true;
+      console.log("🚨 TRIGGERING AUTO-SUBMIT - Tab switches reached 3");
+
+      // Đóng modal cảnh báo nếu đang mở
+      setShowAntiCheatModal(false);
+
+      // ✅ Hiển thị modal tự động nộp bài
+      setTimeout(() => {
+        setShowAutoSubmitModal(true);
+        setAutoSubmitCountdown(3);
+      }, 400);
+    }
+  }, [
+    examState.numTabSwitches,
+    examState.isExamStarted,
+    examState.isExamCompleted,
+  ]);
+
+  const handleConfirmSubmissionRef = useRef(handleConfirmSubmission);
+
+  // Update ref khi function thay đổi
+  useEffect(() => {
+    handleConfirmSubmissionRef.current = handleConfirmSubmission;
+  }, [handleConfirmSubmission]);
+
+  // ✅ Countdown logic - không phụ thuộc vào function
+  useEffect(() => {
+    if (showAutoSubmitModal && autoSubmitCountdown > 0) {
+      const timer = setTimeout(() => {
+        setAutoSubmitCountdown(autoSubmitCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (showAutoSubmitModal && autoSubmitCountdown === 0) {
+      console.log("⚡ Auto-submitting exam...");
+      setShowAutoSubmitModal(false);
+      handleConfirmSubmissionRef.current(); // ✅ Dùng ref thay vì dependency
+    }
+  }, [showAutoSubmitModal, autoSubmitCountdown]);
+
+  const handleCloseAntiCheatModal = () => {
+    setShowAntiCheatModal(false);
   };
 
   if (isLoading) {
@@ -389,13 +528,16 @@ const TakeQuizExam: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Thời gian:</span>
                   <span className="font-semibold">
-                    {examState.examData.duration ? `${examState.examData.duration} phút` : '90 phút'}
+                    {examState.examData.duration
+                      ? `${examState.examData.duration} phút`
+                      : "90 phút"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Loại thi:</span>
                   <span className="font-semibold">
-                    {EXAM_CONFIG.EXAM_TYPES[examState.examData.examType] || 'Thi chính thức'}
+                    {EXAM_CONFIG.EXAM_TYPES[examState.examData.examType] ||
+                      "Thi chính thức"}
                   </span>
                 </div>
               </div>
@@ -410,9 +552,21 @@ const TakeQuizExam: React.FC = () => {
               </div>
               <ul className="text-[14px] text-gray-600 space-y-1 text-left">
                 <li>• Bạn sẽ cần xác thực khuôn mặt trước khi bắt đầu thi</li>
-                <li>• Thời gian làm bài là {examState.examData.duration ? `${examState.examData.duration} phút` : '90 phút'}</li>
+                <li>
+                  • Thời gian làm bài là{" "}
+                  {examState.examData.duration
+                    ? `${examState.examData.duration} phút`
+                    : "90 phút"}
+                </li>
                 <li>• Không được phép tra cứu tài liệu trong quá trình thi</li>
                 <li>• Hệ thống sẽ tự động nộp bài khi hết thời gian</li>
+                <li className="text-red-600 font-semibold">
+                  • Không được copy-paste nội dung hoặc chuyển sang tab/cửa sổ
+                  khác
+                </li>
+                <li className="text-red-600 font-semibold">
+                  • Bài thi sẽ tự động nộp sau 3 lần chuyển tab
+                </li>
               </ul>
             </div>
 
@@ -533,6 +687,62 @@ const TakeQuizExam: React.FC = () => {
             onCancel={handleCancelSubmission}
             isSubmitting={isSubmitting}
             isVisible={showSubmissionModal}
+          />
+
+          <Modal
+            open={showAutoSubmitModal}
+            title={
+              <div className="flex items-center gap-2">
+                <ExclamationCircleOutlined className="text-orange-500 text-[24px]" />
+                <span className="text-[18px] font-bold">
+                  ⚠️ Tự động nộp bài
+                </span>
+              </div>
+            }
+            centered
+            closable={false}
+            maskClosable={false}
+            keyboard={false}
+            footer={[
+              <Button
+                key="submit"
+                type="primary"
+                onClick={() => {
+                  setShowAutoSubmitModal(false);
+                  handleConfirmSubmission();
+                }}
+                className="!bg-[#6392e9] !hover:bg-[#5282d8]"
+              >
+                Nộp ngay
+              </Button>,
+            ]}
+          >
+            <div className="space-y-4">
+              <p className="text-[16px] text-gray-700">
+                Bạn đã vi phạm quy định chuyển tab{" "}
+                <span className="font-bold text-red-600">3 lần</span>.
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-[14px] text-red-700 font-semibold text-center">
+                  🚨 Bài thi sẽ tự động nộp sau{" "}
+                  <span className="text-[24px] font-bold">
+                    {autoSubmitCountdown}
+                  </span>{" "}
+                  giây
+                </p>
+              </div>
+            </div>
+          </Modal>
+
+          <AntiCheatWarningModal
+            visible={showAntiCheatModal}
+            type={antiCheatType}
+            count={
+              antiCheatType === "copy-paste"
+                ? examState.copyPasteAttempts
+                : examState.numTabSwitches
+            }
+            onClose={handleCloseAntiCheatModal}
           />
         </div>
       </div>

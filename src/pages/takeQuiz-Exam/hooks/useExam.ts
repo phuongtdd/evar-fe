@@ -17,18 +17,23 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     isExamCompleted: false,
     userAnswers: {} as { [questionId: string]: number },
     markedQuestions: new Set(),
+    copyPasteAttempts: 0,
+    numTabSwitches: 0,
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+
   useEffect(() => {
     console.log('=== EXAM STATE CHANGED ===', {
       questions: examState.questions.map(q => ({ id: q.id, isMarked: q.isMarked })),
       markedQuestions: Array.from(examState.markedQuestions),
-      currentQuestionIndex: examState.currentQuestionIndex
+      currentQuestionIndex: examState.currentQuestionIndex,
+      copyPasteAttempts: examState.copyPasteAttempts,
+      numTabSwitches: examState.numTabSwitches,
     });
-  }, [examState.questions, examState.markedQuestions, examState.currentQuestionIndex]);
+  }, [examState.questions, examState.markedQuestions, examState.currentQuestionIndex, examState.copyPasteAttempts, examState.numTabSwitches]);
 
   const loadExam = useCallback(async () => {
     if (!examId) return;
@@ -210,6 +215,20 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     }));
   }, []);
 
+  const incrementCopyPasteAttempts = useCallback(() => {
+    setExamState((prev) => ({
+      ...prev,
+      copyPasteAttempts: prev.copyPasteAttempts + 1,
+    }));
+  }, []);
+
+  const incrementTabSwitches = useCallback(() => {
+    setExamState((prev) => ({
+      ...prev,
+      numTabSwitches: prev.numTabSwitches + 1,
+    }));
+  }, []);
+
   const submitExam = useCallback(async () => {
     if (!examId) {
       throw new Error("Không tìm thấy ID bài thi");
@@ -221,7 +240,13 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
       console.log("------------ currentState", currentState)
 
       // Submit to backend API
-      const submissionResponse = await examService.submitExamAnswers(examId, currentState.userAnswers, currentState.examData);
+      const submissionResponse = await examService.submitExamAnswers(
+        examId, 
+        currentState.userAnswers, 
+        currentState.examData,
+        currentState.copyPasteAttempts,
+        currentState.numTabSwitches
+      );
 
       console.log('Submission response:', submissionResponse);
 
@@ -254,6 +279,8 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         timeSpent: (currentState.examData?.duration ? currentState.examData.duration * 60 : EXAM_CONFIG.DEFAULT_TIME_LIMIT) - currentState.timeLeft,
         userAnswers: currentState.userAnswers,
         submissionId: submissionResponse.data.id, // Add submission ID to results
+        copyPasteAttempts: currentState.copyPasteAttempts,
+        numTabSwitches: currentState.numTabSwitches,
       };
 
       console.log('Created results object:', results);
@@ -282,6 +309,8 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
       isExamCompleted: false,
       userAnswers: {} as { [questionId: string]: number | number[] },
       markedQuestions: new Set(),
+      copyPasteAttempts: 0,
+      numTabSwitches: 0,
     });
     setError(null);
   }, []);
@@ -309,27 +338,6 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
   }, [examState.isExamStarted, examState.isExamCompleted]);
 
   useEffect(() => {
-    if (!examState.isExamStarted || examState.isExamCompleted || !examId)
-      return;
-
-    const autoSave = setInterval(() => {
-      examService.saveExamProgress(
-        examId,
-        examState.userAnswers,
-        examState.currentQuestionIndex
-      );
-    }, EXAM_CONSTANTS.AUTO_SAVE_INTERVAL);
-
-    return () => clearInterval(autoSave);
-  }, [
-    examState.isExamStarted,
-    examState.isExamCompleted,
-    examId,
-    examState.userAnswers,
-    examState.currentQuestionIndex,
-  ]);
-
-  useEffect(() => {
     loadExam();
   }, [loadExam]);
 
@@ -341,6 +349,8 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     goToQuestion,
     submitExam,
     resetExam,
+    incrementCopyPasteAttempts,
+    incrementTabSwitches,
     isLoading,
     error,
   };
