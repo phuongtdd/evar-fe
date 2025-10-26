@@ -72,6 +72,7 @@ export interface ExamState {
   markedQuestions: Set<number>;
   copyPasteAttempts: number;
   numTabSwitches: number;
+  startExamFaceImage?: string;
 }
 
 export interface ExamProps {
@@ -155,7 +156,7 @@ export interface ExamService {
 
 export interface UseExamReturn {
   examState: ExamState;
-  startExam: () => void;
+  startExam: (faceImageUrl?: string) => void;
   selectAnswer: (questionId: number, answerIndex: number, isMultiple?: boolean) => void;
   markQuestion: (questionId: number) => void;
   goToQuestion: (questionIndex: number) => void;

@@ -19,6 +19,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     markedQuestions: new Set(),
     copyPasteAttempts: 0,
     numTabSwitches: 0,
+    startExamFaceImage: undefined,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -87,9 +88,10 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     }
   }, [examId, initialExamData]);
 
-  const startExam = useCallback(() => {
+  const startExam = useCallback((faceImageUrl?: string) => {
     setExamState((prev) => ({
       ...prev,
+      startExamFaceImage: faceImageUrl,
       isExamStarted: true,
     }));
   }, []);
@@ -245,7 +247,8 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         currentState.userAnswers, 
         currentState.examData,
         currentState.copyPasteAttempts,
-        currentState.numTabSwitches
+        currentState.numTabSwitches,
+        currentState.startExamFaceImage
       );
 
       console.log('Submission response:', submissionResponse);

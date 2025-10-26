@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       key: "quiz",
       icon: <EditOutlined className="text-2xl"/>,
-      label: "Quản lí quiz",
+      label: "Luyện đề",
     },
     {
       key: "account",

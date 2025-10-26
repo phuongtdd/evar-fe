@@ -22,7 +22,8 @@ class ExamServiceImpl implements ExamService {
     answers: { [questionId: string]: number | number[] },
     examData?: any,
     copyPasteAttempts?: number,
-    numTabSwitches?: number
+    numTabSwitches?: number,
+    startExamFaceImage?: string
   ): Promise<any> {
     try {
       // Get user ID from token
@@ -69,6 +70,7 @@ class ExamServiceImpl implements ExamService {
         userId,
         examId,
         userAnswers,
+        startExamFaceImage: startExamFaceImage || '',
         copyPasteAttempts: copyPasteAttempts || 0,
         numTabSwitches: numTabSwitches || 0
       };

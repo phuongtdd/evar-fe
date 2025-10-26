@@ -4,11 +4,12 @@ import {
   CheckCircleOutlined,
   LoadingOutlined,
 } from "@ant-design/icons";
-import { Button, Spin } from "antd";
+import { Button, Spin, message } from "antd";
 import { useState, useEffect, useRef } from "react";
+import { uploadImageToImgBB } from "../../../../utils/ImageUpload";
 
 interface FaceVerificationStepProps {
-  onStart: () => void;
+  onStart: (faceImageUrl: string) => void;
   onCancel: () => void;
 }
 
@@ -18,37 +19,19 @@ export function FaceVerificationStep({
 }: FaceVerificationStepProps) {
   const [webcamError, setWebcamError] = useState<string | null>(null);
   const [isWebcamLoading, setIsWebcamLoading] = useState(true);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [isWaitingAfterCountdown, setIsWaitingAfterCountdown] =
-    useState(false);
-  const [isCountdownComplete, setIsCountdownComplete] = useState(false);
   const [showSuccessCircle, setShowSuccessCircle] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const waitingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     startWebcam();
     return () => {
       stopWebcam();
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-      if (waitingTimeoutRef.current) {
-        clearTimeout(waitingTimeoutRef.current);
-      }
     };
   }, []);
-
-  useEffect(() => {
-    if (!isWebcamLoading && !webcamError && !countdown && !isCountdownComplete) {
-      const timer = setTimeout(() => {
-        startCountdown();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isWebcamLoading, webcamError]);
 
   const startWebcam = async () => {
     try {
@@ -70,6 +53,7 @@ export function FaceVerificationStep({
         videoRef.current.srcObject = stream;
       }
 
+      // ✅ Giống code cũ - set false ngay lập tức
       setIsWebcamLoading(false);
     } catch (error) {
       console.error("Error accessing webcam:", error);
@@ -87,65 +71,113 @@ export function FaceVerificationStep({
     }
   };
 
-  const startCountdown = () => {
-    setCountdown(1);
-    let count = 1;
-
-    countdownIntervalRef.current = setInterval(() => {
-      count++;
-      if (count <= 3) {
-        setCountdown(count);
-      } else {
-        if (countdownIntervalRef.current) {
-          clearInterval(countdownIntervalRef.current);
-          countdownIntervalRef.current = null;
-        }
-        setCountdown(null);
-        setIsWaitingAfterCountdown(true);
-
-        waitingTimeoutRef.current = setTimeout(() => {
-          setIsWaitingAfterCountdown(false);
-          setIsCountdownComplete(true);
-        }, 3000);
+  // ✅ Hàm chụp ảnh từ video
+  const captureImage = (): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      if (!videoRef.current) {
+        reject(new Error("Video not available"));
+        return;
       }
-    }, 1000);
+
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Cannot get canvas context"));
+        return;
+      }
+
+      // Vẽ frame hiện tại lên canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Chuyển canvas thành blob rồi thành file
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Failed to capture image"));
+            return;
+          }
+
+          const file = new File(
+            [blob],
+            `face-verification-${Date.now()}.jpg`,
+            {
+              type: "image/jpeg",
+            }
+          );
+          resolve(file);
+        },
+        "image/jpeg",
+        0.95
+      );
+    });
   };
 
-  const handleContinue = () => {
-    stopWebcam();
-    setShowSuccessCircle(true);
+  // ✅ Xử lý khi nhấn nút chụp ảnh
+  const handleCapturePhoto = async () => {
+    try {
+      setIsUploadingImage(true);
+      message.loading({ content: "Đang chụp ảnh...", key: "capture" });
 
-    setTimeout(() => {
-      onStart();
-    }, 1500);
+      // Capture ảnh từ video
+      const imageFile = await captureImage();
+      console.log("✅ Image captured:", imageFile);
+
+      message.loading({ content: "Đang tải ảnh lên...", key: "capture" });
+
+      // Upload lên ImgBB
+      const imageUrl = await uploadImageToImgBB(imageFile);
+      console.log("✅ Image uploaded to ImgBB:", imageUrl);
+
+      message.success({
+        content: "Chụp ảnh thành công!",
+        key: "capture",
+        duration: 2,
+      });
+
+      setCapturedImageUrl(imageUrl);
+      setShowSuccessCircle(true);
+
+      // Dừng camera sau khi chụp thành công
+      setTimeout(() => {
+        stopWebcam();
+      }, 500);
+    } catch (error) {
+      console.error("❌ Error capturing/uploading image:", error);
+      message.error({
+        content: "Không thể chụp ảnh. Vui lòng thử lại.",
+        key: "capture",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // ✅ Xử lý khi nhấn nút tiếp tục
+  const handleContinue = () => {
+    if (!capturedImageUrl) {
+      message.error("Không tìm thấy ảnh xác thực. Vui lòng thử lại.");
+      return;
+    }
+
+    console.log("✅ Continuing with image URL:", capturedImageUrl);
+    onStart(capturedImageUrl);
   };
 
   const handleCancel = () => {
     stopWebcam();
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-    if (waitingTimeoutRef.current) {
-      clearTimeout(waitingTimeoutRef.current);
-    }
-    setCountdown(null);
+    setCapturedImageUrl(null);
     setShowSuccessCircle(false);
-    setIsCountdownComplete(false);
-    setIsWaitingAfterCountdown(false);
     onCancel();
   };
 
   const handleRetry = () => {
-    setCountdown(null);
-    setIsCountdownComplete(false);
+    setCapturedImageUrl(null);
     setShowSuccessCircle(false);
-    setIsWaitingAfterCountdown(false);
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-    if (waitingTimeoutRef.current) {
-      clearTimeout(waitingTimeoutRef.current);
-    }
+    setIsUploadingImage(false);
     startWebcam();
   };
 
@@ -154,7 +186,7 @@ export function FaceVerificationStep({
       <div className="!bg-white rounded-[18px] w-[997px] relative p-12">
         <button
           onClick={handleCancel}
-          className="absolute top-8 right-8 p-2 !hover:bg-gray-100 rounded-lg transition-colors"
+          className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <CloseOutlined className="!text-red-500" />
         </button>
@@ -162,7 +194,7 @@ export function FaceVerificationStep({
         <h2 className="text-center text-[36px] font-bold text-black mt-8">
           {showSuccessCircle
             ? "Xác minh thành công"
-            : "Vui lòng kích hoạt webcam"}
+            : "Xác thực người làm bài thi"}
         </h2>
 
         <div className="mx-auto mt-16 w-full h-[580px] !bg-[#33363f] rounded-[11px] flex items-center justify-center relative overflow-hidden">
@@ -192,38 +224,22 @@ export function FaceVerificationStep({
               playsInline
               muted
               className={`w-full h-full object-cover transition-all duration-300 ${
-                countdown !== null || isWaitingAfterCountdown ? "blur-sm" : ""
+                isUploadingImage ? "blur-sm" : ""
               }`}
             />
           )}
 
-          {(countdown !== null || isWaitingAfterCountdown) && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-[11px]" />
-          )}
-
-          {countdown !== null && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                style={{
-                  animation: `scaleIn 0.6s ease-out`,
-                }}
-              >
-                <div className="text-white text-9xl font-bold drop-shadow-lg animate-pulse">
-                  {countdown}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isWaitingAfterCountdown && !countdown && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          {/* ✅ Overlay khi đang upload */}
+          {isUploadingImage && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-[11px] flex flex-col items-center justify-center gap-4">
               <LoadingOutlined className="text-6xl text-blue-400 animate-spin" />
               <p className="text-white text-xl font-semibold">
-                Đang xử lý...
+                Đang tải ảnh lên...
               </p>
             </div>
           )}
 
+          {/* ✅ Success overlay */}
           {showSuccessCircle && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30">
               <div
@@ -236,8 +252,9 @@ export function FaceVerificationStep({
             </div>
           )}
 
-          {!webcamError && !showSuccessCircle && !countdown && !isWaitingAfterCountdown && (
-            <div className="absolute bottom-8 right-0 -translate-x-1/2 !bg-[rgba(240,240,240,0.22)] rounded-[12px] p-3 flex flex-col items-center justify-center backdrop-blur-sm">
+          {/* ✅ Camera icon */}
+          {!webcamError && !showSuccessCircle && !isUploadingImage && !isWebcamLoading && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 !bg-[rgba(240,240,240,0.22)] rounded-[12px] p-3 flex flex-col items-center justify-center backdrop-blur-sm">
               <CameraOutlined className="text-xl !text-[rgb(255,255,255)]" />
             </div>
           )}
@@ -246,38 +263,38 @@ export function FaceVerificationStep({
         <div className="flex justify-center gap-4 mt-12">
           <Button
             onClick={handleCancel}
-            disabled={showSuccessCircle}
+            disabled={isUploadingImage || showSuccessCircle}
             className="!bg-[#ff2e00] !hover:bg-[#e02900] text-white rounded-[12px] h-[50px] !px-12 text-[20px]"
           >
-            Dừng
+            Hủy
           </Button>
 
-          {isCountdownComplete && !showSuccessCircle && (
+          {/* ✅ Nút chụp ảnh - hiện khi camera sẵn sàng và chưa chụp */}
+          {!isWebcamLoading && !webcamError && !capturedImageUrl && !showSuccessCircle && (
+            <Button
+              onClick={handleCapturePhoto}
+              loading={isUploadingImage}
+              disabled={isUploadingImage}
+              className="!bg-[#6392e9] hover:!bg-[#5282d8] !text-white rounded-[12px] h-[50px] !px-12 text-[20px]"
+              icon={!isUploadingImage ? <CameraOutlined /> : undefined}
+            >
+              {isUploadingImage ? "Đang xử lý..." : "Chụp ảnh"}
+            </Button>
+          )}
+
+          {/* ✅ Nút tiếp tục - hiện khi đã chụp thành công */}
+          {capturedImageUrl && showSuccessCircle && (
             <Button
               onClick={handleContinue}
-              className="!bg-[#6392e9] !hover:bg-[#5282d8] text-white rounded-[12px] h-[50px] !px-12 text-[20px]"
+              className="!bg-[#6392e9] hover:!bg-[#5282d8] !text-white rounded-[12px] h-[50px] !px-12 text-[20px]"
             >
-              Tiếp tục
+              Tiếp tục làm bài
             </Button>
           )}
         </div>
       </div>
 
       <style>{`
-        @keyframes scaleIn {
-          0% {
-            transform: scale(0) rotateZ(-5deg);
-            opacity: 0;
-          }
-          50% {
-            transform: scale(1.1) rotateZ(0deg);
-          }
-          100% {
-            transform: scale(1) rotateZ(0deg);
-            opacity: 1;
-          }
-        }
-
         @keyframes scaleInLarge {
           from {
             transform: scale(0.5);
