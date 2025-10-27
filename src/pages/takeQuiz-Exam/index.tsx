@@ -96,14 +96,14 @@ const TakeQuizExam: React.FC = () => {
     }, 1000);
   };
 
-  const handleFaceVerificationSuccess = (faceImageUrl: string) => {
+  const handleFaceVerificationSuccess = (faceImageUrl: string, faceSimilarity: number) => {
     setFaceVerificationStatus("success");
     setIsTransitioningToExam(true);
     setTimeout(() => {
       setShowFaceVerification(false);
       setIsTransitioningToExam(false);
       hasAutoSubmittedRef.current = false; // Reset khi bắt đầu thi mới
-      startExam(faceImageUrl);
+      startExam(faceImageUrl, faceSimilarity);
     }, 2000);
   };
 

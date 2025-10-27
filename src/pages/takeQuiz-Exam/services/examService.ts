@@ -23,7 +23,8 @@ class ExamServiceImpl implements ExamService {
     examData?: any,
     copyPasteAttempts?: number,
     numTabSwitches?: number,
-    startExamFaceImage?: string
+    startExamFaceImage?: string,
+    faceSimilarity?: number
   ): Promise<any> {
     try {
       // Get user ID from token
@@ -72,7 +73,8 @@ class ExamServiceImpl implements ExamService {
         userAnswers,
         startExamFaceImage: startExamFaceImage || '',
         copyPasteAttempts: copyPasteAttempts || 0,
-        numTabSwitches: numTabSwitches || 0
+        numTabSwitches: numTabSwitches || 0,
+        faceSimilarity: faceSimilarity || 0
       };
 
       console.log('Submitting exam with data:', requestData);

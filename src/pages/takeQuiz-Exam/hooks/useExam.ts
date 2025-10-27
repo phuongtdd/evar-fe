@@ -20,6 +20,7 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     copyPasteAttempts: 0,
     numTabSwitches: 0,
     startExamFaceImage: undefined,
+    faceSimilarity: undefined,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -88,10 +89,11 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
     }
   }, [examId, initialExamData]);
 
-  const startExam = useCallback((faceImageUrl?: string) => {
+  const startExam = useCallback((faceImageUrl?: string, faceSimilarity?: number) => {
     setExamState((prev) => ({
       ...prev,
       startExamFaceImage: faceImageUrl,
+      faceSimilarity: faceSimilarity,
       isExamStarted: true,
     }));
   }, []);
@@ -248,7 +250,8 @@ export const useExam = (examId?: string, initialExamData?: any): UseExamReturn =
         currentState.examData,
         currentState.copyPasteAttempts,
         currentState.numTabSwitches,
-        currentState.startExamFaceImage
+        currentState.startExamFaceImage,
+        currentState.faceSimilarity
       );
 
       console.log('Submission response:', submissionResponse);

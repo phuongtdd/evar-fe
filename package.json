@@ -21,6 +21,7 @@
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "clsx": "^2.1.1",
+    "face-api.js": "^0.22.2",
     "framer-motion": "^12.23.24",
     "heroicons": "^2.2.0",
     "leva": "^0.10.0",
@@ -55,5 +56,8 @@
     "typescript": "^5.9.3",
     "vite": "^7.1.7",
     "vite-plugin-svgr": "^4.5.0"
+  },
+  "overrides": {
+    "node-fetch": "^2.6.7"
   }
 }
