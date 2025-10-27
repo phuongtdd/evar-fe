@@ -24,6 +24,7 @@ import { ExamAdminPanel } from "../pages/ExamManage";
 import AdminDashboard from "../pages/admin/index";
 import ProtectedRoute from "./ProtectedRoute";
 import PomodoroModule from "../pages/porodomo";
+import EvarTurTor from "../pages/EvarTurtor";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -106,6 +107,8 @@ const AppRoutes: React.FC = () => {
             path="/createQuiz-AI/savedSuccess"
             element={<SavedQuizSuccess showMessage={showMessage} />}
           />
+
+          <Route path="/evar-turtor" element={<EvarTurTor />} />
         </Route>
 
         <Route

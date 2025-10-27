@@ -13,7 +13,8 @@ import {
   MenuUnfoldOutlined,
   LeftOutlined,
   RightOutlined,
-  SettingOutlined
+  SettingOutlined,
+  DeliveredProcedureOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../authen/services/authService";
@@ -43,7 +44,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!getToken());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    () => !!getToken()
+  );
   const { isAdmin } = useRoleAccess();
 
   useEffect(() => {
@@ -65,37 +68,50 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       key: "pomodoro",
-      icon: <ClockCircleOutlined className="text-2xl"/>,
+      icon: <ClockCircleOutlined className="text-2xl" />,
       label: "Podoromo",
     },
     {
       key: "chat",
-      icon: <MessageOutlined className="text-2xl"/>,
+      icon: <MessageOutlined className="text-2xl" />,
       label: "Trò chuyện",
+    },
+        {
+      key: "tutor",
+      icon: <DeliveredProcedureOutlined className="text-2xl" />,
+      label: "Tài nguyên",
     },
     {
       key: "create-quiz",
-      icon: <CameraOutlined className="text-2xl"/>,
+      icon: <CameraOutlined className="text-2xl" />,
       label: "Tạo quiz từ ảnh",
     },
     {
       key: "quiz",
-      icon: <EditOutlined className="text-2xl"/>,
+      icon: <EditOutlined className="text-2xl" />,
       label: "Luyện đề",
     },
     {
       key: "account",
-      icon: <UserOutlined className="text-2xl"/>,
+      icon: <UserOutlined className="text-2xl" />,
       label: "Thông tin tài khoản",
     },
-    // Admin menu item - only visible to admin users
-    ...(isAdmin ? [{
-      type: "divider" as const,
-    }, {
-      key: "admin",
-      icon: <SettingOutlined className="text-2xl text-purple-600" />,
-      label: <span className="text-purple-600 font-medium">Quản trị hệ thống</span>,
-    }] : []),
+    ...(isAdmin
+      ? [
+          {
+            type: "divider" as const,
+          },
+          {
+            key: "admin",
+            icon: <SettingOutlined className="text-2xl text-purple-600" />,
+            label: (
+              <span className="text-purple-600 font-medium">
+                Quản trị hệ thống
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       type: "divider" as const,
     },
@@ -136,7 +152,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "home":
         navigate("/dashboard");
         break;
-
       case "room":
         navigate("/room");
         break;
@@ -153,6 +168,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "quiz":
         navigate("/quiz");
         break;
+      case "tutor":
+        navigate("/evar-turtor");
+        break;
       case "account":
         navigate("/account");
         break;
@@ -163,7 +181,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         try {
           clearToken();
         } catch (e) {
-          console.error(e)
+          console.error(e);
         }
         window.dispatchEvent(new Event("auth-changed"));
         navigate("/auth/login");
@@ -177,7 +195,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="sidebar-container relative h-screen flex group"
       ref={sidebarRef}
     >
@@ -185,11 +203,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         trigger={null}
         collapsible
         collapsed={collapsed}
-        width={220}  /* Giảm từ 250px xuống 220px */
+        width={220} /* Giảm từ 250px xuống 220px */
         className="h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300"
       >
         {/* Logo with hover effect */}
-        <div 
+        <div
           className="relative flex items-center justify-between pt-10 pb-4 px-4 h-20 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
           onClick={onToggle}
           onMouseEnter={() => setIsHovered(true)}
@@ -197,32 +215,32 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center justify-center w-full">
             <div className="flex items-center justify-center">
-              <div 
+              <div
                 className="transition-all duration-300 ease-in-out"
                 style={{
-                  width: collapsed ? '80px' : '110px',
-                  height: collapsed ? '80px' : '110px',
-                  minWidth: collapsed ? '80px' : '110px',
-                  minHeight: collapsed ? '80px' : '110px',
-                  transition: 'all 0.3s ease-in-out'
+                  width: collapsed ? "80px" : "110px",
+                  height: collapsed ? "80px" : "110px",
+                  minWidth: collapsed ? "80px" : "110px",
+                  minHeight: collapsed ? "80px" : "110px",
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
-                <img 
-                  src={Logo} 
-                  alt="EVar Logo" 
+                <img
+                  src={Logo}
+                  alt="EVar Logo"
                   className="w-full h-full object-contain"
                   style={{
-                    transition: 'all 0.3s ease-in-out'
+                    transition: "all 0.3s ease-in-out",
                   }}
                 />
               </div>
             </div>
           </div>
-          
+
           {/* Collapse/Expand arrow - Only show on hover */}
-          <div 
+          <div
             className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ${
-              isHovered ? 'opacity-100' : 'opacity-0'
+              isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
             {collapsed ? (
@@ -243,7 +261,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           />
         </div>
       </Sider>
-
     </div>
   );
 };

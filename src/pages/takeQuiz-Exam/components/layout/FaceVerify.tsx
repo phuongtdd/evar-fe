@@ -3,9 +3,12 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   LoadingOutlined,
+  ExclamationCircleOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
-import { Button, Spin, message, Progress } from "antd";
+import { Button, Spin, message, Progress, Modal } from "antd";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { uploadImageToImgBB } from "../../../../utils/ImageUpload";
 import * as faceapi from "face-api.js";
 import { getUserById } from "../../../userProfile/services/index";
@@ -29,6 +32,7 @@ export function FaceVerificationStep({
   onStart,
   onCancel,
 }: FaceVerificationStepProps) {
+  const navigate = useNavigate();
   const [webcamError, setWebcamError] = useState<string | null>(null);
   const [isWebcamLoading, setIsWebcamLoading] = useState(true);
   const [showSuccessCircle, setShowSuccessCircle] = useState(false);
@@ -39,6 +43,7 @@ export function FaceVerificationStep({
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [verificationResult, setVerificationResult] =
     useState<FaceVerificationResult | null>(null);
+  const [showNoFaceModal, setShowNoFaceModal] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,8 +76,10 @@ export function FaceVerificationStep({
 
     loadModels();
   }, []);
+  const exitVerify = () => {
+  
+  }
 
-  // ✅ Load reference face từ API
   useEffect(() => {
     const loadReferenceFace = async () => {
       if (isLoadingModels) return;
@@ -89,7 +96,10 @@ export function FaceVerificationStep({
         const faceUrl = userData.face;
 
         if (!faceUrl) {
-          throw new Error("Người dùng chưa có ảnh khuôn mặt trong hệ thống");
+          console.log("❌ User has no face image in system");
+          setShowNoFaceModal(true);
+          setIsLoadingModels(false);
+          return;
         }
 
         referenceImageUrlRef.current = faceUrl;
@@ -400,6 +410,16 @@ export function FaceVerificationStep({
     startWebcam();
   };
 
+  const handleGoToProfile = () => {
+    navigate("/user-profile");
+    onCancel();
+  };
+
+  const handleCloseNoFaceModal = () => {
+    setShowNoFaceModal(false);
+    onCancel();
+  };
+
   // ✅ Hiển thị loading khi đang tải models
   if (isLoadingModels) {
     return (
@@ -588,6 +608,43 @@ export function FaceVerificationStep({
           }
         }
       `}</style>
+
+      {/* Modal cảnh báo không có ảnh khuôn mặt */}
+      <Modal
+        open={showNoFaceModal}
+        onCancel={handleCloseNoFaceModal}
+        footer={null}
+        centered
+        width={500}
+        closable={false}
+        maskClosable={false}
+      >
+        <div className="text-center py-8">
+          <ExclamationCircleOutlined className="text-6xl text-orange-500 mb-6" />
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">
+            Chưa có ảnh khuôn mặt
+          </h3>
+          <p className="text-gray-600 mb-8 text-lg leading-relaxed">
+            Bạn chưa có ảnh khuôn mặt trong hệ thống. Vui lòng cập nhật ảnh khuôn mặt 
+            trong hồ sơ cá nhân để có thể tham gia bài thi với xác thực khuôn mặt.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button
+              onClick={handleCloseNoFaceModal}
+              className="!bg-gray-500 hover:!bg-gray-600 !text-white rounded-lg h-12 !px-8"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleGoToProfile}
+              className="!bg-blue-500 hover:!bg-blue-600 !text-white rounded-lg h-12 !px-8"
+              icon={<UserOutlined />}
+            >
+              Cập nhật ảnh khuôn mặt
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
