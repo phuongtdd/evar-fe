@@ -149,13 +149,21 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
         updateData.person.address = formData.address;
       }
 
-      // Nếu có file ảnh được chọn, upload lên IMGBB trước
       if (selectedFile) {
         try {
           const imageResult = await uploadImageToImgbb(selectedFile);
           updateData.person.avatarUrl = imageResult.url;
         } catch (uploadError: any) {
           throw new Error(`Lỗi upload ảnh đại diện: ${uploadError.message}`);
+        }
+      }
+
+      if (selectedFaceFile && !deleteFaceImage) {
+        try {
+          const imageResult = await uploadImageToImgbb(selectedFaceFile);
+          updateData.person.faceUrl = imageResult.url;
+        } catch (uploadError: any) {
+          throw new Error(`Lỗi upload ảnh mặt: ${uploadError.message}`);
         }
       }
 
