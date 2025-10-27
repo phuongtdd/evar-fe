@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "react-bootstrap"
 import type { UserProfile } from "../types"
 import "../styles/ProfileCard.css"
@@ -12,7 +12,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile: initialProfile }) =>
   const [showEditModal, setShowEditModal] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
   
-  // Tách tên thành họ và tên (bằng tiếng Việt)
+  useEffect(() => {
+    setProfile(initialProfile);
+  }, [initialProfile]);
+  
   const nameParts = profile.name.split(' ')
   const lastName = nameParts[nameParts.length - 1] || ''
   const firstName = nameParts.slice(0, -1).join(' ') || ''
@@ -20,7 +23,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile: initialProfile }) =>
   const handleSaveProfile = (updatedProfile: UserProfile) => {
     setProfile(updatedProfile);
     
-    // Dispatch custom event để header có thể lắng nghe và cập nhật
     window.dispatchEvent(new CustomEvent('avatarUpdated', { 
       detail: { 
         avatar: updatedProfile.avatar,
@@ -31,7 +33,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile: initialProfile }) =>
 
   return (
     <div className="profile-card">
-      {/* Khung thông tin cơ bản */}
       <div className="basic-info-section">
         <div className="basic-info-header">
           <h6 className="basic-info-title">
@@ -84,6 +85,26 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ profile: initialProfile }) =>
           </div>
         </div>
       </div>
+
+      {profile.face && (
+        <div className="face-section" style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <h6 className="mb-3" style={{ fontWeight: 'bold' }}>
+            Ảnh mặt (để xác thực)
+          </h6>
+          <div className="text-center">
+            <img 
+              src={profile.face} 
+              alt="Face verification image"
+              style={{ 
+                maxWidth: '200px', 
+                maxHeight: '200px', 
+                borderRadius: '8px',
+                border: '2px solid #dee2e6'
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Khung thông tin liên hệ */}
       <div className="contact-section">
