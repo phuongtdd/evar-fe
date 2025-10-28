@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { Modal, Button, Select, Alert, Form, Input, Card, Tag, Spin, message } from "antd"
-import { UploadOutlined, ExclamationCircleOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons"
-import { useMaterials, useFlashcards } from "../../hooks"
-import { StudyMaterial, Flashcard } from "../../types"
-import { DIFFICULTY_LABELS } from "../../mock/mockData"
+import { UploadOutlined, ExclamationCircleOutlined, PlusOutlined, DeleteOutlined, ThunderboltOutlined } from "@ant-design/icons"
+import { useKnowledgeBases, useFlashcards } from "../../hooks/evarTutorHooks"
+import { flashcardService } from "../../services/evarTutorService"
+
+type FlashcardRequest = {
+  front: string;
+  back: string;
+  knowledgeBaseId: number;
+};
 
 interface CreateFlashcardsModalProps {
   open: boolean
@@ -13,61 +18,28 @@ interface CreateFlashcardsModalProps {
 }
 
 export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcardsModalProps) {
-  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null)
   const [showError, setShowError] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [generatedFlashcards, setGeneratedFlashcards] = useState<Omit<Flashcard, 'id' | 'createdAt' | 'reviewCount' | 'successRate'>[]>([])
+  const [generatedFlashcards, setGeneratedFlashcards] = useState<Omit<FlashcardRequest, 'knowledgeBaseId'>[]>([])
   const [form] = Form.useForm()
   
-  const { data: materialsData, loading: materialsLoading } = useMaterials()
-  const { createFlashcard } = useFlashcards()
-
-  const materials = materialsData?.data || []
+  const { data: knowledgeBases, loading: knowledgeBasesLoading } = useKnowledgeBases()
+  const { createFlashcard, refetch } = useFlashcards(selectedKnowledgeBase || undefined)
 
   const handleCreateFlashcards = async () => {
-    if (!selectedMaterial) {
+    if (!selectedKnowledgeBase) {
       setShowError(true)
       return
     }
 
     try {
       setGenerating(true)
-      
-      // Simulate AI generation of flashcards
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Generate mock flashcards based on selected material
-      const material = materials.find(m => m.id === selectedMaterial)
-      if (!material) return
-
-      const mockFlashcards: Omit<Flashcard, 'id' | 'createdAt' | 'reviewCount' | 'successRate'>[] = [
-        {
-          front: `What is the main topic of "${material.title}"?`,
-          back: material.description || `This material covers ${material.title}`,
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'easy',
-          tags: material.tags.slice(0, 2)
-        },
-        {
-          front: `What type of file is "${material.fileName}"?`,
-          back: `${material.type.toUpperCase()} file`,
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'easy',
-          tags: material.tags.slice(0, 2)
-        },
-        {
-          front: `When was "${material.title}" uploaded?`,
-          back: new Date(material.uploadDate).toLocaleDateString(),
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'medium',
-          tags: material.tags.slice(0, 2)
-        }
-      ]
-
-      setGeneratedFlashcards(mockFlashcards)
+      const generated = await flashcardService.generateFlashcards(selectedKnowledgeBase, 5)
+      setGeneratedFlashcards(
+        generated.map(fc => ({ front: fc.front, back: fc.back }))
+      )
+      message.success('AI generated flashcards! Review and save if needed.')
       
     } catch (error) {
       console.error('Generation error:', error)
@@ -78,22 +50,24 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   }
 
   const handleSaveFlashcards = async () => {
+    if (!selectedKnowledgeBase) return
+    
     try {
       const formValues = await form.validateFields()
       
-      for (const flashcard of generatedFlashcards) {
-        const flashcardData = {
-          ...flashcard,
-          front: formValues[`front_${generatedFlashcards.indexOf(flashcard)}`] || flashcard.front,
-          back: formValues[`back_${generatedFlashcards.indexOf(flashcard)}`] || flashcard.back,
-          difficulty: formValues[`difficulty_${generatedFlashcards.indexOf(flashcard)}`] || flashcard.difficulty,
-          tags: formValues[`tags_${generatedFlashcards.indexOf(flashcard)}`] || flashcard.tags
-        }
-        
-        await createFlashcard(flashcardData)
-      }
+      await Promise.all(
+        generatedFlashcards.map((flashcard, idx) => {
+          const flashcardData: FlashcardRequest = {
+            front: formValues[`front_${idx}`] || flashcard.front,
+            back: formValues[`back_${idx}`] || flashcard.back,
+            knowledgeBaseId: selectedKnowledgeBase
+          }
+          return createFlashcard(flashcardData)
+        })
+      )
       
       message.success('Flashcards created successfully!')
+      await refetch()
       onClose()
       resetForm()
       
@@ -104,7 +78,7 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   }
 
   const resetForm = () => {
-    setSelectedMaterial(null)
+    setSelectedKnowledgeBase(null)
     setShowError(false)
     setGeneratedFlashcards([])
     form.resetFields()
@@ -120,13 +94,9 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   }
 
   const addCustomFlashcard = () => {
-    const newFlashcard: Omit<Flashcard, 'id' | 'createdAt' | 'reviewCount' | 'successRate'> = {
+    const newFlashcard: Omit<FlashcardRequest, 'knowledgeBaseId'> = {
       front: '',
       back: '',
-      materialId: selectedMaterial || '',
-      materialTitle: materials.find(m => m.id === selectedMaterial)?.title || '',
-      difficulty: 'easy',
-      tags: []
     }
     setGeneratedFlashcards(prev => [...prev, newFlashcard])
   }
@@ -144,26 +114,26 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
         {generatedFlashcards.length === 0 ? (
           <>
             <div>
-              <label className="!block !text-sm !font-medium !text-gray-900 !mb-3">Select Study Material:</label>
+              <label className="!block !text-sm !font-medium !text-gray-900 !mb-3">Select Knowledge Base:</label>
               <Select
-                placeholder="Choose a study material"
-                value={selectedMaterial}
+                placeholder="Choose a knowledge base"
+                value={selectedKnowledgeBase}
                 onChange={(value) => {
-                  setSelectedMaterial(value)
+                  setSelectedKnowledgeBase(value)
                   setShowError(false)
                 }}
                 className="!w-full [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-gray-300 [&_.ant-select-selector]:!h-10"
-                loading={materialsLoading}
-                options={materials.map(material => ({
-                  label: material.title,
-                  value: material.id
+                loading={knowledgeBasesLoading}
+                options={knowledgeBases.map(kb => ({
+                  label: kb.fileName,
+                  value: kb.id
                 }))}
               />
             </div>
 
             {showError && (
               <Alert
-                message="You must select a study material."
+                message="You must select a knowledge base."
                 type="error"
                 showIcon
                 icon={<ExclamationCircleOutlined />}
@@ -177,7 +147,7 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
               size="large"
               onClick={handleCreateFlashcards}
               loading={generating}
-              disabled={!selectedMaterial}
+              disabled={!selectedKnowledgeBase}
               className="!bg-gradient-to-r !from-blue-600 !to-blue-500 !border-0 !text-white !rounded-lg !font-medium !h-11 !hover:shadow-lg !transition-all"
             >
               {generating ? 'Generating Flashcards...' : 'Generate Flashcards with AI'}
@@ -239,39 +209,6 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
                         rows={2}
                       />
                     </Form.Item>
-                  </div>
-                  
-                  <div className="!grid !grid-cols-1 !md:grid-cols-2 !gap-4">
-                    <Form.Item
-                      name={`difficulty_${index}`}
-                      label="Difficulty"
-                      initialValue={flashcard.difficulty}
-                    >
-                      <Select placeholder="Select difficulty">
-                        <Select.Option value="easy">Easy</Select.Option>
-                        <Select.Option value="medium">Medium</Select.Option>
-                        <Select.Option value="hard">Hard</Select.Option>
-                      </Select>
-                    </Form.Item>
-                    
-                    <Form.Item
-                      name={`tags_${index}`}
-                      label="Tags"
-                      initialValue={flashcard.tags}
-                    >
-                      <Select
-                        mode="tags"
-                        placeholder="Enter tags"
-                        style={{ width: '100%' }}
-                      />
-                    </Form.Item>
-                  </div>
-                  
-                  <div className="!flex !items-center !gap-2 !mt-2">
-                    <Tag color="blue">{DIFFICULTY_LABELS[flashcard.difficulty]}</Tag>
-                    {flashcard.tags.map(tag => (
-                      <Tag key={tag}>{tag}</Tag>
-                    ))}
                   </div>
                 </Card>
               ))}

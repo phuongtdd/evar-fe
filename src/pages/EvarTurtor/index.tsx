@@ -1,5 +1,5 @@
 import React from 'react'
-import StudyMaterialLayout from './components/layout/study-material-layout';
+import StudyMaterialLayout from './components/layout/study-material-layout-updated';
 
 const EvarTurTor = () => {
   return (
