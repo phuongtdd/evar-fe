@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layout, Tabs, Button, Tooltip, Card, Tag, Empty, Spin, Alert, Input } from "antd";
+import { Layout, Tabs, Button, Tooltip, Card, Tag, Empty, Spin, Alert, Input, message } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import MaterialsGrid from "./materials-grid";
 import TutorChatPanelUpdated from "../component/tutor-chat-panel-updated";
@@ -11,6 +11,7 @@ import MaterialsUploadAreaUpdated from "../component/materials-upload-area-updat
 import { useKnowledgeBases, useFlashcards, knowledgeBaseService } from "../../hooks/evarTutorHooks";
 import FlashcardViewer from "../component/flashcard-viewer";
 import { flashcardService } from "../../services/evarTutorService";
+import NotePage from "../component/ note-page";
 
 const { Content } = Layout;
 
@@ -25,6 +26,8 @@ export default function StudyMaterialLayout() {
   const [keyNotes, setKeyNotes] = useState("");
   const [parsedKeyNotes, setParsedKeyNotes] = useState<any>(null);
   const [loadingContent, setLoadingContent] = useState(false);
+  const [targetPage, setTargetPage] = useState<number | null>(null);
+  const [highlightText, setHighlightText] = useState<string | null>(null);
 
   // Handler to receive selected KB from chatbot
   const handleKnowledgeBaseSelected = (kbId: number | null) => {
@@ -40,18 +43,17 @@ export default function StudyMaterialLayout() {
       if (selectedKnowledgeBase) {
         setLoadingContent(true);
         try {
-          console.log('📖 Loading content for KB:', selectedKnowledgeBase);
+          // console.log('📖 Loading content for KB:', selectedKnowledgeBase);
           const detail = await knowledgeBaseService.getKnowledgeBaseDetail(selectedKnowledgeBase);
           setStudyGuide(detail.studyGuide || "");
           setKeyNotes(detail.keyNotes || "");
           
-          // Try to get parsed key notes
           try {
             const kn = await knowledgeBaseService.getKeyNotes(selectedKnowledgeBase);
             setParsedKeyNotes(kn);
           } catch {}
           
-          console.log('✅ Content loaded successfully');
+          // console.log('✅ Content loaded successfully');
         } catch (error) {
           console.error("Failed to load content:", error);
         } finally {
@@ -90,6 +92,7 @@ export default function StudyMaterialLayout() {
               { key: "flashcards", label: "Flashcards" },
               { key: "studyGuide", label: "Study Guide" },
               { key: "keyNotes", label: "Key Notes" },
+              { key: "notes", label: "Notes" },
               { key: "pdf", label: "PDF Viewer" },
             ]}
             className="[&_.ant-tabs-tab]:!px-0 [&_.ant-tabs-tab]:!mr-8"
@@ -106,7 +109,7 @@ export default function StudyMaterialLayout() {
                 if (selectedKnowledgeBase) {
                   await refetchFlashcards();
                 }
-                console.log('✅ Refetch completed');
+                // console.log('✅ Refetch completed');
               }}
             />
           ) : (
@@ -301,10 +304,28 @@ export default function StudyMaterialLayout() {
                         {parsedKeyNotes?.notes?.length ? (
                           <div className="!space-y-2 !max-h-[600px] !overflow-auto">
                             {parsedKeyNotes.notes.map((n: any) => (
-                              <div key={n.id} className="!border !border-gray-200 !rounded !p-3 !bg-gray-50">
+                              <div 
+                                key={n.id} 
+                                className="!border !border-gray-200 !rounded !p-3 !bg-gray-50 hover:!bg-blue-50 hover:!border-blue-300 !cursor-pointer !transition-all"
+                                onDoubleClick={() => {
+                                  if (n.pageNumber !== null) {
+                                    console.log('📍 Jumping to page:', n.pageNumber, 'with text:', n.content);
+                                    setTargetPage(n.pageNumber);
+                                    setHighlightText(n.content);
+                                    setActiveTab('pdf');
+                                    message.info(`Jumping to page ${n.pageNumber}...`);
+                                  } else {
+                                    message.warning('No page number available for this note');
+                                  }
+                                }}
+                                title="Double-click to jump to PDF page"
+                              >
                                 <div className="!text-sm !text-gray-900 !mb-1">{n.content}</div>
                                 {n.pageNumber !== null && (
-                                  <div className="!text-xs !text-gray-500">Page {n.pageNumber}</div>
+                                  <div className="!text-xs !text-gray-500 !flex !items-center !gap-1">
+                                    <span>📄 Page {n.pageNumber}</span>
+                                    <span className="!text-blue-500">• Double-click to view</span>
+                                  </div>
                                 )}
                               </div>
                             ))}
@@ -339,12 +360,42 @@ export default function StudyMaterialLayout() {
                 )
               )}
 
+              {activeTab === "notes" && (
+                selectedKnowledgeBase ? (
+                  <div className="!h-full">
+                    <NotePage knowledgeBaseId={selectedKnowledgeBase} />
+                  </div>
+                ) : (
+                  <div className="!flex !items-center !justify-center !h-full !text-center">
+                    <div className="!max-w-md">
+                      <p className="!text-lg !font-semibold !text-gray-700 !mb-3">📝 No Knowledge Base Selected</p>
+                      <p className="!text-sm !text-gray-600 !mb-4">
+                        To take notes, please select a knowledge base from the dropdown in the chatbot section on the right, or upload a new PDF file.
+                      </p>
+                      <Button
+                        type="primary"
+                        onClick={() => setShowUploadArea(true)}
+                        className="!bg-blue-600 !border-blue-600 hover:!bg-blue-700"
+                      >
+                        Upload PDF Now
+                      </Button>
+                    </div>
+                  </div>
+                )
+              )}
+
               {activeTab === "pdf" && (
                 selectedKnowledgeBase && knowledgeBases.find(kb => kb.id === selectedKnowledgeBase) ? (
                   <PdfViewerWithUpload
                     knowledgeBases={[knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)!]}
                     loading={knowledgeBasesLoading}
                     selectedKnowledgeBaseId={selectedKnowledgeBase}
+                    targetPage={targetPage}
+                    highlightText={highlightText}
+                    onPageChanged={() => {
+                      setTargetPage(null);
+                      setHighlightText(null);
+                    }}
                   />
                 ) : (
                   <div className="!flex !items-center !justify-center !h-full !text-center">
