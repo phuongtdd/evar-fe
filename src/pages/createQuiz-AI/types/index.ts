@@ -41,6 +41,8 @@ export interface QuizInfo {
   subjectId: string
   description: string
   grade: string
+  questionType?: string
+  duration?: number
 }
 
 export interface Subject {

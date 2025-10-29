@@ -2,6 +2,7 @@
 
 import { useState, ReactNode, useEffect } from "react";
 import { Button as AntButton, Button, Form, message } from "antd";
+import "./styles/mathjax.css";
 import {
   ArrowLeftOutlined,
   FileTextOutlined,
@@ -12,7 +13,7 @@ import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useQuizContext } from "./context/QuizContext";
 import QuizInfor from "./components/ui/QuizInfor";
-import { QuizInfo, CreateQuizRequest, typeQuiz } from "./types";
+import { QuizInfo, CreateQuizRequest, typeQuiz, Question } from "./types";
 import QuizInfoModal from "./components/ui/QuizInfoModal";
 import { sampleQuestions } from "./mock/mockData";
 import UploadDragger from "./components/ui/UploadDragger";
@@ -74,11 +75,6 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleStartProcess = () => {
     setFileUploaded(true);
-    setUploadedFile({
-      name: "Mock Quiz Data",
-      size: "Generated",
-    });
-    setResults(sampleQuestions);
     navigate("/createQuiz-AI/result");
   };
 
@@ -86,6 +82,15 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
     setFileUploaded(false);
     setUploadedFile({ name: "", size: "" });
     setResults([]);
+  };
+
+  const handleOcrSuccess = (questions: Question[]) => {
+    setResults(questions);
+    setFileUploaded(true);
+    setUploadedFile({
+      name: "OCR Processed",
+      size: `${questions.length} câu hỏi`,
+    });
   };
 
   const handleEditQuizInfo = (updatedQuiz: any) => {
@@ -144,7 +149,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
       subject: selectedSubject?.subject_name || values.subjectId || "",
       questionCount: 0,
       creator: values.description || "",
-      duration: values.time || "02:00:00",
+      duration: "02:00:00", // Default 2 hours
       grade: values.grade || "",
     });
     // The modal will set its own visibility to false; ensure our local view switches as well
@@ -181,14 +186,15 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                   </h1>
                   <BackButton url={"/dashboard"} />
                   <p className="text-gray-600 mb-8 mt-5">
-                    Sử dụng AI để tăng tốc quá trình tạo Quiz từ file pdf, ảnh
-                    png...
+                    Sử dụng AI OCR để tự động tạo Quiz từ ảnh đề thi (JPG, PNG, GIF, BMP, WEBP)
                   </p>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <QuizInfor quiz={quizData} onEdit={handleEditQuizInfo} />
                     <UploadDragger
                       onProcess={handleStartProcess}
                       onRemove={handleRemoveFile}
+                      quizInfo={quizInfo}
+                      onOcrSuccess={handleOcrSuccess}
                     />
                   </div>
 
