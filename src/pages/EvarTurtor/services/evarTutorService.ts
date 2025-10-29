@@ -1,11 +1,7 @@
 import apiClient from '../../../configs/axiosConfig';
 import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KeyNotesResponse, KnowledgeBase, KnowledgeBaseStatus, KnowledgeBaseUploadResponse } from '../types';
 
-// API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-
-// ==================== TYPES ====================
-
 
 // ==================== FLASHCARD SERVICES ====================
 export const flashcardService = {
@@ -60,7 +56,6 @@ export const chatbotService = {
 
 // ==================== KNOWLEDGE BASE SERVICES ====================
 export const knowledgeBaseService = {
-  // Upload PDF file - First upload to Cloudinary using signed upload, then send metadata to backend
   uploadPdf: async (file: File, userId?: string): Promise<KnowledgeBaseUploadResponse> => {
     console.log('🚀 Starting PDF upload process...', {
       fileName: file.name,
@@ -69,7 +64,6 @@ export const knowledgeBaseService = {
     });
 
     try {
-      // Step 1: Get upload signature from backend
       console.log('📝 Step 1: Getting upload signature from backend...');
       const signatureResponse = await fetch(`${API_BASE_URL}/cloudinary/signature`, {
         method: 'POST',
@@ -87,7 +81,6 @@ export const knowledgeBaseService = {
       const signatureData = await signatureResponse.json();
       console.log('✅ Signature received');
 
-      // Step 2: Upload PDF to Cloudinary with signature
       console.log('📤 Step 2: Uploading PDF to Cloudinary with signature...');
       const formData = new FormData();
       formData.append('file', file);
@@ -105,7 +98,7 @@ export const knowledgeBaseService = {
         }
       );
 
-      console.log('📡 Cloudinary response status:', cloudinaryUpload.status);
+      console.log('Cloudinary response status:', cloudinaryUpload.status);
 
       if (!cloudinaryUpload.ok) {
         const errorText = await cloudinaryUpload.text();
@@ -133,15 +126,13 @@ export const knowledgeBaseService = {
         resourceType: cloudinaryData.resource_type
       });
 
-      // Step 3: Send file + fileUrl to backend
       const backendFormData = new FormData();
       backendFormData.append('file', file);
-      backendFormData.append('fileUrl', fileUrl); // Add Cloudinary URL
+      backendFormData.append('fileUrl', fileUrl);
       if (userId) {
         backendFormData.append('userId', userId);
       }
 
-      // Log FormData contents (cannot log FormData directly)
       console.log('📦 Step 3: Sending to backend:', {
         fileName: file.name,
         fileSize: file.size,
@@ -167,7 +158,6 @@ export const knowledgeBaseService = {
         hasFileUrlInResponse: !!response.data.fileUrl
       });
 
-      // Verify fileUrl was saved
       if (!response.data.fileUrl) {
         console.warn('⚠️ WARNING: Backend response does not contain fileUrl!');
       }
@@ -179,13 +169,11 @@ export const knowledgeBaseService = {
     }
   },
 
-  // Kiểm tra status của knowledge base
   getKnowledgeBaseStatus: async (id: number): Promise<KnowledgeBaseStatus> => {
     const response = await apiClient.get(`/knowledge/${id}/status`);
     return response.data;
   },
 
-  // Lấy danh sách knowledge base của user
   getUserKnowledgeBases: async (userId: string): Promise<KnowledgeBase[]> => {
     console.log('📋 Fetching knowledge bases for user:', userId);
     const response = await apiClient.get(`/knowledge/user/${userId}`);
@@ -202,30 +190,25 @@ export const knowledgeBaseService = {
     return response.data;
   },
 
-  // Lấy chi tiết knowledge base (study guide, key notes, user note)
   getKnowledgeBaseDetail: async (id: number): Promise<KnowledgeBase> => {
     const response = await apiClient.get(`/knowledge/${id}`);
     return response.data;
   },
 
-  // Lấy key notes đã parse
   getKeyNotes: async (id: number): Promise<KeyNotesResponse> => {
     const response = await apiClient.get(`/knowledge/${id}/key-notes`);
     return response.data;
   },
 
-  // Cập nhật user note
   updateUserNote: async (id: number, note: string): Promise<void> => {
     await apiClient.put(`/knowledge/${id}/user-note`, { note });
   },
 
-  // Regenerate study guide bằng AI
   regenerateStudyGuide: async (id: number): Promise<string> => {
     const response = await apiClient.post(`/knowledge/${id}/regenerate-study-guide`);
     return response.data;
   },
 
-  // Regenerate key notes bằng AI
   regenerateKeyNotes: async (id: number): Promise<string> => {
     const response = await apiClient.post(`/knowledge/${id}/regenerate-key-notes`);
     return response.data;

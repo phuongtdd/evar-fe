@@ -86,7 +86,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 : status
             ))
 
-            // Cache KB id locally for fallback listing when server listing fails
+            // Cache KB id temporarily (will be updated with full data when READY)
             try {
               if (userId && response.knowledgeBaseId) {
                 const cacheKey = `evar_kb_cache_${userId}`
@@ -94,10 +94,13 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 const newEntry = {
                   id: response.knowledgeBaseId,
                   fileName: file.name || `KB-${response.knowledgeBaseId}`,
+                  fileUrl: response.fileUrl || null,
+                  status: 'PROCESSING',
                   createdAt: new Date().toISOString(),
                 }
                 const merged = [newEntry, ...existing.filter(e => e.id !== newEntry.id)]
                 localStorage.setItem(cacheKey, JSON.stringify(merged))
+                console.log('📝 Temporary cache entry created for KB:', response.knowledgeBaseId)
               }
             } catch {}
             
@@ -139,6 +142,30 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
               ))
               message.success(`File ${status.file.name} processed successfully!`)
               
+              // Fetch latest KB detail to ensure fresh data
+              try {
+                console.log('📥 Fetching latest KB detail for ID:', kbId)
+                const latestKB = await knowledgeBaseService.getKnowledgeBaseDetail(kbId)
+                
+                // Update cache with fresh data from server
+                if (userId) {
+                  const cacheKey = `evar_kb_cache_${userId}`
+                  const existing = JSON.parse(localStorage.getItem(cacheKey) || '[]') as any[]
+                  const updatedEntry = {
+                    id: latestKB.id,
+                    fileName: latestKB.fileName,
+                    fileUrl: latestKB.fileUrl,
+                    status: latestKB.status,
+                    createdAt: latestKB.createdAt,
+                  }
+                  const merged = [updatedEntry, ...existing.filter(e => e.id !== latestKB.id)]
+                  localStorage.setItem(cacheKey, JSON.stringify(merged))
+                  console.log('✅ Cache updated with latest KB data:', updatedEntry)
+                }
+              } catch (error) {
+                console.error('Failed to fetch latest KB detail:', error)
+              }
+              
               // Auto-generate flashcards if enabled
               if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
                 setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
@@ -154,8 +181,11 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 }
               }
               
+              // Delay slightly to ensure backend has committed all data
+              await new Promise(resolve => setTimeout(resolve, 500))
+              
               onUploaded?.(kbId)
-              onRefetch?.() // Refresh KB list
+              onRefetch?.() // Refresh KB list with latest data
               
               // Clear interval
               if (pollingIntervals[fileUid]) {

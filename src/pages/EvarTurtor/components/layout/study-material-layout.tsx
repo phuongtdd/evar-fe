@@ -34,12 +34,13 @@ export default function StudyMaterialLayout() {
   const { data: knowledgeBases, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases();
   const { data: flashcards, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined);
 
-  // Load study guide and key notes when KB is selected
+  // Load study guide and key notes when KB is selected or KB list changes
   useEffect(() => {
     const loadContent = async () => {
       if (selectedKnowledgeBase) {
         setLoadingContent(true);
         try {
+          console.log('📖 Loading content for KB:', selectedKnowledgeBase);
           const detail = await knowledgeBaseService.getKnowledgeBaseDetail(selectedKnowledgeBase);
           setStudyGuide(detail.studyGuide || "");
           setKeyNotes(detail.keyNotes || "");
@@ -49,6 +50,8 @@ export default function StudyMaterialLayout() {
             const kn = await knowledgeBaseService.getKeyNotes(selectedKnowledgeBase);
             setParsedKeyNotes(kn);
           } catch {}
+          
+          console.log('✅ Content loaded successfully');
         } catch (error) {
           console.error("Failed to load content:", error);
         } finally {
@@ -57,7 +60,7 @@ export default function StudyMaterialLayout() {
       }
     };
     loadContent();
-  }, [selectedKnowledgeBase]);
+  }, [selectedKnowledgeBase, knowledgeBases]);
 
   return (
     <div className="!flex !h-screen !w-full !bg-white mt-12 ">
@@ -97,9 +100,13 @@ export default function StudyMaterialLayout() {
           {showUploadArea ? (
             <MaterialsUploadAreaUpdated 
               onClose={() => setShowUploadArea(false)} 
-              onRefetch={() => {
-                refetchKnowledgeBases();
-                refetchFlashcards();
+              onRefetch={async () => {
+                console.log('🔄 Refetching knowledge bases and flashcards...');
+                await refetchKnowledgeBases();
+                if (selectedKnowledgeBase) {
+                  await refetchFlashcards();
+                }
+                console.log('✅ Refetch completed');
               }}
             />
           ) : (

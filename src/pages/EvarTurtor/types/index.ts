@@ -169,6 +169,7 @@ export interface KnowledgeBaseUploadResponse {
   message: string;
   knowledgeBaseId: number;
   status: string;
+  fileUrl?: string;
 }
 
 export interface KnowledgeBaseStatus {
