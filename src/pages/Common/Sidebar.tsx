@@ -76,10 +76,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <MessageOutlined className="text-2xl" />,
       label: "Trò chuyện",
     },
-        {
+    {
       key: "tutor",
       icon: <DeliveredProcedureOutlined className="text-2xl" />,
-      label: "Tài nguyên",
+      label: "Evar Tutor",
     },
     {
       key: "create-quiz",

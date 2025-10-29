@@ -8,6 +8,7 @@ import MaterialsUploadAreaUpdated from "./materials-upload-area-updated"
 
 interface TutorChatPanelProps {
   onPageJump?: (page: number) => void
+  onKnowledgeBaseSelected?: (kbId: number | null) => void
 }
 
 interface ChatMessage {
@@ -54,7 +55,7 @@ function renderMessageWithPageLinks(content: string, sources?: ChatMessage['sour
   return content
 }
 
-export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
+export default function TutorChatPanel({ onPageJump, onKnowledgeBaseSelected }: TutorChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -70,6 +71,12 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
   // Knowledge bases are derived from current user context
   const { data: knowledgeBases, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases()
   const { sendMessage, loading: chatLoading } = useChatbot()
+
+  // Notify parent when KB is selected
+  const handleKnowledgeBaseChange = (kbId: number | null) => {
+    setSelectedKnowledgeBase(kbId)
+    onKnowledgeBaseSelected?.(kbId)
+  }
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
@@ -164,7 +171,7 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
         <Select
           placeholder="Chọn knowledge base"
           value={selectedKnowledgeBase}
-          onChange={setSelectedKnowledgeBase}
+          onChange={handleKnowledgeBaseChange}
           className="!w-full"
           loading={knowledgeBasesLoading}
           options={knowledgeBases.map(kb => ({
@@ -250,12 +257,12 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
           onClose={() => setShowUploadModal(false)}
           onRefetch={refetchKnowledgeBases}
           onUploaded={(kbId: number) => {
-            setSelectedKnowledgeBase(kbId)
+            handleKnowledgeBaseChange(kbId)
             setShowUploadModal(false)
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: "assistant",
-              content: "Tài liệu đã được embedding. Flashcards và hướng dẫn ôn luyện đã được tạo. Bạn có thể chọn knowledge base vừa tạo và bắt đầu đặt câu hỏi.",
+              content: "✅ Tài liệu đã được xử lý thành công! Keynotes và Flashcards đã được tự động tạo. Bạn có thể xem chúng ở tab 'Studying Guidance' và 'Flashcards', hoặc bắt đầu đặt câu hỏi ngay.",
               timestamp: new Date().toISOString()
             }
             setMessages(prev => [...prev, assistantMessage])

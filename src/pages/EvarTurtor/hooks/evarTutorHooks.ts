@@ -15,8 +15,8 @@ import {
   type KnowledgeBaseUploadResponse
 } from '../services/evarTutorService';
 
-// Re-export knowledgeBaseService for direct use in components
-export { knowledgeBaseService };
+// Re-export services for direct use in components
+export { knowledgeBaseService, flashcardService };
 
 export const getCurrentUserId = (): string | null => {
   const explicit = localStorage.getItem('userId');

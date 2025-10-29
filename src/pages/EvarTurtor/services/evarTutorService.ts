@@ -143,20 +143,104 @@ export const chatbotService = {
 
 // ==================== KNOWLEDGE BASE SERVICES ====================
 export const knowledgeBaseService = {
-  // Upload PDF file
+  // Upload PDF file - First upload to Cloudinary, then send metadata to backend
   uploadPdf: async (file: File, userId?: string): Promise<KnowledgeBaseUploadResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (userId) {
-      formData.append('userId', userId);
-    }
-
-    const response = await apiClient.post('/knowledge/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    console.log('🚀 Starting PDF upload process...', {
+      fileName: file.name,
+      fileSize: file.size,
+      userId: userId
     });
-    return response.data;
+
+    try {
+      // Step 1: Upload PDF to Cloudinary
+      console.log('📤 Step 1: Uploading PDF to Cloudinary...');
+      const cloudinaryUpload = await fetch(
+        `https://api.cloudinary.com/v1_1/dxt8ylemj/raw/upload`,
+        {
+          method: 'POST',
+          body: (() => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'evar_study_material'); // Create this preset in Cloudinary
+            formData.append('folder', 'evar-knowledge-base');
+            formData.append('resource_type', 'raw');
+            return formData;
+          })(),
+        }
+      );
+
+      console.log('📡 Cloudinary response status:', cloudinaryUpload.status);
+
+      if (!cloudinaryUpload.ok) {
+        const errorText = await cloudinaryUpload.text();
+        console.error('❌ Cloudinary upload failed:', {
+          status: cloudinaryUpload.status,
+          statusText: cloudinaryUpload.statusText,
+          error: errorText
+        });
+        throw new Error(`Cloudinary upload failed: ${cloudinaryUpload.status} - ${errorText}`);
+      }
+
+      const cloudinaryData = await cloudinaryUpload.json();
+      const fileUrl = cloudinaryData.secure_url;
+      
+      if (!fileUrl) {
+        console.error('❌ No secure_url in Cloudinary response:', cloudinaryData);
+        throw new Error('Cloudinary did not return a file URL');
+      }
+
+      console.log('✅ Cloudinary upload success:', {
+        fileUrl,
+        publicId: cloudinaryData.public_id,
+        format: cloudinaryData.format,
+        bytes: cloudinaryData.bytes,
+        resourceType: cloudinaryData.resource_type
+      });
+
+      // Step 2: Send file + fileUrl to backend
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileUrl', fileUrl); // Add Cloudinary URL
+      if (userId) {
+        formData.append('userId', userId);
+      }
+
+      // Log FormData contents (cannot log FormData directly)
+      console.log('📦 Step 2: Sending to backend:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileUrl: fileUrl,
+        fileUrlLength: fileUrl?.length,
+        userId: userId,
+        hasFile: !!file,
+        hasFileUrl: !!fileUrl,
+        hasUserId: !!userId,
+        endpoint: '/knowledge/upload'
+      });
+
+      const response = await apiClient.post('/knowledge/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('✅ Step 3: Backend response received:', {
+        status: response.status,
+        data: response.data,
+        hasFileUrlInResponse: !!response.data.fileUrl
+      });
+
+      // Verify fileUrl was saved
+      if (!response.data.fileUrl) {
+        console.warn('⚠️ WARNING: Backend response does not contain fileUrl!');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      throw error;
+    }
   },
 
   // Kiểm tra status của knowledge base
@@ -167,7 +251,18 @@ export const knowledgeBaseService = {
 
   // Lấy danh sách knowledge base của user
   getUserKnowledgeBases: async (userId: string): Promise<KnowledgeBase[]> => {
+    console.log('📋 Fetching knowledge bases for user:', userId);
     const response = await apiClient.get(`/knowledge/user/${userId}`);
+    console.log('📋 Knowledge bases received:', {
+      count: response.data.length,
+      knowledgeBases: response.data.map((kb: any) => ({
+        id: kb.id,
+        fileName: kb.fileName,
+        fileUrl: kb.fileUrl,
+        hasFileUrl: !!kb.fileUrl,
+        status: kb.status
+      }))
+    });
     return response.data;
   },
 

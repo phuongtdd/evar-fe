@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert } from "antd"
 import type { UploadFile } from "antd"
-import { usePdfUpload, getCurrentUserId, knowledgeBaseService } from "../../hooks/evarTutorHooks"
+import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/evarTutorHooks"
 import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined } from "@ant-design/icons"
 
 interface MaterialsUploadAreaProps {
   onClose: () => void
   onUploaded?: (knowledgeBaseId: number) => void
   onRefetch?: () => void
+  autoGenerateFlashcards?: boolean // New prop to control auto-generation
 }
 
 interface UploadStatus {
@@ -17,14 +18,15 @@ interface UploadStatus {
   error?: string
 }
 
-export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: MaterialsUploadAreaProps) {
+export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, autoGenerateFlashcards = true }: MaterialsUploadAreaProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [uploadStatuses, setUploadStatuses] = useState<UploadStatus[]>([])
   const [form] = Form.useForm()
+  const [generatingFlashcards, setGeneratingFlashcards] = useState<Record<number, boolean>>({})
   
   const { uploadPdf, uploading, error } = usePdfUpload()
   
-  // Get current user ID from token or localStorage
+
   const userId = getCurrentUserId() || undefined
 
   const formatFileSize = (bytes: number): string => {
@@ -136,6 +138,22 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
                 u.file.uid === fileUid ? { ...u, status: 'ready' } : u
               ))
               message.success(`File ${status.file.name} processed successfully!`)
+              
+              // Auto-generate flashcards if enabled
+              if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
+                setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
+                try {
+                  message.info(`Generating flashcards for ${status.file.name}...`)
+                  await flashcardService.generateFlashcards(kbId, 10)
+                  message.success(`Flashcards generated for ${status.file.name}!`)
+                } catch (error) {
+                  console.error('Failed to generate flashcards:', error)
+                  message.warning(`Flashcards generation failed for ${status.file.name}`)
+                } finally {
+                  setGeneratingFlashcards(prev => ({ ...prev, [kbId]: false }))
+                }
+              }
+              
               onUploaded?.(kbId)
               onRefetch?.() // Refresh KB list
               
@@ -174,7 +192,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
     return () => {
       Object.values(pollingIntervals).forEach(interval => clearInterval(interval))
     }
-  }, [uploadStatuses, onUploaded, onRefetch])
+  }, [uploadStatuses, onUploaded, onRefetch, autoGenerateFlashcards, generatingFlashcards])
 
   const removeFile = (file: UploadFile) => {
     setFileList(prev => prev.filter(f => f.uid !== file.uid))
