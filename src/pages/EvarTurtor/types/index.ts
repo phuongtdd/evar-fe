@@ -17,30 +17,6 @@ export interface StudyMaterial {
   };
 }
 
-export interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  materialId: string;
-  materialTitle: string;
-  questions: QuizQuestion[];
-  createdAt: string;
-  updatedAt: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  estimatedTime: number; 
-  isGenerated: boolean;
-}
-
-export interface QuizQuestion {
-  id: string;
-  question: string;
-  type: 'multiple-choice' | 'true-false' | 'fill-blank' | 'essay';
-  options?: string[];
-  correctAnswer: string | string[];
-  explanation?: string;
-  points: number;
-}
-
 export interface Flashcard {
   id: string;
   front: string;
@@ -119,13 +95,6 @@ export interface UserProgress {
   flashcardsReviewed: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  error?: string;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -152,4 +121,94 @@ export interface SearchParams {
   sortOrder: 'asc' | 'desc';
   page: number;
   limit: number;
+}
+
+
+export interface FlashcardRequest {
+  front: string;
+  back: string;
+  knowledgeBaseId: number;
+}
+
+export interface FlashcardResponse {
+  id: string;
+  front: string;
+  back: string;
+  knowledgeBaseId: number;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FlashcardUpdateRequest {
+  id: string;
+  front: string;
+  back: string;
+}
+
+export interface ChatRequest {
+  knowledgeBaseId: number;
+  question: string;
+  topK?: number;
+}
+
+export interface SourceReference {
+  pageNumber: number;
+  snippet: string;
+  similarity: number;
+}
+
+export interface ChatResponse {
+  answer: string;
+  sources: SourceReference[];
+  chunksUsed: number;
+}
+
+export interface KnowledgeBaseUploadResponse {
+  message: string;
+  knowledgeBaseId: number;
+  status: string;
+}
+
+export interface KnowledgeBaseStatus {
+  id: number;
+  fileName: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface KnowledgeBase {
+  id: number;
+  userId?: string;
+  fileName: string;
+  fileUrl?: string;
+  status: string;
+  studyGuide?: string;
+  keyNotes?: string;
+  userNote?: string;
+  createdAt: string;
+}
+
+export interface KeyNoteItem {
+  id: string;
+  content: string;
+  pageNumber: number | null;
+  relevance: number;
+}
+
+export interface KeyNotesResponse {
+  notes: KeyNoteItem[];
+  totalNotes: number;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  message: string;
+  pageMetadata?: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
+  };
 }

@@ -1,94 +1,11 @@
 import apiClient from '../../../configs/axiosConfig';
+import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KeyNotesResponse, KnowledgeBase, KnowledgeBaseStatus, KnowledgeBaseUploadResponse } from '../types';
+
+// API Base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 // ==================== TYPES ====================
-export interface FlashcardRequest {
-  front: string;
-  back: string;
-  knowledgeBaseId: number;
-}
 
-export interface FlashcardResponse {
-  id: string;
-  front: string;
-  back: string;
-  knowledgeBaseId: number;
-  createdBy?: string;
-  updatedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FlashcardUpdateRequest {
-  id: string;
-  front: string;
-  back: string;
-}
-
-export interface ChatRequest {
-  knowledgeBaseId: number;
-  question: string;
-  topK?: number;
-}
-
-export interface SourceReference {
-  pageNumber: number;
-  snippet: string;
-  similarity: number;
-}
-
-export interface ChatResponse {
-  answer: string;
-  sources: SourceReference[];
-  chunksUsed: number;
-}
-
-export interface KnowledgeBaseUploadResponse {
-  message: string;
-  knowledgeBaseId: number;
-  status: string;
-}
-
-export interface KnowledgeBaseStatus {
-  id: number;
-  fileName: string;
-  status: string;
-  createdAt: string;
-}
-
-export interface KnowledgeBase {
-  id: number;
-  userId?: string;
-  fileName: string;
-  fileUrl?: string;
-  status: string;
-  studyGuide?: string;
-  keyNotes?: string;
-  userNote?: string;
-  createdAt: string;
-}
-
-export interface KeyNoteItem {
-  id: string;
-  content: string;
-  pageNumber: number | null;
-  relevance: number;
-}
-
-export interface KeyNotesResponse {
-  notes: KeyNoteItem[];
-  totalNotes: number;
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  message: string;
-  pageMetadata?: {
-    size: number;
-    number: number;
-    totalElements: number;
-    totalPages: number;
-  };
-}
 
 // ==================== FLASHCARD SERVICES ====================
 export const flashcardService = {
@@ -143,29 +60,48 @@ export const chatbotService = {
 
 // ==================== KNOWLEDGE BASE SERVICES ====================
 export const knowledgeBaseService = {
-  // Upload PDF file - First upload to Cloudinary, then send metadata to backend
+  // Upload PDF file - First upload to Cloudinary using signed upload, then send metadata to backend
   uploadPdf: async (file: File, userId?: string): Promise<KnowledgeBaseUploadResponse> => {
     console.log('🚀 Starting PDF upload process...', {
       fileName: file.name,
       fileSize: file.size,
-      userId: userId
+      userId: userId || 'not provided'
     });
 
     try {
-      // Step 1: Upload PDF to Cloudinary
-      console.log('📤 Step 1: Uploading PDF to Cloudinary...');
+      // Step 1: Get upload signature from backend
+      console.log('📝 Step 1: Getting upload signature from backend...');
+      const signatureResponse = await fetch(`${API_BASE_URL}/cloudinary/signature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ folder: 'evar-knowledge-base' }),
+      });
+
+      if (!signatureResponse.ok) {
+        throw new Error('Failed to get upload signature from backend');
+      }
+
+      const signatureData = await signatureResponse.json();
+      console.log('✅ Signature received');
+
+      // Step 2: Upload PDF to Cloudinary with signature
+      console.log('📤 Step 2: Uploading PDF to Cloudinary with signature...');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('signature', signatureData.signature);
+      formData.append('timestamp', signatureData.timestamp.toString());
+      formData.append('api_key', signatureData.apiKey);
+      formData.append('folder', signatureData.folder);
+      formData.append('resource_type', 'raw');
+
       const cloudinaryUpload = await fetch(
-        `https://api.cloudinary.com/v1_1/dxt8ylemj/raw/upload`,
+        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/raw/upload`,
         {
           method: 'POST',
-          body: (() => {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', 'evar_study_material'); // Create this preset in Cloudinary
-            formData.append('folder', 'evar-knowledge-base');
-            formData.append('resource_type', 'raw');
-            return formData;
-          })(),
+          body: formData
         }
       );
 
@@ -197,16 +133,16 @@ export const knowledgeBaseService = {
         resourceType: cloudinaryData.resource_type
       });
 
-      // Step 2: Send file + fileUrl to backend
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileUrl', fileUrl); // Add Cloudinary URL
+      // Step 3: Send file + fileUrl to backend
+      const backendFormData = new FormData();
+      backendFormData.append('file', file);
+      backendFormData.append('fileUrl', fileUrl); // Add Cloudinary URL
       if (userId) {
-        formData.append('userId', userId);
+        backendFormData.append('userId', userId);
       }
 
       // Log FormData contents (cannot log FormData directly)
-      console.log('📦 Step 2: Sending to backend:', {
+      console.log('📦 Step 3: Sending to backend:', {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
@@ -219,7 +155,7 @@ export const knowledgeBaseService = {
         endpoint: '/knowledge/upload'
       });
 
-      const response = await apiClient.post('/knowledge/upload', formData, {
+      const response = await apiClient.post('/knowledge/upload', backendFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, Tabs, Input, Button, message, Spin, Alert } from "antd";
 import { SaveOutlined, FileTextOutlined, BookOutlined, EditOutlined, ReloadOutlined } from "@ant-design/icons";
-import { KnowledgeBase, KeyNotesResponse } from "../../services/evarTutorService";
+import { KnowledgeBase, KeyNotesResponse } from "../../types";
 import { knowledgeBaseService } from "../../hooks/evarTutorHooks";
 
 const { TextArea } = Input;

@@ -22,37 +22,27 @@ import {
   FileOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
-import { useMaterials, useQuizzes, useFlashcards } from "../../hooks";
-import { StudyMaterial, Quiz, Flashcard } from "../../types";
-import {
-  FILE_TYPE_LABELS,
-  STATUS_LABELS,
-  DIFFICULTY_LABELS,
-  formatFileSize,
-  formatDate,
-} from "../../mock/mockData";
+import { useMaterials, useFlashcards } from "../../hooks/evarTutorHooks";
+import { StudyMaterial, FlashcardResponse } from "../../types";
+import { FILE_TYPE_LABELS, STATUS_LABELS } from "../../constants";
+import { formatFileSize, formatDate } from "../../utils";
 
 interface MaterialsGridProps {
-  type: "quiz" | "material" | "flashcard" | "view-pdf" | "notes";
+  type: "material" | "flashcard" | "view-pdf" | "notes";
 }
 
 export default function MaterialsGrid({ type }: MaterialsGridProps) {
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState<
-    StudyMaterial | Quiz | Flashcard | null
-  >(null);
+  const [editingItem, setEditingItem] = useState<StudyMaterial | FlashcardResponse | null>(null);
   const [form] = Form.useForm();
 
   const materialsHook = useMaterials();
-  const quizzesHook = useQuizzes();
   const flashcardsHook = useFlashcards();
 
   const getCurrentData = () => {
     switch (type) {
       case "material":
         return materialsHook.data?.data || [];
-      case "quiz":
-        return quizzesHook.data || [];
       case "flashcard":
         return flashcardsHook.data || [];
       default:
@@ -64,8 +54,6 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
     switch (type) {
       case "material":
         return materialsHook.loading;
-      case "quiz":
-        return quizzesHook.loading;
       case "flashcard":
         return flashcardsHook.loading;
       default:
@@ -73,13 +61,13 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
     }
   };
 
-  const handleEdit = (item: StudyMaterial | Quiz | Flashcard) => {
+  const handleEdit = (item: StudyMaterial | FlashcardResponse) => {
     setEditingItem(item);
     form.setFieldsValue(item);
     setEditModalVisible(true);
   };
 
-  const handleDelete = async (item: StudyMaterial | Quiz | Flashcard) => {
+  const handleDelete = async (item: StudyMaterial | FlashcardResponse) => {
     Modal.confirm({
       title: "Are you sure you want to delete this item?",
       content: "This action cannot be undone.",
@@ -90,10 +78,7 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
         try {
           switch (type) {
             case "material":
-              await materialsHook.deleteMaterial(item.id);
-              break;
-            case "quiz":
-              await quizzesHook.deleteQuiz(item.id);
+              // Not supported for now
               break;
             case "flashcard":
               await flashcardsHook.deleteFlashcard(item.id);
@@ -114,10 +99,7 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
 
       switch (type) {
         case "material":
-          await materialsHook.updateMaterial(editingItem.id, values);
-          break;
-        case "quiz":
-          await quizzesHook.updateQuiz(editingItem.id, values);
+          // Not supported for now
           break;
         case "flashcard":
           await flashcardsHook.updateFlashcard(editingItem.id, values);
@@ -143,27 +125,34 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
     }
   };
 
-  const getMenuItems = (item: StudyMaterial | Quiz | Flashcard) => [
-    {
-      key: "view",
-      label: "View",
-      icon: <EyeOutlined />,
-      onClick: () => console.log("View", item.id),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <EditOutlined />,
-      onClick: () => handleEdit(item),
-    },
-    {
-      key: "delete",
-      label: "Delete",
-      icon: <DeleteOutlined />,
-      danger: true,
-      onClick: () => handleDelete(item),
-    },
-  ];
+  const getMenuItems = (item: StudyMaterial | FlashcardResponse) => {
+    const items = [
+      {
+        key: "view",
+        label: "View",
+        icon: <EyeOutlined />,
+        onClick: () => console.log("View", item.id),
+      },
+    ] as any[];
+    if (type === "flashcard") {
+      items.push(
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <EditOutlined />,
+          onClick: () => handleEdit(item as any),
+        },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <DeleteOutlined />,
+          danger: true,
+          onClick: () => handleDelete(item as any),
+        }
+      );
+    }
+    return items;
+  };
 
   const renderMaterialCard = (item: StudyMaterial) => (
     <div
@@ -233,42 +222,7 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
     </div>
   );
 
-  const renderQuizCard = (item: Quiz) => (
-    <Card
-      key={item.id}
-      className="!border !border-gray-200 !rounded-lg !shadow-sm !hover:shadow-md !transition-all !cursor-pointer [&_.ant-card-body]:!p-4"
-      hoverable
-    >
-      <div className="!flex !items-start !justify-between">
-        <div className="!flex-1">
-          <h3 className="!font-semibold !text-gray-900 !mb-1">{item.title}</h3>
-          <p className="!text-sm !text-gray-500 !mb-3">{item.description}</p>
-          <div className="!flex !items-center !gap-2 !mb-2">
-            <Tag color="blue">{DIFFICULTY_LABELS[item.difficulty]}</Tag>
-            <Tag color="green">{item.questions.length} questions</Tag>
-            <Tag color="orange">{item.estimatedTime} min</Tag>
-          </div>
-          <p className="!text-xs !text-gray-400">
-            {formatDate(item.createdAt)}
-          </p>
-        </div>
-        <Dropdown
-          menu={{ items: getMenuItems(item) }}
-          trigger={["click"]}
-          placement="bottomRight"
-        >
-          <Button
-            type="text"
-            size="small"
-            icon={<MoreOutlined />}
-            className="!text-gray-400 !hover:text-gray-600"
-          />
-        </Dropdown>
-      </div>
-    </Card>
-  );
-
-  const renderFlashcardCard = (item: Flashcard) => (
+  const renderFlashcardCard = (item: FlashcardResponse) => (
     <Card
       key={item.id}
       className="!border !border-gray-200 !rounded-lg !shadow-sm !hover:shadow-md !transition-all !cursor-pointer [&_.ant-card-body]:!p-4"
@@ -280,13 +234,6 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
           <p className="!text-sm !text-gray-500 !mb-3 !line-clamp-2">
             {item.back}
           </p>
-          <div className="!flex !items-center !gap-2 !mb-2">
-            <Tag color="blue">{DIFFICULTY_LABELS[item.difficulty]}</Tag>
-            <Tag color="green">
-              {Math.round(item.successRate * 100)}% success
-            </Tag>
-            <Tag color="purple">{item.reviewCount} reviews</Tag>
-          </div>
           <p className="!text-xs !text-gray-400">
             {formatDate(item.createdAt)}
           </p>
@@ -333,10 +280,8 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
           switch (type) {
             case "material":
               return renderMaterialCard(item as StudyMaterial);
-            case "quiz":
-              return renderQuizCard(item as Quiz);
             case "flashcard":
-              return renderFlashcardCard(item as Flashcard);
+              return renderFlashcardCard(item as unknown as FlashcardResponse);
             default:
               return null;
           }
@@ -344,13 +289,7 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
       </div>
 
       <Modal
-        title={`Edit ${
-          type === "material"
-            ? "Material"
-            : type === "quiz"
-            ? "Quiz"
-            : "Flashcard"
-        }`}
+        title={`Edit ${type === "material" ? "Material" : "Flashcard"}`}
         open={editModalVisible}
         onOk={handleSave}
         onCancel={() => {
@@ -381,33 +320,6 @@ export default function MaterialsGrid({ type }: MaterialsGridProps) {
                   placeholder="Enter tags"
                   style={{ width: "100%" }}
                 />
-              </Form.Item>
-            </>
-          )}
-
-          {type === "quiz" && (
-            <>
-              <Form.Item
-                name="description"
-                label="Description"
-                rules={[
-                  { required: true, message: "Please enter a description" },
-                ]}
-              >
-                <Input.TextArea placeholder="Enter description" rows={3} />
-              </Form.Item>
-              <Form.Item
-                name="difficulty"
-                label="Difficulty"
-                rules={[
-                  { required: true, message: "Please select difficulty" },
-                ]}
-              >
-                <Select placeholder="Select difficulty">
-                  <Select.Option value="easy">Easy</Select.Option>
-                  <Select.Option value="medium">Medium</Select.Option>
-                  <Select.Option value="hard">Hard</Select.Option>
-                </Select>
               </Form.Item>
             </>
           )}

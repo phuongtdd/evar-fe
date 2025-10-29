@@ -5,15 +5,8 @@ import {
   chatbotService, 
   knowledgeBaseService,
   evarTutorUtils,
-  type FlashcardRequest,
-  type FlashcardResponse,
-  type FlashcardUpdateRequest,
-  type ChatRequest,
-  type ChatResponse,
-  type KnowledgeBase,
-  type KnowledgeBaseStatus,
-  type KnowledgeBaseUploadResponse
 } from '../services/evarTutorService';
+import { ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KnowledgeBase, KnowledgeBaseStatus } from '../types';
 
 // Re-export services for direct use in components
 export { knowledgeBaseService, flashcardService };
