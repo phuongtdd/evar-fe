@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layout, Tabs, Button, Tooltip, Card, Tag, Empty, Spin, Alert, Input, message } from "antd";
+import { Layout, Tabs, Button, Tooltip, Card, Tag, Empty, Spin, Alert, Input, message, Select } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import TutorChatPanelUpdated from "../component/tutor-chat-panel-updated";
 import PdfViewerWithUpload from "../component/pdf-viewer-with-upload";
 import CreateFlashcardsModalUpdated from "../component/create-flashcards-modal-updated";
 import MaterialsUploadAreaUpdated from "../component/materials-upload-area-updated";
@@ -26,12 +25,6 @@ export default function StudyMaterialLayout() {
   const [loadingContent, setLoadingContent] = useState(false);
   const [targetPage, setTargetPage] = useState<number | null>(null);
   const [highlightText, setHighlightText] = useState<string | null>(null);
-  const [chatRefetchTrigger, setChatRefetchTrigger] = useState(0); 
-
-  // Handler to receive selected KB from chatbot
-  const handleKnowledgeBaseSelected = (kbId: number | null) => {
-    setSelectedKnowledgeBase(kbId);
-  };
 
   const { data: knowledgeBasesData, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases();
   const { data: flashcardsData, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined);
@@ -67,10 +60,21 @@ export default function StudyMaterialLayout() {
 
   return (
     <div className="!flex !h-screen !w-full !bg-white mt-12 ">
-      <div className="!flex-1 !flex !flex-col !border-r !border-gray-200">
+      <div className="!flex-1 !flex !flex-col">
         <div className="!flex !items-center !justify-between !px-6 !py-4 !border-b !border-gray-200">
-          <div className="!flex !gap-2">
+          <div className="!flex !items-center !gap-4">
             <h3>Tài nguyên học tập</h3>
+            <Select
+              placeholder="Chọn tài nguyên học tập"
+              style={{ width: 300 }}
+              value={selectedKnowledgeBase || undefined}
+              onChange={(value) => setSelectedKnowledgeBase(value)}
+              loading={knowledgeBasesLoading}
+              options={knowledgeBases.map(kb => ({
+                label: kb.fileName,
+                value: kb.id,
+              }))}
+            />
           </div>
 
           <div className="!flex !gap-2">
@@ -134,9 +138,6 @@ export default function StudyMaterialLayout() {
                     
                     await refetchFlashcards();
                     console.log('✅ Flashcards refetched successfully');
-                    
-                    setChatRefetchTrigger(prev => prev + 1);
-                    console.log('✅ Chat panel KB list refresh triggered');
                     
                     message.success('✅ PDF đã được tải lên và flashcards đã được tạo! Xem chúng ở tab Thẻ ghi nhớ.');
                   } catch (error) {
@@ -216,7 +217,7 @@ export default function StudyMaterialLayout() {
                     <div className="!max-w-md">
                       <p className="!text-lg !font-semibold !text-gray-700 !mb-3">🎴 Chưa chọn tài nguyên học liệu</p>
                       <p className="!text-sm !text-gray-600 !mb-4">
-                        Để xem thẻ ghi nhớ, vui lòng chọn tài nguyên học liệu từ dropdown ở phần chatbot bên phải, hoặc tải lên file PDF mới.
+                        Để xem thẻ ghi nhớ, vui lòng chọn tài nguyên học liệu từ dropdown ở trên, hoặc tải lên file PDF mới.
                       </p>
                       <Button
                         type="primary"
@@ -256,7 +257,7 @@ export default function StudyMaterialLayout() {
                     <div className="!max-w-md">
                       <p className="!text-lg !font-semibold !text-gray-700 !mb-3">📖 Chưa chọn tài nguyên học liệu</p>
                       <p className="!text-sm !text-gray-600 !mb-4">
-                        Để xem hướng dẫn học tập, vui lòng chọn tài nguyên học liệu từ dropdown ở phần chatbot bên phải, hoặc tải lên file PDF mới.
+                        Để xem hướng dẫn học tập, vui lòng chọn tài nguyên học liệu từ dropdown ở trên, hoặc tải lên file PDF mới.
                       </p>
                       <Button
                         type="primary"
@@ -327,7 +328,7 @@ export default function StudyMaterialLayout() {
                     <div className="!max-w-md">
                       <p className="!text-lg !font-semibold !text-gray-700 !mb-3">📝 Chưa chọn tài nguyên học liệu</p>
                       <p className="!text-sm !text-gray-600 !mb-4">
-                        Để xem ghi chú quan trọng, vui lòng chọn tài nguyên học liệu từ dropdown ở phần chatbot bên phải, hoặc tải lên file PDF mới.
+                        Để xem ghi chú quan trọng, vui lòng chọn tài nguyên học liệu từ dropdown ở trên, hoặc tải lên file PDF mới.
                       </p>
                       <Button
                         type="primary"
@@ -351,7 +352,7 @@ export default function StudyMaterialLayout() {
                     <div className="!max-w-md">
                       <p className="!text-lg !font-semibold !text-gray-700 !mb-3">📝 Chưa chọn tài nguyên học liệu</p>
                       <p className="!text-sm !text-gray-600 !mb-4">
-                        Để ghi chú, vui lòng chọn tài nguyên học liệu từ dropdown ở phần chatbot bên phải, hoặc tải lên file PDF mới.
+                        Để ghi chú, vui lòng chọn tài nguyên học liệu từ dropdown ở trên, hoặc tải lên file PDF mới.
                       </p>
                       <Button
                         type="primary"
@@ -383,7 +384,7 @@ export default function StudyMaterialLayout() {
                     <div className="!max-w-md">
                       <p className="!text-lg !font-semibold !text-gray-700 !mb-3">📄 Chưa chọn tài nguyên học liệu</p>
                       <p className="!text-sm !text-gray-600 !mb-4">
-                        Để xem PDF, vui lòng chọn tài nguyên học liệu từ dropdown ở phần chatbot bên phải, hoặc tải lên file PDF mới.
+                        Để xem PDF, vui lòng chọn tài nguyên học liệu từ dropdown ở trên, hoặc tải lên file PDF mới.
                       </p>
                       <Button
                         type="primary"
@@ -399,16 +400,6 @@ export default function StudyMaterialLayout() {
             </>
           )}
         </Content>
-      </div>
-
-      <div className="!w-180 !border-l !border-gray-200 !bg-white !flex !flex-col">
-        <div className="!flex-1 !min-h-0 !border-t !border-gray-200 !overflow-hidden">
-          <TutorChatPanelUpdated 
-            onPageJump={setCurrentPage}
-            onKnowledgeBaseSelected={handleKnowledgeBaseSelected}
-            refetchTrigger={chatRefetchTrigger}
-          />
-        </div>
       </div>
 
       <CreateFlashcardsModalUpdated

@@ -24,8 +24,11 @@ import { ExamAdminPanel } from "../pages/ExamManage";
 import AdminDashboard from "../pages/admin/index";
 import ProtectedRoute from "./ProtectedRoute";
 import PomodoroModule from "../pages/porodomo";
-import EvarTurTor from "../pages/EvarTurtor";
+import EvarTutor from "../pages/EvarTurtor";
+import ChatAI from "../pages/ChatAI";
 import LearningResources from "../pages/LearningResources";
+import Material from "../pages/Material";
+import FlashCard from "../pages/FlashCard";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -97,8 +100,11 @@ const AppRoutes: React.FC = () => {
           </Route>
 
           <Route path="/chat" element={<Chatmodule />} />
+          <Route path="/chat-ai" element={<ChatAI />} />
           <Route path="/account" element={<UserProfile />} />
           <Route path="/pomodoro" element={<PomodoroModule />} />
+          <Route path="/material" element={<Material />} />
+          <Route path="/flashcard" element={<FlashCard />} />
 
           <Route path="/createExam-AI" element={<CreateQuiz />}>
             <Route index element={<div />} />
@@ -109,7 +115,7 @@ const AppRoutes: React.FC = () => {
             element={<SavedQuizSuccess showMessage={showMessage} />}
           />
 
-          <Route path="/evar-turtor" element={<EvarTurTor />} />
+          <Route path="/evar-turtor" element={<EvarTutor />} />
           <Route path="/learning-resources" element={<LearningResources />} />
         </Route>
 

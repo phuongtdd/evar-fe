@@ -135,7 +135,6 @@ export const flashcardService = {
       }
     });
     console.log('✅ Flashcard generation response:', response.data);
-    console.log('🔍 KB ID in response:', response.data.knowledgeBaseId, 'Type:', typeof response.data.knowledgeBaseId);
     // Backend returns CardSetResponse with flashcards array
     return response.data;
   },
