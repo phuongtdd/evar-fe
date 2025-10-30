@@ -15,6 +15,8 @@ import {
   RightOutlined,
   SettingOutlined,
   DeliveredProcedureOutlined,
+  BookOutlined,
+  CreditCardOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../authen/services/authService";
@@ -55,7 +57,56 @@ const Sidebar: React.FC<SidebarProps> = ({
     return () => window.removeEventListener("auth-changed", onAuthChanged);
   }, []);
 
-  const menuItems: MenuItem[] = [
+  // Menu items khác nhau cho Admin và User
+  const userMenuItems: MenuItem[] = [
+    {
+      key: "home",
+      icon: <HomeOutlined className="text-2xl" />,
+      label: "Trang chủ",
+    },
+    {
+      key: "room",
+      icon: <PlayCircleOutlined className="text-2xl" />,
+      label: "Phòng của tôi",
+    },
+    {
+      key: "pomodoro",
+      icon: <ClockCircleOutlined className="text-2xl" />,
+      label: "Podoromo",
+    },
+    {
+      key: "chat",
+      icon: <MessageOutlined className="text-2xl" />,
+      label: "Trò chuyện",
+    },
+    {
+      key: "material",
+      icon: <BookOutlined className="text-2xl" />,
+      label: "Material",
+    },
+    {
+      key: "flashcard",
+      icon: <CreditCardOutlined className="text-2xl" />,
+      label: "Flash Card",
+    },
+    {
+      key: "create-quiz",
+      icon: <CameraOutlined className="text-2xl" />,
+      label: "Tạo quiz từ ảnh",
+    },
+    {
+      key: "quiz",
+      icon: <EditOutlined className="text-2xl" />,
+      label: "Luyện đề",
+    },
+    {
+      key: "account",
+      icon: <UserOutlined className="text-2xl" />,
+      label: "Thông tin tài khoản",
+    },
+  ];
+
+  const adminMenuItems: MenuItem[] = [
     {
       key: "home",
       icon: <HomeOutlined className="text-2xl" />,
@@ -96,6 +147,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <UserOutlined className="text-2xl" />,
       label: "Thông tin tài khoản",
     },
+  ];
+
+  const menuItems: MenuItem[] = isAdmin ? adminMenuItems : userMenuItems;
+
+  const finalMenuItems: MenuItem[] = [
+    ...menuItems,
     ...(isAdmin
       ? [
           {
@@ -128,7 +185,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         },
   ];
 
-  const items: MenuItem[] = menuItems.map((item) => {
+  const items: MenuItem[] = finalMenuItems.map((item) => {
     if (item && item.type === "divider") {
       return item;
     }
@@ -170,6 +227,12 @@ const Sidebar: React.FC<SidebarProps> = ({
         break;
       case "tutor":
         navigate("/evar-turtor");
+        break;
+      case "material":
+        navigate("/material");
+        break;
+      case "flashcard":
+        navigate("/flashcard");
         break;
       case "account":
         navigate("/account");

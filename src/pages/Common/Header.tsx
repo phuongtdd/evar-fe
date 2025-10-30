@@ -49,6 +49,9 @@ const menuLabels: { [key: string]: string } = {
   'room': 'Phòng của tôi',
   'pomodoro': 'Pomodoro',
   'chat': 'Trò chuyện',
+  'tutor': 'Evar Tutor',
+  'material': 'Material',
+  'flashcard': 'Flash Card',
   'create-quiz': 'Tạo quiz từ ảnh',
   'test-room': 'Phòng kiểm tra',
   'account': 'Thông tin tài khoản'

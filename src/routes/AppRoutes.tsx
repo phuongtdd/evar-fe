@@ -25,6 +25,8 @@ import AdminDashboard from "../pages/admin/index";
 import ProtectedRoute from "./ProtectedRoute";
 import PomodoroModule from "../pages/porodomo";
 import EvarTurTor from "../pages/EvarTurtor";
+import Material from "../pages/Material";
+import FlashCard from "../pages/FlashCard";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -98,6 +100,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/chat" element={<Chatmodule />} />
           <Route path="/account" element={<UserProfile />} />
           <Route path="/pomodoro" element={<PomodoroModule />} />
+          <Route path="/material" element={<Material />} />
+          <Route path="/flashcard" element={<FlashCard />} />
 
           <Route path="/createQuiz-AI" element={<CreateQuiz />}>
             <Route index element={<div />} />
