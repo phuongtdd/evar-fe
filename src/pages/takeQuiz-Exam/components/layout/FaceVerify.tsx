@@ -4,7 +4,7 @@ import {
   CheckCircleOutlined,
   LoadingOutlined,
   ExclamationCircleOutlined,
-  UserOutlined,
+  UserOutlined
 } from "@ant-design/icons";
 import { Button, Spin, message, Progress, Modal } from "antd";
 import { useState, useEffect, useRef } from "react";
@@ -13,9 +13,10 @@ import { uploadImageToImgBB } from "../../../../utils/ImageUpload";
 import * as faceapi from "face-api.js";
 import { getUserById } from "../../../userProfile/services/index";
 import { getUserIdFromToken } from "../../../Room/utils/auth";
+import { ContinuousFaceMonitor } from './ContinuousFaceMonitor';
 
 interface FaceVerificationStepProps {
-  onStart: (faceImageUrl: string, faceSimilarity: number) => void;
+  onStart: (faceImageUrl: string, faceSimilarity: number, descriptor?: Float32Array) => void;
   onCancel: () => void;
 }
 
@@ -44,6 +45,8 @@ export function FaceVerificationStep({
   const [verificationResult, setVerificationResult] =
     useState<FaceVerificationResult | null>(null);
   const [showNoFaceModal, setShowNoFaceModal] = useState(false);
+  const [examStarted, setExamStarted] = useState(false);
+  const [isExamBlocked, setIsExamBlocked] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -76,9 +79,7 @@ export function FaceVerificationStep({
 
     loadModels();
   }, []);
-  const exitVerify = () => {
-  
-  }
+  const exitVerify = () => {};
 
   useEffect(() => {
     const loadReferenceFace = async () => {
@@ -389,8 +390,25 @@ export function FaceVerificationStep({
       return;
     }
 
+    console.log("✅ Starting exam with continuous monitoring");
+
+    // Bắt đầu giám sát
+    setExamStarted(true);
+
     console.log("✅ Continuing with verification result:", verificationResult);
-    onStart(capturedImageUrl, verificationResult.similarity);
+    onStart(capturedImageUrl, verificationResult.similarity, referenceDescriptorRef.current || undefined);
+  };
+
+  // Thêm handler cho blocking
+  const handleExamBlock = () => {
+    setIsExamBlocked(true);
+    message.error({
+      content: "Bài thi đã bị khóa do vi phạm quy định giám sát!",
+      duration: 0,
+    });
+
+    // TODO: Gọi API để log violation và tự động nộp bài
+    // autoSubmitExam();
   };
 
   const handleCancel = () => {
@@ -551,6 +569,14 @@ export function FaceVerificationStep({
                 <span className="text-white text-sm mt-1">Sẵn sàng</span>
               </div>
             )}
+
+          {examStarted && referenceDescriptorRef.current && (
+            <ContinuousFaceMonitor
+              referenceDescriptor={referenceDescriptorRef.current}
+              onBlock={handleExamBlock}
+              enabled={!isExamBlocked}
+            />
+          )}
         </div>
 
         <div className="flex justify-center gap-4 mt-12">
@@ -625,8 +651,9 @@ export function FaceVerificationStep({
             Chưa có ảnh khuôn mặt
           </h3>
           <p className="text-gray-600 mb-8 text-lg leading-relaxed">
-            Bạn chưa có ảnh khuôn mặt trong hệ thống. Vui lòng cập nhật ảnh khuôn mặt 
-            trong hồ sơ cá nhân để có thể tham gia bài thi với xác thực khuôn mặt.
+            Bạn chưa có ảnh khuôn mặt trong hệ thống. Vui lòng cập nhật ảnh
+            khuôn mặt trong hồ sơ cá nhân để có thể tham gia bài thi với xác
+            thực khuôn mặt.
           </p>
           <div className="flex gap-4 justify-center">
             <Button

@@ -16,6 +16,7 @@ import { FaceVerificationStep } from "./components/layout/FaceVerify";
 import { VerifySuccess } from "./components/layout/VerifySuccess";
 import { VerifyFailed } from "./components/layout/VerifyFailed";
 import SubmitSuccess from "./components/layout/SubmitSuccess";
+import { ContinuousFaceMonitor } from "./components/layout/ContinuousFaceMonitor";
 
 import { useExam } from "./hooks/useExam";
 import { ExamResults as ExamResultsType } from "./types";
@@ -30,6 +31,10 @@ const TakeQuizExam: React.FC = () => {
 
   const [showAutoSubmitModal, setShowAutoSubmitModal] = useState(false);
   const [autoSubmitCountdown, setAutoSubmitCountdown] = useState(3);
+
+  const [referenceDescriptor, setReferenceDescriptor] =
+    useState<Float32Array | null>(null);
+  const [isExamBlocked, setIsExamBlocked] = useState(false);
 
   if (!examId) {
     return (
@@ -96,15 +101,35 @@ const TakeQuizExam: React.FC = () => {
     }, 1000);
   };
 
-  const handleFaceVerificationSuccess = (faceImageUrl: string, faceSimilarity: number) => {
+  const handleFaceVerificationSuccess = (
+    faceImageUrl: string,
+    faceSimilarity: number,
+    descriptor?: Float32Array
+  ) => {
     setFaceVerificationStatus("success");
     setIsTransitioningToExam(true);
+    if (descriptor) {
+      setReferenceDescriptor(descriptor);
+    }
     setTimeout(() => {
       setShowFaceVerification(false);
       setIsTransitioningToExam(false);
       hasAutoSubmittedRef.current = false; // Reset khi bắt đầu thi mới
       startExam(faceImageUrl, faceSimilarity);
     }, 2000);
+  };
+
+  const handleFaceMonitorBlock = () => {
+    setIsExamBlocked(true);
+    Modal.error({
+      title: "🚫 Bài thi đã bị khóa",
+      content:
+        "Hệ thống phát hiện nhiều vi phạm về giám sát khuôn mặt. Bài thi sẽ được tự động nộp.",
+      okText: "Đã hiểu",
+      onOk: () => {
+        handleConfirmSubmission();
+      },
+    });
   };
 
   const handleFaceVerificationFailed = () => {
@@ -613,6 +638,15 @@ const TakeQuizExam: React.FC = () => {
 
     return (
       <div className="min-h-screen bg-[#f4f4f4]">
+        {referenceDescriptor && !isExamBlocked && (
+          <ContinuousFaceMonitor
+            referenceDescriptor={referenceDescriptor}
+            onBlock={handleFaceMonitorBlock}
+            enabled={
+              !showSubmissionModal && !isSubmitting && !showAutoSubmitModal
+            }
+          />
+        )}
         <div className="p-8">
           <ExamHeader
             examName={examState.examData.examName}
