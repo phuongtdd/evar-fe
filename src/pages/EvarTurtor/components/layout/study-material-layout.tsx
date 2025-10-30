@@ -28,14 +28,19 @@ export default function StudyMaterialLayout() {
   const [loadingContent, setLoadingContent] = useState(false);
   const [targetPage, setTargetPage] = useState<number | null>(null);
   const [highlightText, setHighlightText] = useState<string | null>(null);
+  const [chatRefetchTrigger, setChatRefetchTrigger] = useState(0); // Trigger for chat panel KB refetch
 
   // Handler to receive selected KB from chatbot
   const handleKnowledgeBaseSelected = (kbId: number | null) => {
     setSelectedKnowledgeBase(kbId);
   };
 
-  const { data: knowledgeBases, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases();
-  const { data: flashcards, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined);
+  const { data: knowledgeBasesData, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases();
+  const { data: flashcardsData, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined);
+  
+  // Ensure arrays are always valid
+  const knowledgeBases = Array.isArray(knowledgeBasesData) ? knowledgeBasesData : [];
+  const flashcards = Array.isArray(flashcardsData) ? flashcardsData : [];
 
   // Load study guide and key notes when KB is selected or KB list changes
   useEffect(() => {
@@ -104,17 +109,60 @@ export default function StudyMaterialLayout() {
             <MaterialsUploadAreaUpdated 
               onClose={() => setShowUploadArea(false)} 
               onRefetch={async () => {
-                console.log('🔄 Refetching knowledge bases and flashcards...');
+                console.log('🔄 Refetching knowledge bases...');
                 await refetchKnowledgeBases();
-                if (selectedKnowledgeBase) {
-                  await refetchFlashcards();
-                }
-                // console.log('✅ Refetch completed');
+                console.log('✅ Knowledge bases refetched');
+              }}
+              onUploaded={async (kbId: number) => {
+                console.log('\n=== UPLOAD COMPLETED ===' );
+                console.log('📦 Upload completed for KB ID:', kbId);
+                console.log('Current selected KB:', selectedKnowledgeBase);
+                console.log('Current active tab:', activeTab);
+                
+                // Close upload area first
+                setShowUploadArea(false);
+                console.log('✅ Upload area closed');
+                
+                // Auto-select the newly uploaded KB
+                setSelectedKnowledgeBase(kbId);
+                console.log('✅ Auto-selected KB:', kbId);
+                
+                // Switch to PDF tab to show the uploaded PDF
+                setActiveTab('pdf');
+                console.log('✅ Switched to PDF tab');
+                
+                // Wait for state updates and then refresh data
+                setTimeout(async () => {
+                  console.log('\n=== REFRESHING DATA ===');
+                  console.log('🔄 Refetching data for KB:', kbId);
+                  
+                  try {
+                    // Refresh KB list to ensure latest data
+                    await refetchKnowledgeBases();
+                    console.log('✅ Knowledge bases refetched');
+                    
+                    // Refresh flashcards
+                    await refetchFlashcards();
+                    console.log('✅ Flashcards refetched successfully');
+                    
+                    // Trigger refetch in chat panel
+                    setChatRefetchTrigger(prev => prev + 1);
+                    console.log('✅ Chat panel KB list refresh triggered');
+                    
+                    message.success('✅ PDF uploaded and flashcards generated! View them in the Flashcards tab.');
+                  } catch (error) {
+                    console.error('❌ Failed to refresh data:', error);
+                    message.error('Failed to refresh data. Please reload the page.');
+                  }
+                  
+                  console.log('=== UPLOAD FLOW COMPLETE ===\n');
+                }, 1000);
               }}
             />
           ) : (
             <>
-              {/* {activeTab === "materials" && (
+              {/* Materials tab is commented out - using flashcards as default
+              {activeTab === "materials" && (
                 <div className="!space-y-4">
                   <h4 className="!text-lg !font-semibold !text-gray-900">Knowledge Bases</h4>
                   {knowledgeBasesLoading ? (
@@ -425,6 +473,7 @@ export default function StudyMaterialLayout() {
           <TutorChatPanelUpdated 
             onPageJump={setCurrentPage}
             onKnowledgeBaseSelected={handleKnowledgeBaseSelected}
+            refetchTrigger={chatRefetchTrigger}
           />
         </div>
       </div>

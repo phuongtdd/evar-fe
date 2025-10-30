@@ -1,51 +1,153 @@
 import apiClient from '../../../configs/axiosConfig';
-import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KeyNotesResponse, KnowledgeBase, KnowledgeBaseStatus, KnowledgeBaseUploadResponse } from '../types';
+import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KeyNotesResponse, KnowledgeBase, KnowledgeBaseOverview, KnowledgeBaseStatus, KnowledgeBaseUploadResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// ==================== FLASHCARD SERVICES ====================
+// Helper to get real userId
+const getRealUserId = (): string => {
+  // Try explicit userId first
+  const explicit = localStorage.getItem('userId');
+  if (explicit && explicit !== 'default-user') return explicit;
+  
+  // Try to extract from JWT token
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const [, payloadB64] = token.split('.');
+      const payload = JSON.parse(atob(payloadB64));
+      const userId = payload?.userId || payload?.id || payload?.sub || payload?.user?.id;
+      if (userId) {
+        console.log('✅ Extracted userId from token:', userId);
+        return userId;
+      }
+    } catch (e) {
+      console.error('❌ Failed to parse JWT token:', e);
+    }
+  }
+  
+  console.warn('⚠️ No valid userId found, using default-user');
+  return 'default-user';
+};
+
 export const flashcardService = {
-  // Tạo flashcard mới (backend: /api/flashcards)
   createFlashcard: async (request: FlashcardRequest): Promise<FlashcardResponse> => {
-    const response = await apiClient.post('/flashcards', request);
+    const userId = getRealUserId();
+    
+    const setsResponse = await apiClient.get(`/card-set/my?userId=${userId}`);
+    const sets = Array.isArray(setsResponse.data) ? setsResponse.data : [];
+    
+    let targetSet = sets.find((s: any) => s.knowledgeBaseId === request.knowledgeBaseId);
+    
+    if (!targetSet) {
+      const createSetResponse = await apiClient.post('/card-set/generate/ai', null, {
+        params: {
+          knowledgeBaseId: request.knowledgeBaseId,
+          count: 0
+        }
+      });
+      targetSet = createSetResponse.data;
+    }
+    
+    const response = await apiClient.post(`/card-set/${targetSet.id}/flashcards`, {
+      userId: userId,
+      knowledgeBaseId: request.knowledgeBaseId,
+      front: request.front,
+      back: request.back
+    });
     return response.data;
   },
 
-  // Lấy flashcard theo ID
   getFlashcardById: async (id: string): Promise<ApiResponse<FlashcardResponse>> => {
-    const response = await apiClient.get(`/v1/flashcards/${id}`);
-    return response.data;
+    throw new Error('Get flashcard by ID is not available in current backend');
   },
 
-  // Lấy tất cả flashcard theo knowledge base ID (backend: /api/flashcards/knowledge-base/{id})
   getFlashcardsByKnowledgeBaseId: async (knowledgeBaseId: number): Promise<FlashcardResponse[]> => {
-    const response = await apiClient.get(`/flashcards/knowledge-base/${knowledgeBaseId}`);
-    return response.data;
+    const userId = getRealUserId();
+    console.log('🔍 [FLASHCARDS] Fetching card sets for userId:', userId, 'KB:', knowledgeBaseId);
+    
+    // Lấy thông tin KB để biết tên file
+    const kbResponse = await apiClient.get(`/knowledge/${knowledgeBaseId}`);
+    const fileName = kbResponse.data?.fileName;
+    console.log('📄 [FLASHCARDS] KB fileName:', fileName);
+    
+    const response = await apiClient.get(`/card-set/my?userId=${userId}`);
+    const sets = Array.isArray(response.data) ? response.data : [];
+    
+    console.log('📦 [FLASHCARDS] Received', sets.length, 'card sets:', sets.map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      knowledgeBaseId: s.knowledgeBaseId,
+      totalCards: s.totalCards || s.flashcardCount
+    })));
+    
+    // Lọc theo knowledgeBaseId HOẶC theo tên file (fallback nếu knowledgeBaseId null)
+    const kbSets = sets.filter((s: any) => {
+      // Ưu tiên filter theo knowledgeBaseId nếu có
+      if (s.knowledgeBaseId === knowledgeBaseId) {
+        return true;
+      }
+      // Fallback: filter theo tên file nếu knowledgeBaseId là null
+      if (s.knowledgeBaseId === null && fileName && s.name) {
+        return s.name.includes(fileName);
+      }
+      return false;
+    });
+    console.log('🎯 [FLASHCARDS] Found', kbSets.length, 'sets for KB', knowledgeBaseId);
+    
+    if (kbSets.length === 0) {
+      console.warn('⚠️ [FLASHCARDS] No card sets found for this KB. This might mean:');
+      console.warn('  1. Flashcards were not generated yet');
+      console.warn('  2. UserId mismatch between KB and CardSet');
+      console.warn('  3. KnowledgeBaseId mismatch or null');
+      return [];
+    }
+    
+    const allFlashcards: FlashcardResponse[] = [];
+    for (const set of kbSets) {
+      console.log('📥 [FLASHCARDS] Fetching details for set:', set.id);
+      const detailResponse = await apiClient.get(`/card-set/${set.id}`);
+      if (detailResponse.data && Array.isArray(detailResponse.data.flashcards)) {
+        console.log('✅ [FLASHCARDS] Set', set.id, 'has', detailResponse.data.flashcards.length, 'flashcards');
+        allFlashcards.push(...detailResponse.data.flashcards);
+      }
+    }
+    
+    console.log('✅ [FLASHCARDS] Total flashcards:', allFlashcards.length);
+    return allFlashcards;
   },
 
-  // Cập nhật flashcard (not available on backend currently) - keep for forward compatibility
   updateFlashcard: async (id: string, request: FlashcardUpdateRequest): Promise<FlashcardResponse> => {
-    throw new Error('Update flashcard API is not available');
-  },
-
-  // Xóa flashcard (backend: /api/flashcards/{id})
-  deleteFlashcard: async (id: string): Promise<void> => {
-    await apiClient.delete(`/flashcards/${id}`);
-  },
-
-  // Gọi AI để sinh và lưu flashcards (backend: /api/flashcards/generate/{knowledgeBaseId}?count=5)
-  generateFlashcards: async (knowledgeBaseId: number, count: number = 5): Promise<FlashcardResponse[]> => {
-    const response = await apiClient.post(`/flashcards/generate/${knowledgeBaseId}?count=${count}`);
+    const response = await apiClient.put('/card-set/flashcards/update', {
+      id: id,
+      front: request.front,
+      back: request.back
+    });
     return response.data;
   },
 
-  // Đếm số lượng flashcard theo knowledge base ID (not available on backend)
-  countFlashcardsByKnowledgeBaseId: async (_knowledgeBaseId: number): Promise<number> => {
-    throw new Error('Count flashcards API is not available');
+  deleteFlashcard: async (id: string): Promise<void> => {
+    await apiClient.delete(`/card-set/flashcards/${id}`);
+  },
+
+  generateFlashcards: async (knowledgeBaseId: number, count: number = 5): Promise<any> => {
+    console.log('🤖 Generating flashcards for KB:', knowledgeBaseId, 'count:', count);
+    const response = await apiClient.post('/card-set/generate/ai', null, {
+      params: {
+        knowledgeBaseId: knowledgeBaseId,
+        count: count
+      }
+    });
+    console.log('✅ Flashcard generation response:', response.data);
+    // Backend returns CardSetResponse with flashcards array
+    return response.data;
+  },
+
+  countFlashcardsByKnowledgeBaseId: async (knowledgeBaseId: number): Promise<number> => {
+    const flashcards = await flashcardService.getFlashcardsByKnowledgeBaseId(knowledgeBaseId);
+    return flashcards.length;
   }
 };
 
-// ==================== CHATBOT RAG SERVICES ====================
 export const chatbotService = {
   // Chat với AI dựa trên knowledge base
   chat: async (request: ChatRequest): Promise<ChatResponse> => {
@@ -54,7 +156,6 @@ export const chatbotService = {
   }
 };
 
-// ==================== KNOWLEDGE BASE SERVICES ====================
 export const knowledgeBaseService = {
   uploadPdf: async (file: File, userId?: string): Promise<KnowledgeBaseUploadResponse> => {
     console.log('🚀 Starting PDF upload process...', {
@@ -176,18 +277,41 @@ export const knowledgeBaseService = {
 
   getUserKnowledgeBases: async (userId: string): Promise<KnowledgeBase[]> => {
     console.log('📋 Fetching knowledge bases for user:', userId);
-    const response = await apiClient.get(`/knowledge/user/${userId}`);
-    console.log('📋 Knowledge bases received:', {
-      count: response.data.length,
-      knowledgeBases: response.data.map((kb: any) => ({
+    const response = await apiClient.get<KnowledgeBaseOverview[]>(`/knowledge/user/${userId}`);
+    
+    // Backend returns List<KnowledgeBaseOverview>
+    const data = response.data;
+    
+    if (!Array.isArray(data)) {
+      console.error('❌ Expected array but got:', typeof data);
+      return [];
+    }
+    
+    // Map KnowledgeBaseOverview to KnowledgeBase for frontend compatibility
+    const knowledgeBases: KnowledgeBase[] = data.map((overview: KnowledgeBaseOverview) => ({
+      id: overview.id,
+      userId: overview.userId,
+      fileName: overview.fileName,
+      fileUrl: overview.fileUrl,
+      status: overview.status,
+      createdAt: overview.createdAt,
+      // These fields are not in overview, will be loaded when detail is fetched
+      studyGuide: '',
+      keyNotes: '',
+      userNote: ''
+    }));
+    
+    console.log('✅ Fetched knowledge bases:', {
+      count: knowledgeBases.length,
+      items: knowledgeBases.map(kb => ({
         id: kb.id,
         fileName: kb.fileName,
-        fileUrl: kb.fileUrl,
-        hasFileUrl: !!kb.fileUrl,
-        status: kb.status
+        status: kb.status,
+        hasFileUrl: !!kb.fileUrl
       }))
     });
-    return response.data;
+    
+    return knowledgeBases;
   },
 
   getKnowledgeBaseDetail: async (id: number): Promise<KnowledgeBase> => {
@@ -215,7 +339,7 @@ export const knowledgeBaseService = {
   }
 };
 
-// ==================== UTILITY FUNCTIONS ====================
+
 export const evarTutorUtils = {
   // Polling để kiểm tra status của knowledge base
   pollKnowledgeBaseStatus: async (

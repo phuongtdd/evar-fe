@@ -16,6 +16,7 @@ import MaterialsUploadAreaUpdated from "./materials-upload-area-updated";
 interface TutorChatPanelProps {
   onPageJump?: (page: number) => void;
   onKnowledgeBaseSelected?: (kbId: number | null) => void;
+  refetchTrigger?: number; // Trigger refetch when this value changes
 }
 
 interface ChatMessage {
@@ -69,6 +70,7 @@ function renderMessageWithPageLinks(
 export default function TutorChatPanel({
   onPageJump,
   onKnowledgeBaseSelected,
+  refetchTrigger,
 }: TutorChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -87,11 +89,22 @@ export default function TutorChatPanel({
 
   // Knowledge bases are derived from current user context
   const {
-    data: knowledgeBases,
+    data: knowledgeBasesData,
     loading: knowledgeBasesLoading,
     refetch: refetchKnowledgeBases,
   } = useKnowledgeBases();
   const { sendMessage, loading: chatLoading } = useChatbot();
+  
+  // Ensure knowledgeBases is always an array
+  const knowledgeBases = Array.isArray(knowledgeBasesData) ? knowledgeBasesData : [];
+
+  // Refetch KB list when refetchTrigger changes
+  useEffect(() => {
+    if (refetchTrigger !== undefined && refetchTrigger > 0) {
+      console.log('🔄 [CHAT PANEL] Refetching KB list due to trigger:', refetchTrigger);
+      refetchKnowledgeBases();
+    }
+  }, [refetchTrigger, refetchKnowledgeBases]);
 
   // Notify parent when KB is selected
   const handleKnowledgeBaseChange = (kbId: number | null) => {
@@ -300,15 +313,30 @@ export default function TutorChatPanel({
       >
         <MaterialsUploadAreaUpdated
           onClose={() => setShowUploadModal(false)}
-          onRefetch={refetchKnowledgeBases}
-          onUploaded={(kbId: number) => {
+          onRefetch={async () => {
+            console.log('🔄 Refreshing knowledge bases in chat panel...');
+            await refetchKnowledgeBases();
+            console.log('✅ Knowledge bases refreshed in chat panel');
+          }}
+          onUploaded={async (kbId: number) => {
+            console.log('📦 Upload completed in chat panel, KB ID:', kbId);
+            
+            // Refresh KB list to get the latest data
+            await refetchKnowledgeBases();
+            
+            // Auto-select the newly uploaded KB
             handleKnowledgeBaseChange(kbId);
+            console.log('✅ Auto-selected KB in chat:', kbId);
+            
+            // Close modal
             setShowUploadModal(false);
+            
+            // Show success message
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: "assistant",
               content:
-                " Tài liệu đã được xử lý thành công! Keynotes và Flashcards đã được tự động tạo. Bạn có thể xem chúng ở tab 'Studying Guidance' và 'Flashcards', hoặc bắt đầu đặt câu hỏi ngay.",
+                "✅ Tài liệu đã được xử lý thành công! Flashcards đã được tự động tạo. Bạn có thể xem chúng ở tab 'Flashcards' bên trái, hoặc bắt đầu đặt câu hỏi ngay.",
               timestamp: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, assistantMessage]);
