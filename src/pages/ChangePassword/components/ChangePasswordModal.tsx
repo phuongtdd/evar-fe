@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import './ChangePasswordModal.css';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { changePassword } from '../services';
+import { ChangePasswordRequest } from '../types';
+import '../styles/ChangePasswordModal.css';
 
 interface ChangePasswordModalProps {
   show: boolean;
@@ -14,6 +17,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
     newPassword: '',
     confirmPassword: ''
   });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -62,14 +68,12 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
       setError(null);
       setSuccess(false);
 
-      // TODO: Gọi API đổi mật khẩu
-      // const response = await changePassword({
-      //   currentPassword: formData.currentPassword,
-      //   newPassword: formData.newPassword
-      // });
+      const requestData: ChangePasswordRequest = {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      };
 
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await changePassword(requestData);
       
       setSuccess(true);
       
@@ -86,7 +90,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
       }, 2000);
       
     } catch (error: any) {
-      setError(`Lỗi đổi mật khẩu: ${error.message}`);
+      setError(error.response?.data?.message || error.message || 'Lỗi đổi mật khẩu');
     } finally {
       setLoading(false);
     }
@@ -99,6 +103,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
         newPassword: '',
         confirmPassword: ''
       });
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
       setError(null);
       setSuccess(false);
       onHide();
@@ -139,42 +146,66 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
               <div className="form-section">
                 <Form.Group className="mb-3">
                   <Form.Label>Mật khẩu hiện tại</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                    placeholder="Nhập mật khẩu hiện tại"
-                    disabled={loading}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <Form.Control
+                      type={showCurrentPassword ? "text" : "password"}
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleChange}
+                      placeholder="Nhập mật khẩu hiện tại"
+                      disabled={loading}
+                      required
+                    />
+                    <span 
+                      className="password-toggle-icon"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    </span>
+                  </div>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label>Mật khẩu mới</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    placeholder="Nhập mật khẩu mới"
-                    disabled={loading}
-                    required
-                    minLength={6}
-                  />
+                  <div className="password-input-wrapper">
+                    <Form.Control
+                      type={showNewPassword ? "text" : "password"}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder="Nhập mật khẩu mới"
+                      disabled={loading}
+                      required
+                      minLength={6}
+                    />
+                    <span 
+                      className="password-toggle-icon"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    </span>
+                  </div>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label>Xác nhận mật khẩu mới</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Nhập lại mật khẩu mới"
-                    disabled={loading}
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <Form.Control
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Nhập lại mật khẩu mới"
+                      disabled={loading}
+                      required
+                    />
+                    <span 
+                      className="password-toggle-icon"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    </span>
+                  </div>
                 </Form.Group>
               </div>
             </Modal.Body>
@@ -201,3 +232,4 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ show, onHide 
 };
 
 export default ChangePasswordModal;
+

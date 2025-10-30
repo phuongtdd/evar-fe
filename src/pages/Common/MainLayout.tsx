@@ -35,6 +35,10 @@ const MainLayout: React.FC = () => {
       setSelectedMenu("test-room");
     } else if (path === "/account") {
       setSelectedMenu("account");
+    } else if (path === "/about") {
+      setSelectedMenu("about");
+    } else if (path === "/help") {
+      setSelectedMenu("help");
     }
   }, [location]);
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import './BuyTimeModal.css';
+import { buyTime } from '../services';
+import { TimePackage } from '../types';
+import '../styles/BuyTimeModal.css';
 
 interface BuyTimeModalProps {
   show: boolean;
@@ -14,7 +16,7 @@ const BuyTimeModal: React.FC<BuyTimeModalProps> = ({ show, onHide }) => {
   const [success, setSuccess] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
 
-  const timePackages = [
+  const timePackages: TimePackage[] = [
     {
       id: 'basic',
       name: 'Gói Cơ Bản',
@@ -57,13 +59,7 @@ const BuyTimeModal: React.FC<BuyTimeModalProps> = ({ show, onHide }) => {
       setError(null);
       setSuccess(false);
 
-      // TODO: Gọi API mua thời gian
-      // const response = await buyTime({
-      //   packageId: selectedPackage
-      // });
-
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await buyTime(selectedPackage);
       
       setSuccess(true);
       
@@ -73,7 +69,7 @@ const BuyTimeModal: React.FC<BuyTimeModalProps> = ({ show, onHide }) => {
       }, 2000);
       
     } catch (error: any) {
-      setError(`Lỗi mua thời gian: ${error.message}`);
+      setError(error.response?.data?.message || error.message || 'Lỗi mua thời gian');
     } finally {
       setLoading(false);
     }
@@ -179,3 +175,4 @@ const BuyTimeModal: React.FC<BuyTimeModalProps> = ({ show, onHide }) => {
 };
 
 export default BuyTimeModal;
+

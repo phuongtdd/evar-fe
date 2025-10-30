@@ -275,7 +275,7 @@ The application supports internationalization (i18n) with easy language switchin
         <sub><b>Hoàng Võ Bảo Khánh</b></sub>
       </a>
       <br />
-      <sub>Full-stack Developer</sub>
+      <sub>Front-end Developer</sub>
     </td>
     <td align="center">
       <a href="https://github.com/nauthen">
@@ -293,7 +293,7 @@ The application supports internationalization (i18n) with easy language switchin
         <sub><b>Nguyễn Tấn Đạt</b></sub>
       </a>
       <br />
-      <sub>Backend Developer</sub>
+      <sub>Full-Stack Developer</sub>
     </td>
   </tr>
 </table>

@@ -29,6 +29,8 @@ import ChatAI from "../pages/ChatAI";
 import LearningResources from "../pages/LearningResources";
 import Material from "../pages/Material";
 import FlashCard from "../pages/FlashCard";
+import About from "../pages/About";
+import Help from "../pages/Help";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -117,6 +119,8 @@ const AppRoutes: React.FC = () => {
 
           <Route path="/evar-turtor" element={<EvarTutor />} />
           <Route path="/learning-resources" element={<LearningResources />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/help" element={<Help />} />
         </Route>
 
         <Route
