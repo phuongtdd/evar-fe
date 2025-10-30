@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Select, Button, Checkbox, Space, InputNumber } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, Select, Button, Checkbox, Space, InputNumber, Upload, Image, message } from 'antd';
+import { PlusOutlined, MinusCircleOutlined, CameraOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Question, Answer } from '../../types';
 import MathContent from './MathContent';
+import { uploadImageToImgBB } from '../../../../utils/ImageUpload';
 
 interface EditQuestionModalProps {
   visible: boolean;
@@ -22,6 +23,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   const [form] = Form.useForm();
   const [previewContent, setPreviewContent] = useState('');
   const [previewAnswers, setPreviewAnswers] = useState<string[]>([]);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (visible && question) {
@@ -34,6 +37,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       });
       setPreviewContent(question.content);
       setPreviewAnswers(question.answers.map(a => a.content));
+      setUploadedImage(question.questionImg || question.imageSrc || null);
     }
   }, [visible, question, form]);
 
@@ -48,6 +52,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         hardLevel: values.hardLevel,
         quesScore: values.quesScore,
         answers: values.answers,
+        questionImg: uploadedImage || undefined,
+        imageSrc: uploadedImage || undefined,
+        hasImage: !!uploadedImage,
       };
 
       onSave(updatedQuestion);
@@ -211,6 +218,64 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             </>
           )}
         </Form.List>
+
+        {/* Image Upload Section */}
+        <div className="mt-6">
+          <span className="font-semibold mb-3 block">Hình ảnh câu hỏi</span>
+          {uploadedImage ? (
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <Image
+                src={uploadedImage}
+                alt="Question image"
+                width={200}
+                height={200}
+                className="rounded"
+              />
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => setUploadedImage(null)}
+              >
+                Xóa ảnh
+              </Button>
+            </div>
+          ) : (
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              beforeUpload={async (file) => {
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  message.error('Chỉ hỗ trợ file ảnh!');
+                  return Upload.LIST_IGNORE;
+                }
+
+                const isLt10M = file.size / 1024 / 1024 < 10;
+                if (!isLt10M) {
+                  message.error('File phải nhỏ hơn 10MB!');
+                  return Upload.LIST_IGNORE;
+                }
+
+                setUploading(true);
+                try {
+                  const imageUrl = await uploadImageToImgBB(file);
+                  setUploadedImage(imageUrl);
+                  message.success('Tải ảnh lên thành công!');
+                } catch (error) {
+                  message.error('Tải ảnh lên thất bại. Vui lòng thử lại.');
+                  console.error('Upload error:', error);
+                } finally {
+                  setUploading(false);
+                }
+                return false;
+              }}
+            >
+              <Button icon={<CameraOutlined />} loading={uploading} className="w-full">
+                {uploading ? 'Đang tải...' : 'Thêm ảnh'}
+              </Button>
+            </Upload>
+          )}
+        </div>
       </Form>
     </Modal>
   );

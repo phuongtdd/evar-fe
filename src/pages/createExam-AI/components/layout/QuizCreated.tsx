@@ -74,6 +74,49 @@ export default function QuizCreated() {
     setResults(updatedResults);
   };
 
+  // Handle image upload
+  const handleImageUpload = (questionId: number, imageUrl: string) => {
+    const updatedResults = results.map(q => {
+      if (q.id === questionId) {
+        return {
+          ...q,
+          questionImg: imageUrl,
+          imageSrc: imageUrl,
+          hasImage: true,
+        };
+      }
+      return q;
+    });
+    setResults(updatedResults);
+    message.success('Đã thêm ảnh cho câu hỏi');
+  };
+
+  // Handle image deletion
+  const handleImageDelete = (questionId: number) => {
+    Modal.confirm({
+      title: 'Xác nhận xóa ảnh',
+      content: 'Bạn có chắc chắn muốn xóa ảnh này?',
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: () => {
+        const updatedResults = results.map(q => {
+          if (q.id === questionId) {
+            return {
+              ...q,
+              questionImg: undefined,
+              imageSrc: undefined,
+              hasImage: false,
+            };
+          }
+          return q;
+        });
+        setResults(updatedResults);
+        message.success('Đã xóa ảnh');
+      },
+    });
+  };
+
   // Handle delete all
   const handleDeleteAll = () => {
     Modal.confirm({
@@ -120,25 +163,15 @@ export default function QuizCreated() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Kết quả</h2>
         {fileUploaded && (
-          <div className="flex gap-3">
-            <AntButton 
-              danger 
-              size="large" 
-              className="font-medium"
-              onClick={handleDeleteAll}
-              disabled={results.length === 0}
-            >
-              Xóa hết
-            </AntButton>
-            <AntButton
-              type="primary"
-              size="large"
-              className="bg-blue-500 hover:bg-blue-600 font-medium"
-              onClick={()=> navigate("/createQuiz-AI/savedSuccess")}
-            >
-              Lưu ngay
-            </AntButton>
-          </div>
+          <AntButton 
+            danger 
+            size="large" 
+            className="font-medium"
+            onClick={handleDeleteAll}
+            disabled={results.length === 0}
+          >
+            Xóa hết
+          </AntButton>
         )}
       </div>
       {!fileUploaded ? (
@@ -166,6 +199,8 @@ export default function QuizCreated() {
               onToggleCorrect={handleToggleCorrect}
               onMoveUp={() => handleMoveUp(index)}
               onMoveDown={() => handleMoveDown(index)}
+              onImageUpload={handleImageUpload}
+              onImageDelete={handleImageDelete}
               isFirst={index === 0}
               isLast={index === results.length - 1}
             />

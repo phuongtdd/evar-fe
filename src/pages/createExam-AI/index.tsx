@@ -13,12 +13,12 @@ import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useQuizContext } from "./context/QuizContext";
 import QuizInfor from "./components/ui/QuizInfor";
-import { QuizInfo, CreateQuizRequest, typeQuiz, Question } from "./types";
+import { QuizInfo, CreateQuizRequest, CreateExamRequest, typeQuiz, Question } from "./types";
 import QuizInfoModal from "./components/ui/QuizInfoModal";
 import { sampleQuestions } from "./mock/mockData";
 import UploadDragger from "./components/ui/UploadDragger";
 import BackButton from "../Common/BackButton";
-import { createQuizAIService } from "./services/quizService";
+import { createExamService } from "../createExam-Manual/services/examService";
 import { subjectService } from "../Subject/services/subjectService";
 import { Subject } from "./types";
 
@@ -75,7 +75,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleStartProcess = () => {
     setFileUploaded(true);
-    navigate("/createQuiz-AI/result");
+    navigate("/createExam-AI/result");
   };
 
   const handleRemoveFile = () => {
@@ -100,7 +100,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleCreateQuiz = async () => {
     if (!quizInfo) {
-      message.error("Vui lòng nhập thông tin quiz");
+      message.error("Vui lòng nhập thông tin đề thi");
       return;
     }
 
@@ -111,12 +111,13 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
     setIsCreating(true);
     try {
-      const quizData: CreateQuizRequest = {
+      const examData: CreateExamRequest = {
         examName: quizInfo.examName,
-        examType: quizInfo.examType || 2,
-        subjectId: parseInt(quizInfo.subjectId),
+        examType: quizInfo.examType || 1,
+        subjectId: quizInfo.subjectId,
         description: quizInfo.description,
         numOfQuestions: results.length,
+        duration: quizInfo.duration || 120, // Duration in minutes, default 2 hours
         questions: results.map((q) => ({
           questionImg: q.questionImg,
           content: q.content,
@@ -130,12 +131,15 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
         })),
       };
 
-      const result = await createQuizAIService.createQuiz(quizData);
-      message.success("Tạo quiz thành công!");
-      console.log("Quiz created:", result);
+      const result = await createExamService.createExam(examData);
+      message.success("Tạo đề thi thành công!");
+      console.log("Exam created:", result);
+      setTimeout(() => {
+        navigate("/admin/manage-exam");
+      }, 1500);
     } catch (error) {
-      message.error("Có lỗi xảy ra khi tạo quiz");
-      console.error("Error creating quiz:", error);
+      message.error("Có lỗi xảy ra khi tạo đề thi");
+      console.error("Error creating exam:", error);
     } finally {
       setIsCreating(false);
     }
@@ -157,7 +161,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
   };
 
   const handleModalCancel = () => {
-    message.error("Không thể tạo Quiz");
+    message.error("Không thể tạo Đề Thi");
    window.history.back()
   };
 
@@ -182,11 +186,11 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
               <main className="flex-1 overflow-auto p-8  [scrollbar-color:transparent_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb:hover]:bg-transparent">
                 <div className="w-full">
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                    Tạo Quiz với AI OCR
+                    Tạo Đề Thi với AI OCR
                   </h1>
                   <BackButton url={"/dashboard"} />
                   <p className="text-gray-600 mb-8 mt-5">
-                    Sử dụng AI OCR để tự động tạo Quiz từ ảnh đề thi (JPG, PNG, GIF, BMP, WEBP)
+                    Sử dụng AI OCR để tự động tạo Đề Thi từ ảnh đề thi (PNG, JPG)
                   </p>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <QuizInfor quiz={quizData} onEdit={handleEditQuizInfo} />
@@ -208,7 +212,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                         loading={isCreating}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        Lưu Quiz
+                        Lưu Đề Thi
                       </Button>
                     </div>
                   )}

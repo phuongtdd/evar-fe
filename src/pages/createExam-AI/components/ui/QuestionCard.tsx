@@ -19,6 +19,8 @@ interface ExtendedQuestionCardProps extends QuestionCardProps {
   onToggleCorrect?: (questionId: number, answerIndex: number) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  onImageUpload?: (questionId: number, imageUrl: string) => void;
+  onImageDelete?: (questionId: number) => void;
   isFirst?: boolean;
   isLast?: boolean;
 }
@@ -30,6 +32,8 @@ const QuestionCard = ({
   onToggleCorrect,
   onMoveUp,
   onMoveDown,
+  onImageUpload,
+  onImageDelete,
   isFirst,
   isLast 
 }: ExtendedQuestionCardProps) => {
@@ -133,12 +137,18 @@ const QuestionCard = ({
           </div>
           <div className="lg:col-span-1">
             <h4 className="text-sm font-medium text-gray-700 mb-3">Hình ảnh</h4>
-            {question.hasImage ? (
+            {question.hasImage || question.questionImg || question.imageSrc ? (
               <div className="w-full border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center relative">
                 <div className="text-center object-cover">
-                  <Image src={question.imageSrc || mockImage} alt="" />
+                  <Image src={question.questionImg || question.imageSrc || mockImage} alt="Question image" />
                   <div className="absolute bottom-2 right-2">
-                    <Button icon={<DeleteOutlined className="!text-red-600" />} className=""></Button>
+                    <Button 
+                      icon={<DeleteOutlined className="!text-red-600" />} 
+                      onClick={() => onImageDelete && onImageDelete(question.id!)}
+                      danger
+                    >
+                      Xóa
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -149,7 +159,9 @@ const QuestionCard = ({
                 </div>
 
                 <p className="text-gray-400 text-sm">Không có</p>
-                <ImageUploadOnly />
+                <ImageUploadOnly 
+                  onImageUploaded={(imageUrl) => onImageUpload && onImageUpload(question.id!, imageUrl)}
+                />
               </div>
             )}
           </div>

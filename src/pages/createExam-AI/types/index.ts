@@ -95,3 +95,23 @@ export interface CreateQuizRequest {
   }[]
 }
 
+export interface CreateExamRequest {
+  examName: string
+  examType: number
+  subjectId: string
+  description: string
+  numOfQuestions: number
+  duration: number
+  questions: {
+    questionImg?: string
+    content: string
+    questionType: string
+    hardLevel: number
+    quesScore?: number
+    answers: {
+      isCorrect: boolean
+      content: string
+    }[]
+  }[]
+}
+
