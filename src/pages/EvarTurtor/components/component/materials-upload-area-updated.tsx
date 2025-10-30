@@ -167,25 +167,51 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
               }
               
               // Auto-generate flashcards if enabled
+              let flashcardsGenerated = false;
               if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
                 setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
                 try {
+                  console.log('🤖 Starting flashcard generation for KB:', kbId);
                   message.info(`Generating flashcards for ${status.file.name}...`)
-                  await flashcardService.generateFlashcards(kbId, 10)
-                  message.success(`Flashcards generated for ${status.file.name}!`)
-                } catch (error) {
-                  console.error('Failed to generate flashcards:', error)
-                  message.warning(`Flashcards generation failed for ${status.file.name}`)
+                  const flashcardSet = await flashcardService.generateFlashcards(kbId, 10)
+                  console.log('✅ Flashcard generation complete:', flashcardSet)
+                  const count = flashcardSet?.flashcards?.length || flashcardSet?.totalCards || 10;
+                  message.success(`${count} flashcards generated for ${status.file.name}!`)
+                  flashcardsGenerated = true;
+                } catch (error: any) {
+                  console.error('❌ Flashcard generation failed:', error)
+                  console.error('Error details:', error.response?.data || error.message)
+                  message.error(`Failed to generate flashcards: ${error.response?.data?.message || error.message}`)
                 } finally {
                   setGeneratingFlashcards(prev => ({ ...prev, [kbId]: false }))
                 }
               }
               
-              // Delay slightly to ensure backend has committed all data
-              await new Promise(resolve => setTimeout(resolve, 500))
+              // Delay to ensure backend has committed all data
+              console.log('⏳ Waiting for backend to commit all data...')
+              await new Promise(resolve => setTimeout(resolve, 1500))
               
-              onUploaded?.(kbId)
-              onRefetch?.() // Refresh KB list with latest data
+              // Refresh KB list first to get latest data
+              console.log('🔄 Triggering knowledge base data refresh...')
+              if (onRefetch) {
+                try {
+                  await onRefetch();
+                  console.log('✅ Knowledge base data refreshed successfully');
+                } catch (error) {
+                  console.error('❌ Failed to refresh knowledge base data:', error);
+                }
+              } else {
+                console.warn('⚠️ onRefetch callback is not provided!');
+              }
+              
+              // Notify parent with the KB ID to auto-select it
+              console.log('📢 Notifying parent component with KB ID:', kbId)
+              if (onUploaded) {
+                onUploaded(kbId);
+                console.log('✅ Parent notified successfully');
+              } else {
+                console.warn('⚠️ onUploaded callback is not provided!');
+              }
               
               // Clear interval
               if (pollingIntervals[fileUid]) {

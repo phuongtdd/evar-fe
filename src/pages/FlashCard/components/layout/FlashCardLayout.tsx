@@ -27,7 +27,8 @@ import CardSetItem from '../ui/CardSetItem';
 import CardListView from './CardListView';
 import GenerateFromImageModal from '../ui/GenerateFromImageModal';
 import CreateCardSetWithFlashcardsModal from '../ui/CreateCardSetWithFlashcardsModal';
-import { createCardSetWithFlashcards } from '../../services/cardSetService';
+import EditCardSetModal from '../ui/EditCardSetModal';
+import { createCardSetWithFlashcards, updateCardSet } from '../../services/cardSetService';
 import { getUserIdFromToken } from '../../utils/auth';
 
 const { Content } = Layout;
@@ -45,7 +46,10 @@ const FlashCardLayout: React.FC = () => {
   const [selectedCardSet, setSelectedCardSet] = useState<CardSet | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCardSet, setEditingCardSet] = useState<CardSet | null>(null);
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   // Filter card sets
   const filteredCardSets = cardSets.filter(set =>
@@ -74,8 +78,8 @@ const FlashCardLayout: React.FC = () => {
 
   // Handle edit
   const handleEdit = (cardSet: CardSet) => {
-    // TODO: Implement edit modal
-    message.info('Chức năng chỉnh sửa đang được phát triển');
+    setEditingCardSet(cardSet);
+    setShowEditModal(true);
   };
 
   // Handle click card set to view cards inside
@@ -126,6 +130,27 @@ const FlashCardLayout: React.FC = () => {
 
   const handleImageModalSuccess = () => {
     refresh(); // Refresh card sets list
+  };
+
+  // Handle update card set
+  const handleUpdateCardSet = async (data: {
+    id: string;
+    name: string;
+    description: string;
+  }) => {
+    try {
+      setUpdating(true);
+      await updateCardSet(data);
+      message.success('Cập nhật bộ flashcard thành công');
+      refresh();
+    } catch (error: any) {
+      console.error('Update error:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Không thể cập nhật bộ flashcard';
+      message.error(errorMsg);
+      throw error;
+    } finally {
+      setUpdating(false);
+    }
   };
 
   // If a card set is selected, show the cards inside
@@ -184,24 +209,24 @@ const FlashCardLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {/* Statistics Cards */}
           <Row gutter={16} className="mb-6">
-            <Col xs={24} sm={12} lg={8}>
+            <Col xs={24} sm={12} lg={12}>
               <AntCard 
                 size="small"
                 style={{
-                  border: '2px solid #1890ff',
+                  border: '2px solid #faad14',
                   borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(24, 144, 255, 0.15)',
+                  boxShadow: '0 2px 8px rgba(250, 173, 20, 0.15)',
                 }}
               >
                 <Statistic
                   title="Tổng số bộ flashcard"
                   value={cardSets.length}
                   prefix={<FolderOutlined />}
-                  valueStyle={{ color: '#1890ff', fontWeight: 600 }}
+                  valueStyle={{ color: '#faad14', fontWeight: 600 }}
                 />
               </AntCard>
             </Col>
-            <Col xs={24} sm={12} lg={8}>
+            <Col xs={24} sm={12} lg={12}>
               <AntCard 
                 size="small"
                 style={{
@@ -218,23 +243,6 @@ const FlashCardLayout: React.FC = () => {
                 />
               </AntCard>
             </Col>
-            <Col xs={24} sm={12} lg={8}>
-              <AntCard 
-                size="small"
-                style={{
-                  border: '2px solid #faad14',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(250, 173, 20, 0.15)',
-                }}
-              >
-                <Statistic
-                  title="Bộ có Knowledge Base"
-                  value={cardSets.filter(set => set.knowledgeBaseId).length}
-                  prefix={<BookOutlined />}
-                  valueStyle={{ color: '#faad14', fontWeight: 600 }}
-                />
-              </AntCard>
-            </Col>
           </Row>
 
           {/* Main Content Card */}
@@ -245,11 +253,11 @@ const FlashCardLayout: React.FC = () => {
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               background: '#ffffff',
               minHeight: 'calc(100vh - 280px)',
-              padding: '8px',
             }}
+            bodyStyle={{ padding: '16px' }}
           >
             {/* Search and Action Buttons */}
-            <Row gutter={16} className="mb-6" align="middle">
+            <Row gutter={12} style={{ margin: '10px 0px 20px 0px' }} align="middle">
               <Col xs={24} md={12}>
                 <Input
                   size="large"
@@ -283,13 +291,22 @@ const FlashCardLayout: React.FC = () => {
             </Row>
 
             {/* Card Sets Display - Fixed Container */}
-            <div style={{ height: '480px' }}>
+            <div
+              className="grid grid-cols-3"
+              style={{
+                height: '480px',
+                padding: '8px',
+                gap: '24px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+              }}
+            >
               {loading ? (
-                <div className="flex justify-center items-center" style={{ height: '520px' }}>
+                <div className="col-span-3 flex justify-center items-center" style={{ height: '100%' }}>
                   <Spin size="large" />
                 </div>
               ) : filteredCardSets.length === 0 ? (
-                <div className="flex justify-center items-center" style={{ height: '520px' }}>
+                <div className="col-span-3 flex justify-center items-center" style={{ height: '100%' }}>
                   <Empty
                     description={
                       cardSets.length === 0
@@ -320,24 +337,15 @@ const FlashCardLayout: React.FC = () => {
                   </Empty>
                 </div>
               ) : (
-                <div 
-                  className="grid grid-cols-3 gap-6 overflow-y-auto" 
-                  style={{ 
-                    height: '520px',
-                    paddingTop: '8px',
-                    paddingBottom: '8px'
-                  }}
-                >
-                  {filteredCardSets.map(set => (
-                    <CardSetItem
-                      key={set.id}
-                      cardSet={set}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onClick={handleCardSetClick}
-                    />
-                  ))}
-                </div>
+                filteredCardSets.map(set => (
+                  <CardSetItem
+                    key={set.id}
+                    cardSet={set}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onClick={handleCardSetClick}
+                  />
+                ))
               )}
             </div>
           </AntCard>
@@ -358,6 +366,18 @@ const FlashCardLayout: React.FC = () => {
         onSubmit={handleCreateCardSetWithFlashcards}
         userId={getUserIdFromToken() || ''}
         loading={creating}
+      />
+
+      {/* Edit Card Set Modal */}
+      <EditCardSetModal
+        visible={showEditModal}
+        cardSet={editingCardSet}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingCardSet(null);
+        }}
+        onSubmit={handleUpdateCardSet}
+        loading={updating}
       />
     </Layout>
   );

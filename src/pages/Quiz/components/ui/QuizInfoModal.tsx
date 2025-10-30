@@ -24,8 +24,18 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
   const [form] = Form.useForm<QuizInfo>();
 
   React.useEffect(() => {
-    if (visible && initialValues) {
-      form.setFieldsValue(initialValues);
+    if (visible) {
+      const currentUser = getUsernameFromToken() || "Admin";
+      if (initialValues) {
+        form.setFieldsValue({
+          ...initialValues,
+          description: currentUser,
+        });
+      } else {
+        form.setFieldsValue({
+          description: currentUser,
+        });
+      }
     }
   }, [visible, initialValues, form]);
 
@@ -56,13 +66,11 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
     borderRadius: "6px",
     fontWeight: 500,
   };
-  const currentUser = getUsernameFromToken() || "Admin";
-  console.log("currentUser: "+currentUser)
   return (
     <Modal
       title={
         <h2 style={{ fontWeight: "bold", fontSize: "1.5rem", margin: 0 }}>
-          Tạo bài Quiz mới
+          Tạo bài kiểm tra mới
         </h2>
       }
       open={visible}
@@ -133,8 +141,15 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
             rules={[{ required: true, message: "Người tạo" }]}
             style={{ margin: 0 }}
           >
-            <Input defaultValue={String(currentUser)} style={{ borderRadius: "4px" }} />
-            
+            <Input 
+              disabled 
+              style={{ 
+                borderRadius: "4px",
+                backgroundColor: "#f5f5f5",
+                color: "#000",
+                cursor: "not-allowed"
+              }} 
+            />
           </Form.Item>
 
           <Form.Item

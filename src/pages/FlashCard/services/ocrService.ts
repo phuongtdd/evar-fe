@@ -20,7 +20,10 @@ export interface GenerateFlashcardResponse {
  */
 export const generateFlashcardFromImage = async (
   imageFile: File,
-  knowledgeBaseId?: string
+  knowledgeBaseId?: string,
+  count: number = 5,
+  name: string = 'Flashcard từ ảnh',
+  description: string = 'Tự động tạo từ OCR'
 ): Promise<GenerateFlashcardResponse> => {
   try {
     const userId = getUserIdFromToken();
@@ -31,6 +34,9 @@ export const generateFlashcardFromImage = async (
 
     console.log('🌐 Upload ảnh để generate flashcard:', imageFile.name);
     console.log('👤 User ID:', userId);
+    console.log('📊 Count:', count);
+    console.log('📝 Name:', name);
+    console.log('📄 Description:', description);
     
     // Create FormData
     const formData = new FormData();
@@ -40,9 +46,9 @@ export const generateFlashcardFromImage = async (
       formData.append('knowledgeBaseId', knowledgeBaseId);
     }
 
-    // userId được gửi như query parameter
+    // userId, count, name, description được gửi như query parameter
     const response = await apiClient.post<GenerateFlashcardResponse>(
-      `${API_BASE_URL}/generate-flashcard?userId=${userId}`,
+      `${API_BASE_URL}/generate-flashcard?userId=${userId}&count=${count}&name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}`,
       formData,
       {
         headers: {

@@ -22,7 +22,7 @@ import {
   FileOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
-import { useMaterials, useFlashcards } from "../../hooks/materialHooks";
+import { useMaterials, useFlashcards } from "../../hooks/evarTutorHooks";
 import { StudyMaterial, FlashcardResponse } from "../../types";
 import { FILE_TYPE_LABELS, STATUS_LABELS } from "../../constants";
 import { formatFileSize, formatDate } from "../../utils";

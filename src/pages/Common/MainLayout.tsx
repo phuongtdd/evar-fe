@@ -21,6 +21,8 @@ const MainLayout: React.FC = () => {
       setSelectedMenu("pomodoro");
     } else if (path === "/chat") {
       setSelectedMenu("chat");
+    } else if (path === "/chat-ai") {
+      setSelectedMenu("chat-ai");
     } else if (path === "/evar-turtor") {
       setSelectedMenu("tutor");
     } else if (path === "/material") {

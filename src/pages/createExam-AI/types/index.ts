@@ -41,6 +41,8 @@ export interface QuizInfo {
   subjectId: string
   description: string
   grade: string
+  questionType?: string
+  duration?: number
 }
 
 export interface Subject {
@@ -80,6 +82,26 @@ export interface CreateQuizRequest {
   subjectId: number
   description: string
   numOfQuestions: number
+  questions: {
+    questionImg?: string
+    content: string
+    questionType: string
+    hardLevel: number
+    quesScore?: number
+    answers: {
+      isCorrect: boolean
+      content: string
+    }[]
+  }[]
+}
+
+export interface CreateExamRequest {
+  examName: string
+  examType: number
+  subjectId: string
+  description: string
+  numOfQuestions: number
+  duration: number
   questions: {
     questionImg?: string
     content: string

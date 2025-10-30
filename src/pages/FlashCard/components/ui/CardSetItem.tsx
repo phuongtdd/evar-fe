@@ -88,7 +88,7 @@ const CardSetItem: React.FC<CardSetItemProps> = ({ cardSet, onEdit, onDelete, on
         <Dropdown menu={{ items: menuItems }} trigger={['click']}>
           <Button
             type="text"
-            icon={<MoreOutlined />}
+            icon={<EditOutlined style={{ color: '#faad14', fontSize: '20px' }} />}
             size="small"
             onClick={(e) => e.stopPropagation()}
           />
@@ -124,7 +124,7 @@ const CardSetItem: React.FC<CardSetItemProps> = ({ cardSet, onEdit, onDelete, on
         </div>
       </div>
 
-      <div className="pt-3 border-t">
+      <div className="pt-3" style={{ borderTop: '1px solid #ff4d4f' }}>
         <div className="flex justify-between items-center text-xs text-gray-400">
           <span>
             <CalendarOutlined /> {formatDate(cardSet.createdAt)}

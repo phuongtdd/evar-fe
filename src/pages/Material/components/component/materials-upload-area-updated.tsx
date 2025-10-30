@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert } from "antd"
 import type { UploadFile } from "antd"
-import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/materialHooks"
+import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/evarTutorHooks"
 import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined } from "@ant-design/icons"
 
 interface MaterialsUploadAreaProps {
@@ -86,7 +86,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 : status
             ))
 
-            // Cache KB id locally for fallback listing when server listing fails
+            // Cache KB id temporarily (will be updated with full data when READY)
             try {
               if (userId && response.knowledgeBaseId) {
                 const cacheKey = `evar_kb_cache_${userId}`
@@ -94,10 +94,13 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 const newEntry = {
                   id: response.knowledgeBaseId,
                   fileName: file.name || `KB-${response.knowledgeBaseId}`,
+                  fileUrl: response.fileUrl || null,
+                  status: 'PROCESSING',
                   createdAt: new Date().toISOString(),
                 }
                 const merged = [newEntry, ...existing.filter(e => e.id !== newEntry.id)]
                 localStorage.setItem(cacheKey, JSON.stringify(merged))
+                console.log('📝 Temporary cache entry created for KB:', response.knowledgeBaseId)
               }
             } catch {}
             
@@ -139,23 +142,76 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
               ))
               message.success(`File ${status.file.name} processed successfully!`)
               
+              // Fetch latest KB detail to ensure fresh data
+              try {
+                console.log('📥 Fetching latest KB detail for ID:', kbId)
+                const latestKB = await knowledgeBaseService.getKnowledgeBaseDetail(kbId)
+                
+                // Update cache with fresh data from server
+                if (userId) {
+                  const cacheKey = `evar_kb_cache_${userId}`
+                  const existing = JSON.parse(localStorage.getItem(cacheKey) || '[]') as any[]
+                  const updatedEntry = {
+                    id: latestKB.id,
+                    fileName: latestKB.fileName,
+                    fileUrl: latestKB.fileUrl,
+                    status: latestKB.status,
+                    createdAt: latestKB.createdAt,
+                  }
+                  const merged = [updatedEntry, ...existing.filter(e => e.id !== latestKB.id)]
+                  localStorage.setItem(cacheKey, JSON.stringify(merged))
+                  console.log('✅ Cache updated with latest KB data:', updatedEntry)
+                }
+              } catch (error) {
+                console.error('Failed to fetch latest KB detail:', error)
+              }
+              
               // Auto-generate flashcards if enabled
+              let flashcardsGenerated = false;
               if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
                 setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
                 try {
+                  console.log('🤖 Starting flashcard generation for KB:', kbId);
                   message.info(`Generating flashcards for ${status.file.name}...`)
-                  await flashcardService.generateFlashcards(kbId, 10)
-                  message.success(`Flashcards generated for ${status.file.name}!`)
-                } catch (error) {
-                  console.error('Failed to generate flashcards:', error)
-                  message.warning(`Flashcards generation failed for ${status.file.name}`)
+                  const flashcardSet = await flashcardService.generateFlashcards(kbId, 10)
+                  console.log('✅ Flashcard generation complete:', flashcardSet)
+                  const count = flashcardSet?.flashcards?.length || flashcardSet?.totalCards || 10;
+                  message.success(`${count} flashcards generated for ${status.file.name}!`)
+                  flashcardsGenerated = true;
+                } catch (error: any) {
+                  console.error('❌ Flashcard generation failed:', error)
+                  console.error('Error details:', error.response?.data || error.message)
+                  message.error(`Failed to generate flashcards: ${error.response?.data?.message || error.message}`)
                 } finally {
                   setGeneratingFlashcards(prev => ({ ...prev, [kbId]: false }))
                 }
               }
               
-              onUploaded?.(kbId)
-              onRefetch?.() // Refresh KB list
+              // Delay to ensure backend has committed all data
+              console.log('⏳ Waiting for backend to commit all data...')
+              await new Promise(resolve => setTimeout(resolve, 1500))
+              
+              // Refresh KB list first to get latest data
+              console.log('🔄 Triggering knowledge base data refresh...')
+              if (onRefetch) {
+                try {
+                  await onRefetch();
+                  console.log('✅ Knowledge base data refreshed successfully');
+                } catch (error) {
+                  console.error('❌ Failed to refresh knowledge base data:', error);
+                }
+              } else {
+                console.warn('⚠️ onRefetch callback is not provided!');
+              }
+              
+              // Notify parent with the KB ID to auto-select it
+              console.log('📢 Notifying parent component with KB ID:', kbId)
+              if (onUploaded) {
+                onUploaded(kbId);
+                console.log('✅ Parent notified successfully');
+              } else {
+                console.warn('⚠️ onUploaded callback is not provided!');
+              }
               
               // Clear interval
               if (pollingIntervals[fileUid]) {

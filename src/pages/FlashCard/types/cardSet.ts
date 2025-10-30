@@ -43,7 +43,7 @@ export interface CreateCardSetWithFlashcardsRequest {
 // Request to update card set
 export interface UpdateCardSetRequest {
   id: string;
-  name?: string;
-  description?: string;
+  name: string;
+  description: string;
 }
 

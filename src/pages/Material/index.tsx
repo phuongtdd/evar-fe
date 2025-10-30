@@ -1,12 +1,12 @@
-import React from 'react';
-import StudyMaterialLayout from "./components/layout/study-material-layout";
+import React from 'react'
+import StudyMaterialLayout from "./components/layout/study-material-layout"
 
-const Material: React.FC = () => {
+const Material = () => {
   return (
     <div className="!h-screen !bg-white">
-      <StudyMaterialLayout />
+          <StudyMaterialLayout />
     </div>
-  );
-};
+  )
+}
 
 export default Material;

@@ -101,7 +101,11 @@ export const updateCardSet = async (data: UpdateCardSetRequest): Promise<CardSet
   try {
     console.log('🌐 Cập nhật card set:', data);
     
-    const response = await apiClient.put<CardSet>(`${API_BASE_URL}/${data.id}`, data);
+    const response = await apiClient.put<CardSet>(`${API_BASE_URL}/update`, {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+    });
 
     console.log('✅ Cập nhật card set thành công:', response.data);
     

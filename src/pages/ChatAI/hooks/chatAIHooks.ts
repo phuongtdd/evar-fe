@@ -5,7 +5,7 @@ import {
   chatbotService, 
   knowledgeBaseService,
   evarTutorUtils,
-} from '../services/materialService';
+} from '../services/chatAIService';
 import { ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KnowledgeBase, KnowledgeBaseStatus } from '../types';
 
 // Re-export services for direct use in components
@@ -39,54 +39,58 @@ export const useKnowledgeBases = () => {
       return;
     }
     
-    console.log('📋 Frontend: Fetching KB for userId:', userId);
-    console.log('📋 Frontend: userId type:', typeof userId, 'length:', userId.length);
+    console.log('📋 Fetching knowledge bases for userId:', userId);
     
     try {
       setLoading(true);
       setError(null);
+
       const response = await knowledgeBaseService.getUserKnowledgeBases(userId);
-      console.log('📋 Frontend: Received response:', response);
+      
+      console.log('✅ Fetched knowledge bases:', {
+        count: response.length,
+        items: response.map(kb => ({ id: kb.id, fileName: kb.fileName, status: kb.status }))
+      });
+      
+      // Update cache for offline fallback
+      const cacheKey = `evar_kb_cache_${userId}`;
+      const cacheData = response.map(kb => ({
+        id: kb.id,
+        fileName: kb.fileName,
+        fileUrl: kb.fileUrl,
+        status: kb.status,
+        createdAt: kb.createdAt,
+      }));
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      
       setData(response);
     } catch (err) {
       const anyErr = err as any;
       const status = anyErr?.response?.status;
-      // On 400/404, do not break UI; show empty list silently
-      if (status === 400 || status === 404) {
-        // Fallback: hydrate from local cache and detail endpoint
+      
+      console.error('❌ Failed to fetch knowledge bases:', err);
+      
+      // Try to use cache as fallback
+      if (status === 400 || status === 404 || status === 500) {
         try {
           const cacheKey = `evar_kb_cache_${userId}`;
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]') as Array<{ id: number; fileName?: string; createdAt?: string }>;
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+          
           if (cached.length > 0) {
-            const hydrated: KnowledgeBase[] = [];
-            for (const c of cached) {
-              try {
-                const kb = await knowledgeBaseService.getKnowledgeBaseDetail(c.id);
-                hydrated.push(kb);
-              } catch {
-                hydrated.push({
-                  id: c.id,
-                  fileName: c.fileName || `KB-${c.id}`,
-                  status: 'PROCESSING',
-                  createdAt: c.createdAt || new Date().toISOString(),
-                } as KnowledgeBase);
-              }
-            }
-            setData(hydrated);
+            console.log('⚠️ Using cached data:', cached.length, 'items');
+            setData(cached);
             setError(null);
             return;
           }
-          setData([]);
-          setError(null);
-        } catch {
-          setData([]);
-          setError(null);
+        } catch (cacheErr) {
+          console.error('Cache fallback failed:', cacheErr);
         }
-      } else {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch knowledge bases';
-        setError(errorMessage);
-        message.error(errorMessage);
       }
+      
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch knowledge bases';
+      setError(errorMessage);
+      message.error(errorMessage);
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -179,22 +183,33 @@ export const useFlashcards = (knowledgeBaseId?: number) => {
   const [apiAvailable, setApiAvailable] = useState(true);
 
   const fetchFlashcards = useCallback(async () => {
-    if (!knowledgeBaseId) return;
+    if (!knowledgeBaseId) {
+      console.log('⚠️ [FLASHCARDS] No knowledgeBaseId provided, skipping fetch');
+      return;
+    }
+    
+    console.log('🎴 [FLASHCARDS] Fetching flashcards for KB:', knowledgeBaseId);
     
     try {
       setLoading(true);
       setError(null);
       const response = await flashcardService.getFlashcardsByKnowledgeBaseId(knowledgeBaseId);
+      console.log('✅ [FLASHCARDS] Fetched', response.length, 'flashcards');
       setData(response);
     } catch (err) {
       const anyErr = err as any;
       const status = anyErr?.response?.status;
+      console.error('❌ [FLASHCARDS] Fetch failed:', err);
       if (status === 404) {
+        console.log('🔍 [FLASHCARDS] 404 - No flashcards found, setting empty array');
         setApiAvailable(false);
+        setData([]); // Set empty array instead of showing error
+        setError(null);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch flashcards';
+        setError(errorMessage);
+        console.error('❌ [FLASHCARDS] Error message:', errorMessage);
       }
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch flashcards';
-      setError(errorMessage);
-      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -215,7 +230,7 @@ export const useFlashcards = (knowledgeBaseId?: number) => {
       }
       const errorMessage = err instanceof Error ? err.message : 'Failed to create flashcard';
       setError(errorMessage);
-      message.error(errorMessage);
+      // Don't show error message here, let the caller handle it
       throw err;
     } finally {
       setLoading(false);
@@ -355,7 +370,10 @@ export const useMaterials = (_params?: any) => {
   // Map to knowledge bases for compatibility
   const { data: knowledgeBases, loading, error, refetch } = useKnowledgeBases();
   
-  const materials = knowledgeBases.map(kb => ({
+  // Ensure knowledgeBases is an array
+  const safeKnowledgeBases = Array.isArray(knowledgeBases) ? knowledgeBases : [];
+  
+  const materials = safeKnowledgeBases.map(kb => ({
     id: kb.id.toString(),
     title: kb.fileName,
     type: 'pdf' as const,
@@ -363,7 +381,7 @@ export const useMaterials = (_params?: any) => {
     fileSize: 0, // Not available in current API
     uploadDate: kb.createdAt,
     lastModified: kb.createdAt,
-    status: kb.status.toLowerCase() as 'processing' | 'ready' | 'error',
+    status: (kb.status ? kb.status.toLowerCase() : 'processing') as 'processing' | 'ready' | 'error',
     tags: [],
     description: kb.studyGuide || kb.keyNotes,
     thumbnailUrl: undefined,
@@ -394,7 +412,7 @@ export const useFlashcardsLegacy = (materialId?: string) => {
     id: fc.id,
     front: fc.front,
     back: fc.back,
-    materialId: fc.knowledgeBaseId.toString(),
+    materialId: materialId || '', // Use the provided materialId since backend doesn't return it
     materialTitle: '', // Not available in current API
     difficulty: 'easy' as const, // Not available in current API
     createdAt: fc.createdAt,

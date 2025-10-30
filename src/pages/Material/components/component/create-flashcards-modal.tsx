@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Modal, Button, Select, Alert, Form, Input, Card, Tag, Spin, message } from "antd"
 import { UploadOutlined, ExclamationCircleOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons"
-import { useMaterials, useFlashcardsLegacy } from "../../hooks/materialHooks"
+import { useMaterials, useFlashcardsLegacy } from "../../hooks/evarTutorHooks"
 import { StudyMaterial, Flashcard } from "../../types"
 import { DIFFICULTY_LABELS } from "../../constants"
 

@@ -2,6 +2,7 @@
 
 import { useState, ReactNode, useEffect } from "react";
 import { Button as AntButton, Button, Form, message } from "antd";
+import "./styles/mathjax.css";
 import {
   ArrowLeftOutlined,
   FileTextOutlined,
@@ -12,12 +13,12 @@ import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useQuizContext } from "./context/QuizContext";
 import QuizInfor from "./components/ui/QuizInfor";
-import { QuizInfo, CreateQuizRequest, typeQuiz } from "./types";
+import { QuizInfo, CreateQuizRequest, CreateExamRequest, typeQuiz, Question } from "./types";
 import QuizInfoModal from "./components/ui/QuizInfoModal";
 import { sampleQuestions } from "./mock/mockData";
 import UploadDragger from "./components/ui/UploadDragger";
 import BackButton from "../Common/BackButton";
-import { createQuizAIService } from "./services/quizService";
+import { createExamService } from "../createExam-Manual/services/examService";
 import { subjectService } from "../Subject/services/subjectService";
 import { Subject } from "./types";
 
@@ -74,18 +75,22 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleStartProcess = () => {
     setFileUploaded(true);
-    setUploadedFile({
-      name: "Mock Quiz Data",
-      size: "Generated",
-    });
-    setResults(sampleQuestions);
-    navigate("/createQuiz-AI/result");
+    navigate("/createExam-AI/result");
   };
 
   const handleRemoveFile = () => {
     setFileUploaded(false);
     setUploadedFile({ name: "", size: "" });
     setResults([]);
+  };
+
+  const handleOcrSuccess = (questions: Question[]) => {
+    setResults(questions);
+    setFileUploaded(true);
+    setUploadedFile({
+      name: "OCR Processed",
+      size: `${questions.length} câu hỏi`,
+    });
   };
 
   const handleEditQuizInfo = (updatedQuiz: any) => {
@@ -95,7 +100,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
   const handleCreateQuiz = async () => {
     if (!quizInfo) {
-      message.error("Vui lòng nhập thông tin quiz");
+      message.error("Vui lòng nhập thông tin đề thi");
       return;
     }
 
@@ -106,12 +111,13 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
 
     setIsCreating(true);
     try {
-      const quizData: CreateQuizRequest = {
+      const examData: CreateExamRequest = {
         examName: quizInfo.examName,
-        examType: quizInfo.examType || 2,
-        subjectId: parseInt(quizInfo.subjectId),
+        examType: quizInfo.examType || 1,
+        subjectId: quizInfo.subjectId,
         description: quizInfo.description,
         numOfQuestions: results.length,
+        duration: quizInfo.duration || 120, // Duration in minutes, default 2 hours
         questions: results.map((q) => ({
           questionImg: q.questionImg,
           content: q.content,
@@ -125,12 +131,15 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
         })),
       };
 
-      const result = await createQuizAIService.createQuiz(quizData);
-      message.success("Tạo quiz thành công!");
-      console.log("Quiz created:", result);
+      const result = await createExamService.createExam(examData);
+      message.success("Tạo đề thi thành công!");
+      console.log("Exam created:", result);
+      setTimeout(() => {
+        navigate("/admin/manage-exam");
+      }, 1500);
     } catch (error) {
-      message.error("Có lỗi xảy ra khi tạo quiz");
-      console.error("Error creating quiz:", error);
+      message.error("Có lỗi xảy ra khi tạo đề thi");
+      console.error("Error creating exam:", error);
     } finally {
       setIsCreating(false);
     }
@@ -144,7 +153,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
       subject: selectedSubject?.subject_name || values.subjectId || "",
       questionCount: 0,
       creator: values.description || "",
-      duration: values.time || "02:00:00",
+      duration: "02:00:00", // Default 2 hours
       grade: values.grade || "",
     });
     // The modal will set its own visibility to false; ensure our local view switches as well
@@ -152,7 +161,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
   };
 
   const handleModalCancel = () => {
-    message.error("Không thể tạo Quiz");
+    message.error("Không thể tạo Đề Thi");
    window.history.back()
   };
 
@@ -177,18 +186,19 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
               <main className="flex-1 overflow-auto p-8  [scrollbar-color:transparent_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb:hover]:bg-transparent">
                 <div className="w-full">
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                    Tạo Quiz với AI OCR
+                    Tạo Đề Thi với AI OCR
                   </h1>
                   <BackButton url={"/dashboard"} />
                   <p className="text-gray-600 mb-8 mt-5">
-                    Sử dụng AI để tăng tốc quá trình tạo Quiz từ file pdf, ảnh
-                    png...
+                    Sử dụng AI OCR để tự động tạo Đề Thi từ ảnh đề thi (PNG, JPG)
                   </p>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <QuizInfor quiz={quizData} onEdit={handleEditQuizInfo} />
                     <UploadDragger
                       onProcess={handleStartProcess}
                       onRemove={handleRemoveFile}
+                      quizInfo={quizInfo}
+                      onOcrSuccess={handleOcrSuccess}
                     />
                   </div>
 
@@ -202,7 +212,7 @@ export default function CreateQuizLayout({ children }: LayoutProps) {
                         loading={isCreating}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        Lưu Quiz
+                        Lưu Đề Thi
                       </Button>
                     </div>
                   )}

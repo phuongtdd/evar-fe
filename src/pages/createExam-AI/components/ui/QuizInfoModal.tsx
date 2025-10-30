@@ -60,7 +60,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
         const payload = {
           ...allValues,
           description: allValues.description || currentUser,
-          examType: 2, 
+          examType: 1, 
         } as QuizInfo;
         form.resetFields();
         onOk(payload);
@@ -88,7 +88,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
 
   return (
     <Modal
-      title={<h2 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: 0 }}>Tạo bài Quiz mới</h2>}
+      title={<h2 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: 0 }}>Tạo Đề Thi mới</h2>}
       open={visible}
       onCancel={onCancel}
       width={600}      
@@ -118,13 +118,13 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
 
             <Form.Item
               name="examName"
-              label={<span style={{fontWeight: '500'}}>Tên bài quiz</span>}
+              label={<span style={{fontWeight: '500'}}>Tên đề thi</span>}
               rules={[
-                { required: true, message: "Nhập tên bài Quiz" },
+                { required: true, message: "Nhập tên đề thi" },
               ]}
               style={{ margin: 0 }}
             >
-              <Input placeholder="Nhập tên bài Quiz..." style={{ borderRadius: '4px' }} />
+              <Input placeholder="Nhập tên đề thi..." style={{ borderRadius: '4px' }} />
             </Form.Item>
 
 
@@ -149,7 +149,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
             </Form.Item>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '64% 1fr', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '64% 1fr', gap: '24px', marginBottom: '16px' }}>
 
             <Form.Item
               name="description"
@@ -173,6 +173,46 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
                   { value: "10", label: "Lớp 10" },
                   { value: "11", label: "Lớp 11" },
                   { value: "12", label: "Lớp 12" },
+                ]}
+                style={{ borderRadius: '4px' }}
+              />
+            </Form.Item>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '64% 1fr', gap: '24px' }}>
+
+            <Form.Item
+              name="questionType"
+              label={<span style={{fontWeight: '500'}}>Loại câu hỏi</span>}
+              initialValue="SINGLE_CHOICE"
+              style={{ margin: 0 }}
+            >
+              <Select
+                placeholder="Chọn loại câu hỏi"
+                options={[
+                  { value: "SINGLE_CHOICE", label: "Trắc nghiệm 1 đáp án" },
+                  { value: "MULTIPLE_CHOICE", label: "Trắc nghiệm nhiều đáp án" },
+                  { value: "TRUE_FALSE", label: "Đúng/Sai" },
+                  { value: "ESSAY", label: "Tự luận" },
+                ]}
+                style={{ borderRadius: '4px' }}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="duration"
+              label={<span style={{fontWeight: '500'}}>Thời gian (phút)</span>}
+              initialValue={60}
+              style={{ margin: 0 }}
+            >
+              <Select
+                placeholder="Chọn thời gian"
+                options={[
+                  { value: 30, label: "30 phút" },
+                  { value: 45, label: "45 phút" },
+                  { value: 60, label: "60 phút" },
+                  { value: 90, label: "90 phút" },
+                  { value: 120, label: "120 phút" },
                 ]}
                 style={{ borderRadius: '4px' }}
               />

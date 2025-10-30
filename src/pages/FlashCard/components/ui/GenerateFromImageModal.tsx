@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Modal, Upload, message, Button, Space } from 'antd';
+import { Modal, Upload, message, Button, Space, InputNumber, Input } from 'antd';
 import { InboxOutlined, PictureOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import { generateFlashcardFromImage } from '../../services/ocrService';
 
 const { Dragger } = Upload;
+const { TextArea } = Input;
 
 interface GenerateFromImageModalProps {
   visible: boolean;
@@ -20,6 +21,9 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [count, setCount] = useState<number>(5);
+  const [name, setName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
 
   const uploadProps: UploadProps = {
     name: 'file',
@@ -65,9 +69,19 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
       return;
     }
 
+    if (!name.trim()) {
+      message.warning('Vui lòng nhập tên bộ flashcard!');
+      return;
+    }
+
+    if (!description.trim()) {
+      message.warning('Vui lòng nhập mô tả!');
+      return;
+    }
+
     try {
       setUploading(true);
-      const result = await generateFlashcardFromImage(selectedFile);
+      const result = await generateFlashcardFromImage(selectedFile, undefined, count, name, description);
       
       message.success({
         content: `Tạo thành công ${result.totalCards} flashcard từ ảnh!`,
@@ -77,6 +91,9 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
       // Reset and close
       setFileList([]);
       setSelectedFile(null);
+      setCount(5);
+      setName('');
+      setDescription('');
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -92,6 +109,9 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
     if (!uploading) {
       setFileList([]);
       setSelectedFile(null);
+      setCount(5);
+      setName('');
+      setDescription('');
       onClose();
     }
   };
@@ -115,7 +135,7 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
           type="primary"
           loading={uploading}
           onClick={handleUpload}
-          disabled={!selectedFile}
+          disabled={!selectedFile || !name.trim() || !description.trim()}
         >
           {uploading ? 'Đang xử lý...' : 'Tạo Flashcard'}
         </Button>,
@@ -144,6 +164,52 @@ const GenerateFromImageModal: React.FC<GenerateFromImageModalProps> = ({
             </p>
           </div>
         )}
+
+        <div style={{ marginTop: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+            Tên bộ flashcard <span style={{ color: '#ff4d4f' }}>*</span>
+          </label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nhập tên bộ flashcard"
+            style={{ width: '100%' }}
+            maxLength={100}
+            showCount
+          />
+        </div>
+
+        <div style={{ marginTop: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+            Mô tả <span style={{ color: '#ff4d4f' }}>*</span>
+          </label>
+          <TextArea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Nhập mô tả cho bộ flashcard"
+            rows={3}
+            style={{ width: '100%' }}
+            maxLength={500}
+            showCount
+          />
+        </div>
+
+        <div style={{ marginTop: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+            Số lượng flashcard muốn tạo
+          </label>
+          <InputNumber
+            min={1}
+            max={50}
+            value={count}
+            onChange={(value) => setCount(value || 5)}
+            style={{ width: '100%' }}
+            placeholder="Nhập số lượng (mặc định: 5)"
+          />
+          <p style={{ marginTop: '4px', fontSize: '12px', color: '#8c8c8c' }}>
+            Mặc định: 5 flashcard. Tối đa: 50 flashcard
+          </p>
+        </div>
       </div>
     </Modal>
   );

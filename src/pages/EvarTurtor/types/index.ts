@@ -134,11 +134,9 @@ export interface FlashcardResponse {
   id: string;
   front: string;
   back: string;
-  knowledgeBaseId: number;
-  createdBy?: string;
-  updatedBy?: string;
   createdAt: string;
-  updatedAt: string;
+  // Note: knowledgeBaseId is available in CardSetResponse, not in individual FlashcardResponse
+  // Backend FlashcardResponse only has: id, front, back, createdAt
 }
 
 export interface FlashcardUpdateRequest {
@@ -179,15 +177,27 @@ export interface KnowledgeBaseStatus {
   createdAt: string;
 }
 
+// Backend returns KnowledgeBaseOverview for list endpoints
+export interface KnowledgeBaseOverview {
+  id: number;
+  userId: string;
+  fileName: string;
+  fileUrl: string | null;
+  status: string;
+  createdAt: string;
+}
+
+// Backend returns KnowledgeBaseDetailResponse for detail endpoints
 export interface KnowledgeBase {
   id: number;
   userId?: string;
   fileName: string;
-  fileUrl?: string;
+  fileUrl?: string | null;
   status: string;
   studyGuide?: string;
   keyNotes?: string;
   userNote?: string;
+  cardSets?: any[]; // CardSetResponse[] from backend
   createdAt: string;
 }
 

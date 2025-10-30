@@ -17,6 +17,7 @@ import {
   DeliveredProcedureOutlined,
   BookOutlined,
   CreditCardOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../authen/services/authService";
@@ -80,6 +81,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Trò chuyện",
     },
     {
+      key: "chat-ai",
+      icon: <RobotOutlined className="text-2xl" />,
+      label: "Evar Tutor",
+    },
+    {
       key: "material",
       icon: <BookOutlined className="text-2xl" />,
       label: "Material",
@@ -133,14 +139,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Evar Tutor",
     },
     {
-      key: "create-quiz",
+      key: "create-exam-ai",
       icon: <CameraOutlined className="text-2xl" />,
-      label: "Tạo quiz từ ảnh",
+      label: "Tạo đề thi với AI",
     },
     {
       key: "quiz",
       icon: <EditOutlined className="text-2xl" />,
       label: "Luyện đề",
+    },
+    {
+      key: "learning-resources",
+      icon: <BookOutlined className="text-2xl" />,
+      label: "Tài nguyên học tập",
     },
     {
       key: "account",
@@ -218,12 +229,18 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "chat":
         navigate("/chat");
         break;
-      case "create-quiz":
+      case "chat-ai":
+        navigate("/chat-ai");
+        break;
+      case "create-exam-ai":
         window.dispatchEvent(new CustomEvent("reset-quiz-info"));
-        navigate("/createQuiz-AI");
+        navigate("/createExam-AI");
         break;
       case "quiz":
         navigate("/quiz");
+        break;
+      case "learning-resources":
+        navigate("/learning-resources");
         break;
       case "tutor":
         navigate("/evar-turtor");

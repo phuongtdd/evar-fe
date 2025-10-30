@@ -94,7 +94,7 @@ const SimpleFlashCard: React.FC<SimpleFlashCardProps> = ({ card, onEdit, onDelet
               <Dropdown menu={{ items: menuItems }} trigger={['click']}>
                 <Button
                   type="text"
-                  icon={<MoreOutlined />}
+                  icon={<EditOutlined style={{ color: '#faad14', fontSize: '20px' }} />}
                   size="small"
                   onClick={(e) => e.stopPropagation()}
                   className="ant-dropdown-trigger"

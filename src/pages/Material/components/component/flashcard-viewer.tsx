@@ -16,7 +16,6 @@ interface FlashcardViewerProps {
     id: string
     front: string
     back: string
-    knowledgeBaseId: number
     createdAt: string
   }>
   onBack: () => void

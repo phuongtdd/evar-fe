@@ -17,25 +17,21 @@ import {
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+import { KnowledgeBase } from '../../types'
 
 // Configure PDF.js worker - Use worker from public folder
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.mjs'
-
-interface KnowledgeBase {
-  id: number
-  fileName: string
-  fileUrl?: string
-  status: string
-  createdAt: string
-}
 
 interface PdfViewerWithUploadProps {
   knowledgeBases: KnowledgeBase[]
   loading?: boolean
   selectedKnowledgeBaseId?: number
+  targetPage?: number | null
+  highlightText?: string | null
+  onPageChanged?: () => void
 }
 
-export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedKnowledgeBaseId }: PdfViewerWithUploadProps) {
+export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedKnowledgeBaseId, targetPage, highlightText, onPageChanged }: PdfViewerWithUploadProps) {
   const [selectedKB, setSelectedKB] = useState<KnowledgeBase | null>(null)
   const [localFile, setLocalFile] = useState<File | null>(null)
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
@@ -46,6 +42,7 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pageRendering, setPageRendering] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pageContainerRef = useRef<HTMLDivElement>(null)
 
   const handleSelectKB = async (kb: KnowledgeBase) => {
     console.log('📄 Selected Knowledge Base:', {
@@ -114,6 +111,118 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedKnowledgeBaseId, knowledgeBases])
+
+  // Jump to target page when provided from keynote click
+  useEffect(() => {
+    if (targetPage !== null && targetPage !== undefined && numPages > 0) {
+      console.log('🎯 Jumping to target page:', targetPage);
+      if (targetPage >= 1 && targetPage <= numPages) {
+        setCurrentPage(targetPage);
+        setPageRendering(true);
+        message.success(`Jumped to page ${targetPage}`);
+      } else {
+        message.warning(`Page ${targetPage} is out of range (1-${numPages})`);
+      }
+    }
+  }, [targetPage, numPages])
+
+  // Highlight text after page is rendered
+  useEffect(() => {
+    if (!highlightText || pageRendering) return;
+
+    const highlightTextInPDF = () => {
+      try {
+        // Wait a bit for text layer to be fully rendered
+        setTimeout(() => {
+          const textLayer = pageContainerRef.current?.querySelector('.react-pdf__Page__textContent');
+          if (!textLayer) {
+            console.log('⚠️ Text layer not found yet');
+            return;
+          }
+
+          // Remove previous highlights
+          const oldHighlights = textLayer.querySelectorAll('.keynote-highlight');
+          oldHighlights.forEach(el => {
+            const parent = el.parentNode;
+            if (parent) {
+              parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+            }
+          });
+
+          // Clean and prepare search text
+          const searchText = highlightText
+            .replace(/\*\*/g, '') // Remove markdown bold
+            .replace(/\s+/g, ' ')  // Normalize whitespace
+            .trim()
+            .substring(0, 150); // Use first 150 chars for better matching
+
+          console.log('🔍 Searching for text:', searchText);
+
+          // Get all text spans in the text layer
+          const textSpans = Array.from(textLayer.querySelectorAll('span'));
+          let found = false;
+
+          // Try to find matching text across multiple spans
+          for (let i = 0; i < textSpans.length; i++) {
+            let combinedText = '';
+            let matchingSpans: HTMLElement[] = [];
+
+            // Combine text from consecutive spans
+            for (let j = i; j < Math.min(i + 20, textSpans.length); j++) {
+              const span = textSpans[j] as HTMLElement;
+              combinedText += span.textContent || '';
+              matchingSpans.push(span);
+
+              // Check if we have a match
+              const normalizedCombined = combinedText.replace(/\s+/g, ' ').trim();
+              const normalizedSearch = searchText.replace(/\s+/g, ' ').trim();
+
+              if (normalizedCombined.toLowerCase().includes(normalizedSearch.toLowerCase().substring(0, 50))) {
+                // Highlight all matching spans
+                matchingSpans.forEach(s => {
+                  s.style.backgroundColor = '#fef08a'; // yellow-200
+                  s.style.padding = '2px 0';
+                  s.style.borderRadius = '2px';
+                  s.classList.add('keynote-highlight');
+                });
+
+                // Scroll to the first highlighted span
+                matchingSpans[0].scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center' 
+                });
+
+                console.log('✅ Text highlighted successfully');
+                message.success('Text highlighted in PDF');
+                found = true;
+                
+                // Clear the highlight text after successful highlight
+                if (onPageChanged) {
+                  setTimeout(() => onPageChanged(), 2000);
+                }
+                break;
+              }
+            }
+
+            if (found) break;
+          }
+
+          if (!found) {
+            console.log('⚠️ Text not found in current page');
+            message.warning('Text not found on this page. Try using Ctrl+F to search.');
+            // Still clear after a delay
+            if (onPageChanged) {
+              setTimeout(() => onPageChanged(), 3000);
+            }
+          }
+        }, 500); // Wait for text layer to render
+      } catch (error) {
+        console.error('❌ Error highlighting text:', error);
+      }
+    };
+
+    highlightTextInPDF();
+  }, [highlightText, pageRendering, currentPage, onPageChanged])
 
   // Log knowledge bases when component mounts or updates
   console.log('📚 PDF Viewer - Knowledge Bases:', {
@@ -351,10 +460,21 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
         )}
       </div>
 
+      {/* Highlight Text Banner */}
+      {highlightText && (
+        <div className="!px-4 !py-2 !bg-yellow-50 !border-b !border-yellow-200">
+          <div className="!flex !items-center !gap-2">
+            <span className="!text-yellow-800 !text-sm !font-medium">✨ Highlighting:</span>
+            <span className="!text-yellow-900 !text-sm !italic !line-clamp-1">"{highlightText.substring(0, 100)}..."</span>
+            <span className="!text-xs !text-yellow-600 !ml-auto">Text will be highlighted in yellow</span>
+          </div>
+        </div>
+      )}
+
       {/* PDF Viewer Area */}
       <div className="!flex-1 !overflow-auto !flex !items-start !justify-center !bg-gray-100 !p-4">
         {pdfSource ? (
-          <div className="!relative">
+          <div className="!relative" ref={pageContainerRef}>
             {/* Loading overlay for page rendering */}
             {(pdfLoading || pageRendering) && (
               <div className="!absolute !inset-0 !flex !items-center !justify-center !bg-white !bg-opacity-80 !z-10">
