@@ -79,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {
       key: "tutor",
       icon: <DeliveredProcedureOutlined className="text-2xl" />,
-      label: "Tài nguyên",
+      label: "EVarTutor",
     },
     {
       key: "create-quiz",
