@@ -67,17 +67,18 @@ export default function QuizList({ onCreateQuizClick }: QuizListProps) {
               <Button icon={<FilterOutlined />} />
             </div>
 
-           <Tooltip title={"Đang phát triển"}>
+           {/* <Tooltip title={"Đang phát triển"}>
+           </Tooltip> */}
+
            <Button
               type="primary"
               icon={<PlusOutlined />}
               className="bg-blue-500 hover:bg-blue-600"
               onClick={onCreateQuizClick}
-              disabled
+              // disabled
             >
               Tạo Quiz
             </Button>
-           </Tooltip>
           </div>
           <div className="space-y-4 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             {exams.map((exam) => (

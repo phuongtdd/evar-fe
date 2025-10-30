@@ -3,13 +3,10 @@ import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResp
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// Helper to get real userId
 const getRealUserId = (): string => {
-  // Try explicit userId first
   const explicit = localStorage.getItem('userId');
   if (explicit && explicit !== 'default-user') return explicit;
   
-  // Try to extract from JWT token
   const token = localStorage.getItem('token');
   if (token) {
     try {

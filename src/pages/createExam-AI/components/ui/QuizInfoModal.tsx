@@ -60,7 +60,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
         const payload = {
           ...allValues,
           description: allValues.description || currentUser,
-          examType: 2, 
+          examType: 1, 
         } as QuizInfo;
         form.resetFields();
         onOk(payload);
@@ -88,7 +88,7 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
 
   return (
     <Modal
-      title={<h2 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: 0 }}>Tạo bài Quiz mới</h2>}
+      title={<h2 style={{ fontWeight: 'bold', fontSize: '1.5rem', margin: 0 }}>Tạo Đề Thi mới</h2>}
       open={visible}
       onCancel={onCancel}
       width={600}      
@@ -118,13 +118,13 @@ const QuizInfoModal: React.FC<QuizInfoModalProps> = ({
 
             <Form.Item
               name="examName"
-              label={<span style={{fontWeight: '500'}}>Tên bài quiz</span>}
+              label={<span style={{fontWeight: '500'}}>Tên đề thi</span>}
               rules={[
-                { required: true, message: "Nhập tên bài Quiz" },
+                { required: true, message: "Nhập tên đề thi" },
               ]}
               style={{ margin: 0 }}
             >
-              <Input placeholder="Nhập tên bài Quiz..." style={{ borderRadius: '4px' }} />
+              <Input placeholder="Nhập tên đề thi..." style={{ borderRadius: '4px' }} />
             </Form.Item>
 
 

@@ -71,6 +71,12 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
         (answer: any) => answer.select
       );
 
+      // If no correct answer info from backend, treat as wrong
+      const hasCorrectAnswerInfo = correctAnswers.length > 0;
+      if (!hasCorrectAnswerInfo) {
+        return; // Skip this question, count as wrong
+      }
+
       const allCorrectSelected = correctAnswers.every(
         (answer: any) => answer.select
       );
@@ -107,6 +113,12 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
       const userSelectedAnswers = question.answers.filter(
         (answer: any) => answer.select
       );
+
+      // If no correct answer info from backend, treat as wrong (no points)
+      const hasCorrectAnswerInfo = correctAnswers.length > 0;
+      if (!hasCorrectAnswerInfo) {
+        return; // Skip this question, no points awarded
+      }
 
       const allCorrectSelected = correctAnswers.every(
         (answer: any) => answer.select
@@ -212,6 +224,12 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
     const userSelectedAnswers = question.answers.filter(
       (answer: any) => answer.select
     );
+
+    // If no correct answer info from backend, treat as wrong
+    const hasCorrectAnswerInfo = correctAnswers.length > 0;
+    if (!hasCorrectAnswerInfo) {
+      return userSelectedAnswers.length > 0 ? "wrong" : "not-answered";
+    }
 
     const allCorrectSelected = correctAnswers.every(
       (answer: any) => answer.select
@@ -375,15 +393,19 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                         (answer: any) => answer.correct
                       );
 
-                      const allCorrectAnswersSelected = correctAnswers.every(
-                        (answer: any) => answer.select
-                      );
-                      const noWrongAnswersSelected = question.answers.every(
-                        (answer: any) =>
-                          !answer.correct ? !answer.select : true
-                      );
+                      // If backend doesn't return any correct answer (all correct: false), treat as wrong
+                      const hasCorrectAnswerInfo = correctAnswers.length > 0;
+                      
+                      const allCorrectAnswersSelected = hasCorrectAnswerInfo 
+                        ? correctAnswers.every((answer: any) => answer.select)
+                        : false;
+                      const noWrongAnswersSelected = hasCorrectAnswerInfo
+                        ? question.answers.every((answer: any) =>
+                            !answer.correct ? !answer.select : true
+                          )
+                        : false;
                       const isCorrect =
-                        allCorrectAnswersSelected && noWrongAnswersSelected;
+                        hasCorrectAnswerInfo && allCorrectAnswersSelected && noWrongAnswersSelected;
 
                       return (
                         <div
@@ -504,6 +526,22 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                                     )
                                   )
                                   .join(", ")}
+                              </p>
+                            </div>
+                          )}
+
+                          {userSelectedAnswers.length === 0 && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-[8px]">
+                              <p className="text-[16px] font-semibold text-red-800">
+                                ⚠️ Bạn chưa trả lời câu hỏi này - Tính là sai
+                              </p>
+                            </div>
+                          )}
+
+                          {!hasCorrectAnswerInfo && userSelectedAnswers.length > 0 && (
+                            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-[8px]">
+                              <p className="text-[16px] font-semibold text-orange-800">
+                                ⚠️ Không có thông tin đáp án đúng - Tính là sai
                               </p>
                             </div>
                           )}

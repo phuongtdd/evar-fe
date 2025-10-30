@@ -24,7 +24,7 @@ const UploadDragger: React.FC<UploadDraggerProps> = ({
 
   const handleProcessOCR = async () => {
     if (!quizInfo) {
-      message.error('Vui lòng nhập thông tin quiz trước');
+      message.error('Vui lòng nhập thông tin đề thi trước');
       return;
     }
 
@@ -83,11 +83,12 @@ const UploadDragger: React.FC<UploadDraggerProps> = ({
     multiple: false,
     fileList,
     beforeUpload: (file: File) => {
-      // Validate file type - only images supported
-      const isImage = file.type.startsWith('image/');
+      // Validate file type - only PNG and JPG supported
+      const isPNG = file.type === 'image/png';
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/jpg';
       
-      if (!isImage) {
-        message.error('Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, BMP, WEBP)!');
+      if (!isPNG && !isJPG) {
+        message.error('Chỉ hỗ trợ file ảnh PNG và JPG!');
         return Upload.LIST_IGNORE;
       }
 
@@ -126,7 +127,7 @@ const UploadDragger: React.FC<UploadDraggerProps> = ({
               Kéo thả hoặc click để chọn file
             </p>
             <p className="ant-upload-hint">
-              Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, BMP, WEBP). Kích thước tối đa 10MB.
+              Chỉ hỗ trợ file ảnh PNG và JPG. Kích thước tối đa 10MB.
               <br />
               File sẽ được xử lý bằng AI OCR để tạo câu hỏi tự động.
             </p>

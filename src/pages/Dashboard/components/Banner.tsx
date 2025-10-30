@@ -66,9 +66,9 @@ const Banner = () => {
             <Button
               type="default"
               className="!bg-blue-400 text-white !border-none"
-              onClick={() => navigate("/createQuiz-AI")}
+              onClick={() => navigate("/createExam-AI")}
             >
-              Tạo Quiz với AI
+              Tạo Đề Thi với AI
             </Button>
           </div>
         </div>
