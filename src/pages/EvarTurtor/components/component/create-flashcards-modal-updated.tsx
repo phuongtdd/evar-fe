@@ -24,8 +24,11 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   const [generatedFlashcards, setGeneratedFlashcards] = useState<Omit<FlashcardRequest, 'knowledgeBaseId'>[]>([])
   const [form] = Form.useForm()
   
-  const { data: knowledgeBases, loading: knowledgeBasesLoading } = useKnowledgeBases()
+  const { data: knowledgeBasesData, loading: knowledgeBasesLoading } = useKnowledgeBases()
   const { createFlashcard, refetch } = useFlashcards(selectedKnowledgeBase || undefined)
+  
+  // Ensure knowledgeBases is always an array
+  const knowledgeBases = Array.isArray(knowledgeBasesData) ? knowledgeBasesData : []
 
   const handleCreateFlashcards = async () => {
     if (!selectedKnowledgeBase) {

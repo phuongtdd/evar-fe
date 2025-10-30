@@ -17,17 +17,10 @@ import {
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+import { KnowledgeBase } from '../../types'
 
 // Configure PDF.js worker - Use worker from public folder
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.mjs'
-
-interface KnowledgeBase {
-  id: number
-  fileName: string
-  fileUrl?: string
-  status: string
-  createdAt: string
-}
 
 interface PdfViewerWithUploadProps {
   knowledgeBases: KnowledgeBase[]
