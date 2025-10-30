@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Button, Space, Tooltip, Divider, ColorPicker, Select, Popover } from "antd"
+import { useState, useEffect } from "react"
+import { Button, Space, Tooltip, Divider, ColorPicker, Select, Popover, message } from "antd"
 import {
   BoldOutlined,
   ItalicOutlined,
@@ -14,18 +14,22 @@ import {
   OrderedListOutlined,
   LinkOutlined,
   ClearOutlined,
+  SaveOutlined,
 } from "@ant-design/icons"
+import { knowledgeBaseService } from "../../services/evarTutorService"
 
 interface NotePageProps {
-  type?: "material" | "quiz" | "flashcard"
+  knowledgeBaseId?: number | null
 }
 
-export default function NotePage({ type = "material" }: NotePageProps) {
+export default function NotePage({ knowledgeBaseId }: NotePageProps) {
   const [content, setContent] = useState("")
   const [fontSize, setFontSize] = useState("16")
   const [fontFamily, setFontFamily] = useState("Arial")
   const [textColor, setTextColor] = useState("#000000")
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
   const fontSizes = [
     { label: "12px", value: "12" },
@@ -47,9 +51,91 @@ export default function NotePage({ type = "material" }: NotePageProps) {
     { label: "Comic Sans MS", value: "Comic Sans MS" },
   ]
 
-  const handleClear = () => {
+  // Load notes when component mounts or knowledgeBaseId changes
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (!knowledgeBaseId) {
+        setContent("")
+        return
+      }
+
+      try {
+        // Try to load from backend first
+        const detail = await knowledgeBaseService.getKnowledgeBaseDetail(knowledgeBaseId)
+        if (detail.userNote) {
+          setContent(detail.userNote)
+          setLastSaved(new Date())
+        } else {
+          // Fallback to localStorage
+          const localNote = localStorage.getItem(`note_kb_${knowledgeBaseId}`)
+          if (localNote) {
+            setContent(localNote)
+          } else {
+            setContent("")
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load notes from backend, using localStorage:", error)
+        // Fallback to localStorage
+        const localNote = localStorage.getItem(`note_kb_${knowledgeBaseId}`)
+        if (localNote) {
+          setContent(localNote)
+        } else {
+          setContent("")
+        }
+      }
+    }
+
+    loadNotes()
+  }, [knowledgeBaseId])
+
+  // Auto-save to localStorage every 3 seconds
+  useEffect(() => {
+    if (!knowledgeBaseId) return
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(`note_kb_${knowledgeBaseId}`, content)
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [content, knowledgeBaseId])
+
+  const handleSave = async () => {
+    if (!knowledgeBaseId) {
+      message.warning("Please select a knowledge base first")
+      return
+    }
+
+    setSaving(true)
+    try {
+      // Try to save to backend
+      await knowledgeBaseService.updateUserNote(knowledgeBaseId, content)
+      setLastSaved(new Date())
+      message.success("Notes saved successfully!")
+    } catch (error) {
+      console.error("Failed to save to backend, saved to localStorage instead:", error)
+      // Fallback to localStorage
+      localStorage.setItem(`note_kb_${knowledgeBaseId}`, content)
+      setLastSaved(new Date())
+      message.info("Notes saved locally (backend unavailable)")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleClear = async () => {
     if (window.confirm("Are you sure you want to clear all notes?")) {
       setContent("")
+      if (knowledgeBaseId) {
+        try {
+          await knowledgeBaseService.updateUserNote(knowledgeBaseId, "")
+          localStorage.removeItem(`note_kb_${knowledgeBaseId}`)
+          message.success("Notes cleared successfully!")
+        } catch (error) {
+          localStorage.removeItem(`note_kb_${knowledgeBaseId}`)
+          message.info("Notes cleared locally")
+        }
+      }
     }
   }
 
@@ -68,7 +154,20 @@ export default function NotePage({ type = "material" }: NotePageProps) {
       {/* Header */}
       <div className="!flex !items-center !justify-between !px-4 !py-3 !border-b !border-gray-200 !bg-white">
         <h3 className="!text-gray-900 !font-semibold">Notes</h3>
-        <div className="!text-sm !text-gray-600">{content.length} characters</div>
+        <div className="!flex !items-center !gap-3">
+          <div className="!text-sm !text-gray-600">{content.length} characters</div>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            size="small"
+            onClick={handleSave}
+            loading={saving}
+            disabled={!knowledgeBaseId}
+            className="!bg-blue-600 !border-blue-600 hover:!bg-blue-700"
+          >
+            Save
+          </Button>
+        </div>
       </div>
 
       <div className="!px-4 !py-3 !border-b !border-gray-200 !bg-gray-50 !overflow-x-auto">
@@ -192,7 +291,10 @@ export default function NotePage({ type = "material" }: NotePageProps) {
 
       <div className="!flex !items-center !justify-between !px-4 !py-3 !border-t !border-gray-200 !bg-gray-50 !text-xs !text-gray-500">
         <div>Words: {content.split(/\s+/).filter((w) => w.length > 0).length}</div>
-        <div>Last saved: {new Date().toLocaleTimeString()}</div>
+        <div>
+          {lastSaved ? `Last saved: ${lastSaved.toLocaleTimeString()}` : "Not saved yet"}
+          {!knowledgeBaseId && " (Select a knowledge base to save)"}
+        </div>
       </div>
     </div>
   )

@@ -1,0 +1,58 @@
+/* MathJax Styling for Quiz Questions */
+
+/* Inline math */
+.MathJax {
+  display: inline-block !important;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+/* Display math (block) */
+.MathJax_Display {
+  display: block !important;
+  text-align: center;
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Container styling */
+mjx-container {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+mjx-container[display="true"] {
+  display: block !important;
+  text-align: center;
+  margin: 1em 0;
+}
+
+/* Ensure proper font size */
+mjx-math {
+  font-size: 1em;
+}
+
+/* Scrollable for long equations */
+mjx-container[display="true"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+/* Better spacing in answers */
+.answer-content mjx-container {
+  margin: 0 4px;
+}
+
+/* Prevent equation breaking */
+mjx-container {
+  white-space: nowrap;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  mjx-math {
+    color: inherit;
+  }
+}

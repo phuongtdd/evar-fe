@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert } from "antd"
 import type { UploadFile } from "antd"
-import { usePdfUpload, getCurrentUserId, knowledgeBaseService } from "../../hooks/evarTutorHooks"
+import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/evarTutorHooks"
 import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined } from "@ant-design/icons"
 
 interface MaterialsUploadAreaProps {
   onClose: () => void
   onUploaded?: (knowledgeBaseId: number) => void
   onRefetch?: () => void
+  autoGenerateFlashcards?: boolean // New prop to control auto-generation
 }
 
 interface UploadStatus {
@@ -17,14 +18,15 @@ interface UploadStatus {
   error?: string
 }
 
-export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: MaterialsUploadAreaProps) {
+export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, autoGenerateFlashcards = true }: MaterialsUploadAreaProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [uploadStatuses, setUploadStatuses] = useState<UploadStatus[]>([])
   const [form] = Form.useForm()
+  const [generatingFlashcards, setGeneratingFlashcards] = useState<Record<number, boolean>>({})
   
   const { uploadPdf, uploading, error } = usePdfUpload()
   
-  // Get current user ID from token or localStorage
+
   const userId = getCurrentUserId() || undefined
 
   const formatFileSize = (bytes: number): string => {
@@ -84,7 +86,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
                 : status
             ))
 
-            // Cache KB id locally for fallback listing when server listing fails
+            // Cache KB id temporarily (will be updated with full data when READY)
             try {
               if (userId && response.knowledgeBaseId) {
                 const cacheKey = `evar_kb_cache_${userId}`
@@ -92,10 +94,13 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
                 const newEntry = {
                   id: response.knowledgeBaseId,
                   fileName: file.name || `KB-${response.knowledgeBaseId}`,
+                  fileUrl: response.fileUrl || null,
+                  status: 'PROCESSING',
                   createdAt: new Date().toISOString(),
                 }
                 const merged = [newEntry, ...existing.filter(e => e.id !== newEntry.id)]
                 localStorage.setItem(cacheKey, JSON.stringify(merged))
+                console.log('📝 Temporary cache entry created for KB:', response.knowledgeBaseId)
               }
             } catch {}
             
@@ -136,8 +141,51 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
                 u.file.uid === fileUid ? { ...u, status: 'ready' } : u
               ))
               message.success(`File ${status.file.name} processed successfully!`)
+              
+              // Fetch latest KB detail to ensure fresh data
+              try {
+                console.log('📥 Fetching latest KB detail for ID:', kbId)
+                const latestKB = await knowledgeBaseService.getKnowledgeBaseDetail(kbId)
+                
+                // Update cache with fresh data from server
+                if (userId) {
+                  const cacheKey = `evar_kb_cache_${userId}`
+                  const existing = JSON.parse(localStorage.getItem(cacheKey) || '[]') as any[]
+                  const updatedEntry = {
+                    id: latestKB.id,
+                    fileName: latestKB.fileName,
+                    fileUrl: latestKB.fileUrl,
+                    status: latestKB.status,
+                    createdAt: latestKB.createdAt,
+                  }
+                  const merged = [updatedEntry, ...existing.filter(e => e.id !== latestKB.id)]
+                  localStorage.setItem(cacheKey, JSON.stringify(merged))
+                  console.log('✅ Cache updated with latest KB data:', updatedEntry)
+                }
+              } catch (error) {
+                console.error('Failed to fetch latest KB detail:', error)
+              }
+              
+              // Auto-generate flashcards if enabled
+              if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
+                setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
+                try {
+                  message.info(`Generating flashcards for ${status.file.name}...`)
+                  await flashcardService.generateFlashcards(kbId, 10)
+                  message.success(`Flashcards generated for ${status.file.name}!`)
+                } catch (error) {
+                  console.error('Failed to generate flashcards:', error)
+                  message.warning(`Flashcards generation failed for ${status.file.name}`)
+                } finally {
+                  setGeneratingFlashcards(prev => ({ ...prev, [kbId]: false }))
+                }
+              }
+              
+              // Delay slightly to ensure backend has committed all data
+              await new Promise(resolve => setTimeout(resolve, 500))
+              
               onUploaded?.(kbId)
-              onRefetch?.() // Refresh KB list
+              onRefetch?.() // Refresh KB list with latest data
               
               // Clear interval
               if (pollingIntervals[fileUid]) {
@@ -174,7 +222,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch }: 
     return () => {
       Object.values(pollingIntervals).forEach(interval => clearInterval(interval))
     }
-  }, [uploadStatuses, onUploaded, onRefetch])
+  }, [uploadStatuses, onUploaded, onRefetch, autoGenerateFlashcards, generatingFlashcards])
 
   const removeFile = (file: UploadFile) => {
     setFileList(prev => prev.filter(f => f.uid !== file.uid))

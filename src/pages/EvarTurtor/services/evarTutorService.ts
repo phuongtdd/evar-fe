@@ -1,94 +1,7 @@
 import apiClient from '../../../configs/axiosConfig';
+import { ApiResponse, ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KeyNotesResponse, KnowledgeBase, KnowledgeBaseStatus, KnowledgeBaseUploadResponse } from '../types';
 
-// ==================== TYPES ====================
-export interface FlashcardRequest {
-  front: string;
-  back: string;
-  knowledgeBaseId: number;
-}
-
-export interface FlashcardResponse {
-  id: string;
-  front: string;
-  back: string;
-  knowledgeBaseId: number;
-  createdBy?: string;
-  updatedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FlashcardUpdateRequest {
-  id: string;
-  front: string;
-  back: string;
-}
-
-export interface ChatRequest {
-  knowledgeBaseId: number;
-  question: string;
-  topK?: number;
-}
-
-export interface SourceReference {
-  pageNumber: number;
-  snippet: string;
-  similarity: number;
-}
-
-export interface ChatResponse {
-  answer: string;
-  sources: SourceReference[];
-  chunksUsed: number;
-}
-
-export interface KnowledgeBaseUploadResponse {
-  message: string;
-  knowledgeBaseId: number;
-  status: string;
-}
-
-export interface KnowledgeBaseStatus {
-  id: number;
-  fileName: string;
-  status: string;
-  createdAt: string;
-}
-
-export interface KnowledgeBase {
-  id: number;
-  userId?: string;
-  fileName: string;
-  fileUrl?: string;
-  status: string;
-  studyGuide?: string;
-  keyNotes?: string;
-  userNote?: string;
-  createdAt: string;
-}
-
-export interface KeyNoteItem {
-  id: string;
-  content: string;
-  pageNumber: number | null;
-  relevance: number;
-}
-
-export interface KeyNotesResponse {
-  notes: KeyNoteItem[];
-  totalNotes: number;
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  message: string;
-  pageMetadata?: {
-    size: number;
-    number: number;
-    totalElements: number;
-    totalPages: number;
-  };
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 // ==================== FLASHCARD SERVICES ====================
 export const flashcardService = {
@@ -143,58 +56,159 @@ export const chatbotService = {
 
 // ==================== KNOWLEDGE BASE SERVICES ====================
 export const knowledgeBaseService = {
-  // Upload PDF file
   uploadPdf: async (file: File, userId?: string): Promise<KnowledgeBaseUploadResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (userId) {
-      formData.append('userId', userId);
-    }
-
-    const response = await apiClient.post('/knowledge/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    console.log('🚀 Starting PDF upload process...', {
+      fileName: file.name,
+      fileSize: file.size,
+      userId: userId || 'not provided'
     });
-    return response.data;
+
+    try {
+      console.log('📝 Step 1: Getting upload signature from backend...');
+      const signatureResponse = await fetch(`${API_BASE_URL}/cloudinary/signature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ folder: 'evar-knowledge-base' }),
+      });
+
+      if (!signatureResponse.ok) {
+        throw new Error('Failed to get upload signature from backend');
+      }
+
+      const signatureData = await signatureResponse.json();
+      console.log('✅ Signature received');
+
+      console.log('📤 Step 2: Uploading PDF to Cloudinary with signature...');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('signature', signatureData.signature);
+      formData.append('timestamp', signatureData.timestamp.toString());
+      formData.append('api_key', signatureData.apiKey);
+      formData.append('folder', signatureData.folder);
+      formData.append('resource_type', 'raw');
+
+      const cloudinaryUpload = await fetch(
+        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/raw/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      console.log('Cloudinary response status:', cloudinaryUpload.status);
+
+      if (!cloudinaryUpload.ok) {
+        const errorText = await cloudinaryUpload.text();
+        console.error('❌ Cloudinary upload failed:', {
+          status: cloudinaryUpload.status,
+          statusText: cloudinaryUpload.statusText,
+          error: errorText
+        });
+        throw new Error(`Cloudinary upload failed: ${cloudinaryUpload.status} - ${errorText}`);
+      }
+
+      const cloudinaryData = await cloudinaryUpload.json();
+      const fileUrl = cloudinaryData.secure_url;
+      
+      if (!fileUrl) {
+        console.error('❌ No secure_url in Cloudinary response:', cloudinaryData);
+        throw new Error('Cloudinary did not return a file URL');
+      }
+
+      console.log('✅ Cloudinary upload success:', {
+        fileUrl,
+        publicId: cloudinaryData.public_id,
+        format: cloudinaryData.format,
+        bytes: cloudinaryData.bytes,
+        resourceType: cloudinaryData.resource_type
+      });
+
+      const backendFormData = new FormData();
+      backendFormData.append('file', file);
+      backendFormData.append('fileUrl', fileUrl);
+      if (userId) {
+        backendFormData.append('userId', userId);
+      }
+
+      console.log('📦 Step 3: Sending to backend:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileUrl: fileUrl,
+        fileUrlLength: fileUrl?.length,
+        userId: userId,
+        hasFile: !!file,
+        hasFileUrl: !!fileUrl,
+        hasUserId: !!userId,
+        endpoint: '/knowledge/upload'
+      });
+
+      const response = await apiClient.post('/knowledge/upload', backendFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('✅ Step 3: Backend response received:', {
+        status: response.status,
+        data: response.data,
+        hasFileUrlInResponse: !!response.data.fileUrl
+      });
+
+      if (!response.data.fileUrl) {
+        console.warn('⚠️ WARNING: Backend response does not contain fileUrl!');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      throw error;
+    }
   },
 
-  // Kiểm tra status của knowledge base
   getKnowledgeBaseStatus: async (id: number): Promise<KnowledgeBaseStatus> => {
     const response = await apiClient.get(`/knowledge/${id}/status`);
     return response.data;
   },
 
-  // Lấy danh sách knowledge base của user
   getUserKnowledgeBases: async (userId: string): Promise<KnowledgeBase[]> => {
+    console.log('📋 Fetching knowledge bases for user:', userId);
     const response = await apiClient.get(`/knowledge/user/${userId}`);
+    console.log('📋 Knowledge bases received:', {
+      count: response.data.length,
+      knowledgeBases: response.data.map((kb: any) => ({
+        id: kb.id,
+        fileName: kb.fileName,
+        fileUrl: kb.fileUrl,
+        hasFileUrl: !!kb.fileUrl,
+        status: kb.status
+      }))
+    });
     return response.data;
   },
 
-  // Lấy chi tiết knowledge base (study guide, key notes, user note)
   getKnowledgeBaseDetail: async (id: number): Promise<KnowledgeBase> => {
     const response = await apiClient.get(`/knowledge/${id}`);
     return response.data;
   },
 
-  // Lấy key notes đã parse
   getKeyNotes: async (id: number): Promise<KeyNotesResponse> => {
     const response = await apiClient.get(`/knowledge/${id}/key-notes`);
     return response.data;
   },
 
-  // Cập nhật user note
   updateUserNote: async (id: number, note: string): Promise<void> => {
     await apiClient.put(`/knowledge/${id}/user-note`, { note });
   },
 
-  // Regenerate study guide bằng AI
   regenerateStudyGuide: async (id: number): Promise<string> => {
     const response = await apiClient.post(`/knowledge/${id}/regenerate-study-guide`);
     return response.data;
   },
 
-  // Regenerate key notes bằng AI
   regenerateKeyNotes: async (id: number): Promise<string> => {
     const response = await apiClient.post(`/knowledge/${id}/regenerate-key-notes`);
     return response.data;

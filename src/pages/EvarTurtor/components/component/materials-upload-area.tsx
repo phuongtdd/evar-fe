@@ -4,10 +4,10 @@ import { useState } from "react"
 import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag } from "antd"
 import { InboxOutlined, FileTextOutlined, FileImageOutlined, FileOutlined } from "@ant-design/icons"
 import type { UploadFile } from "antd"
-import { useMaterials } from "../../hooks"
+import { usePdfUpload, getCurrentUserId } from "../../hooks/evarTutorHooks"
 import { StudyMaterial } from "../../types"
-import { FILE_TYPES, UPLOAD_LIMITS, formatFileSize } from "../../mock/mockData"
-
+import { FILE_TYPES, UPLOAD_LIMITS} from "../../constants/index"
+import { formatFileSize } from "../../utils"
 interface MaterialsUploadAreaProps {
   onClose: () => void
 }
@@ -18,7 +18,7 @@ export default function MaterialsUploadArea({ onClose }: MaterialsUploadAreaProp
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const [form] = Form.useForm()
   
-  const { createMaterial } = useMaterials()
+  const { uploadPdf } = usePdfUpload()
 
   const handleUpload = (info: any) => {
     let newFileList = [...info.fileList]
@@ -65,30 +65,20 @@ export default function MaterialsUploadArea({ onClose }: MaterialsUploadAreaProp
     const extension = fileName?.split('.').pop()?.toLowerCase()
     switch (extension) {
       case 'pdf':
-        return FILE_TYPES.PDF
+        return 'pdf'
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-        return FILE_TYPES.IMAGE
+        return 'image'
       default:
-        return FILE_TYPES.DOCUMENT
+        return 'document'
     }
   }
 
-  const simulateUpload = async (file: UploadFile): Promise<void> => {
-    return new Promise((resolve) => {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += Math.random() * 20
-        if (progress >= 100) {
-          progress = 100
-          clearInterval(interval)
-          resolve()
-        }
-        setUploadProgress(prev => ({ ...prev, [file.uid]: progress }))
-      }, 200)
-    })
+  // simple progress updater for UX (sets to 100% on completion)
+  const markUploaded = (file: UploadFile) => {
+    setUploadProgress(prev => ({ ...prev, [file.uid]: 100 }))
   }
 
   const handleSubmit = async () => {
@@ -103,31 +93,19 @@ export default function MaterialsUploadArea({ onClose }: MaterialsUploadAreaProp
       // Get form values
       const formValues = await form.validateFields()
       
-      // Upload each file
+      // Upload each file to Cloudinary via signed upload, then backend
       for (const file of fileList) {
         if (file.status === 'done') continue
         
         try {
-          // Simulate upload progress
-          await simulateUpload(file)
-          
-          // Create material record
-          const materialData: Omit<StudyMaterial, 'id' | 'uploadDate' | 'lastModified'> = {
-            title: formValues.title || file.name?.split('.')[0] || 'Untitled',
-            type: getFileType(file.name || ''),
-            fileName: file.name || '',
-            fileSize: file.size || 0,
-            status: 'ready',
-            tags: formValues.tags || [],
-            description: formValues.description || '',
-            content: `Content extracted from ${file.name}`,
-            metadata: {
-              pages: file.type === 'pdf' ? Math.floor(Math.random() * 50) + 1 : undefined,
-              resolution: getFileType(file.name || '') === 'image' ? '1920x1080' : undefined
-            }
+          const raw = file.originFileObj as File | undefined
+          if (!raw) {
+            message.error(`Missing file content for ${file.name}`)
+            continue
           }
-          
-          await createMaterial(materialData)
+          const userId = getCurrentUserId() || undefined
+          await uploadPdf(raw, userId)
+          markUploaded(file)
           
         } catch (error) {
           console.error('Upload error for file:', file.name, error)

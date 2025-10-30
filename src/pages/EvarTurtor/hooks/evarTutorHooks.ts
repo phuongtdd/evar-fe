@@ -5,18 +5,11 @@ import {
   chatbotService, 
   knowledgeBaseService,
   evarTutorUtils,
-  type FlashcardRequest,
-  type FlashcardResponse,
-  type FlashcardUpdateRequest,
-  type ChatRequest,
-  type ChatResponse,
-  type KnowledgeBase,
-  type KnowledgeBaseStatus,
-  type KnowledgeBaseUploadResponse
 } from '../services/evarTutorService';
+import { ChatRequest, ChatResponse, FlashcardRequest, FlashcardResponse, FlashcardUpdateRequest, KnowledgeBase, KnowledgeBaseStatus } from '../types';
 
-// Re-export knowledgeBaseService for direct use in components
-export { knowledgeBaseService };
+// Re-export services for direct use in components
+export { knowledgeBaseService, flashcardService };
 
 export const getCurrentUserId = (): string | null => {
   const explicit = localStorage.getItem('userId');
@@ -54,6 +47,19 @@ export const useKnowledgeBases = () => {
       setError(null);
       const response = await knowledgeBaseService.getUserKnowledgeBases(userId);
       console.log('📋 Frontend: Received response:', response);
+      
+      // Update cache with fresh server data
+      const cacheKey = `evar_kb_cache_${userId}`;
+      const cacheData = response.map(kb => ({
+        id: kb.id,
+        fileName: kb.fileName,
+        fileUrl: kb.fileUrl,
+        status: kb.status,
+        createdAt: kb.createdAt,
+      }));
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      console.log('✅ Cache synchronized with server data');
+      
       setData(response);
     } catch (err) {
       const anyErr = err as any;
@@ -63,7 +69,9 @@ export const useKnowledgeBases = () => {
         // Fallback: hydrate from local cache and detail endpoint
         try {
           const cacheKey = `evar_kb_cache_${userId}`;
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]') as Array<{ id: number; fileName?: string; createdAt?: string }>;
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]') as Array<{ id: number; fileName?: string; fileUrl?: string; status?: string; createdAt?: string }>;
+          console.log('⚠️ Server failed, using cache fallback:', cached.length, 'items');
+          
           if (cached.length > 0) {
             const hydrated: KnowledgeBase[] = [];
             for (const c of cached) {
@@ -71,10 +79,12 @@ export const useKnowledgeBases = () => {
                 const kb = await knowledgeBaseService.getKnowledgeBaseDetail(c.id);
                 hydrated.push(kb);
               } catch {
+                // Use cached data if detail fetch fails
                 hydrated.push({
                   id: c.id,
                   fileName: c.fileName || `KB-${c.id}`,
-                  status: 'PROCESSING',
+                  fileUrl: c.fileUrl,
+                  status: (c.status as any) || 'PROCESSING',
                   createdAt: c.createdAt || new Date().toISOString(),
                 } as KnowledgeBase);
               }

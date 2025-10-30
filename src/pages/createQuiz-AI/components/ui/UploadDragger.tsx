@@ -1,32 +1,108 @@
 import React, { useState } from "react";
 import { InboxOutlined } from "@ant-design/icons";
-import { message, Upload, Button } from "antd";
+import { message, Upload, Button, Spin } from "antd";
+import { ocrService } from "../../services/ocrService";
+import { QuizInfo, Question } from "../../types";
 
 const { Dragger } = Upload;
 
 interface UploadDraggerProps {
   onProcess: () => void;
   onRemove?: () => void;
+  quizInfo: QuizInfo | null;
+  onOcrSuccess?: (questions: Question[]) => void;
 }
 
-const UploadDragger: React.FC<UploadDraggerProps> = ({ onProcess, onRemove }) => {
+const UploadDragger: React.FC<UploadDraggerProps> = ({ 
+  onProcess, 
+  onRemove, 
+  quizInfo, 
+  onOcrSuccess 
+}) => {
   const [fileList, setFileList] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleProcessOCR = async () => {
+    if (!quizInfo) {
+      message.error('Vui lòng nhập thông tin quiz trước');
+      return;
+    }
+
+    if (fileList.length === 0) {
+      message.error('Vui lòng chọn file trước');
+      return;
+    }
+
+    setIsProcessing(true);
+    const hideLoading = message.loading('Đang xử lý OCR...', 0);
+
+    try {
+      const file = fileList[0] as File;
+      
+      const response = await ocrService.generateExamFromImage({
+        file,
+        subjectId: quizInfo.subjectId,
+        questionType: quizInfo.questionType || 'SINGLE_CHOICE',
+        duration: quizInfo.duration || 60,
+        examName: quizInfo.examName,
+      });
+
+      // Transform backend response to frontend Question format
+      const questions: Question[] = response.questions.map((q, index) => ({
+        id: index + 1,
+        number: index + 1,
+        content: q.content,
+        questionType: q.questionType,
+        hardLevel: q.hardLevel,
+        quesScore: q.quesScore,
+        questionImg: q.questionImg || undefined,
+        answers: q.answers.map(a => ({
+          content: a.content,
+          isCorrect: false, // User needs to mark correct answers manually
+        })),
+      }));
+
+      message.success(`Tạo thành công ${questions.length} câu hỏi từ OCR!`);
+      
+      if (onOcrSuccess) {
+        onOcrSuccess(questions);
+      }
+      
+      onProcess();
+    } catch (error: any) {
+      console.error('OCR Error:', error);
+      message.error(error.message || 'Lỗi xử lý OCR. Vui lòng thử lại.');
+    } finally {
+      hideLoading();
+      setIsProcessing(false);
+    }
+  };
 
   const props = {
     name: "file",
     multiple: false,
     fileList,
-    onChange(info: any) {
-      const { status } = info.file;
-      if (status !== "uploading") {
-        console.log(info.file, info.fileList);
+    beforeUpload: (file: File) => {
+      // Validate file type - only images supported
+      const isImage = file.type.startsWith('image/');
+      
+      if (!isImage) {
+        message.error('Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, BMP, WEBP)!');
+        return Upload.LIST_IGNORE;
       }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
+
+      // Validate file size (max 10MB)
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('File phải nhỏ hơn 10MB!');
+        return Upload.LIST_IGNORE;
       }
-      setFileList([info.file]);
+
+      setFileList([file]);
+      message.success(`${file.name} đã được chọn`);
+      
+      // Prevent auto upload
+      return false;
     },
     onRemove: (file: any) => {
       setFileList([]);
@@ -47,11 +123,12 @@ const UploadDragger: React.FC<UploadDraggerProps> = ({ onProcess, onRemove }) =>
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">
-              Click or drag file to this area to upload
+              Kéo thả hoặc click để chọn file
             </p>
             <p className="ant-upload-hint">
-              Support for a single upload. Strictly prohibit from uploading
-              company data or other band files
+              Chỉ hỗ trợ file ảnh (JPG, PNG, GIF, BMP, WEBP). Kích thước tối đa 10MB.
+              <br />
+              File sẽ được xử lý bằng AI OCR để tạo câu hỏi tự động.
             </p>
           </>
         )}
@@ -59,11 +136,12 @@ const UploadDragger: React.FC<UploadDraggerProps> = ({ onProcess, onRemove }) =>
      </div>
       <Button
         type="primary"
-        onClick={onProcess}
-        disabled={fileList.length === 0}
-       className="mt-5"
+        onClick={handleProcessOCR}
+        disabled={fileList.length === 0 || isProcessing}
+        loading={isProcessing}
+        className="mt-5"
       >
-        Process
+        {isProcessing ? 'Đang xử lý...' : 'Xử lý với AI OCR'}
       </Button>
     </div>
     </>

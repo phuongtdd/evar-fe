@@ -1,32 +1,44 @@
-"use client"
+"use client";
 
-import { ReactNode, useState, useEffect } from "react"
-import { Button, Input, Avatar, Select, message, Spin, Modal } from "antd"
-import { SendOutlined, SmileOutlined, LinkOutlined, PaperClipOutlined, CameraOutlined, RobotOutlined } from "@ant-design/icons"
-import { useChatbot, useKnowledgeBases } from "../../hooks/evarTutorHooks"
-import MaterialsUploadAreaUpdated from "./materials-upload-area-updated"
+import { ReactNode, useState, useEffect } from "react";
+import { Button, Input, Avatar, Select, message, Spin, Modal } from "antd";
+import {
+  SendOutlined,
+  SmileOutlined,
+  LinkOutlined,
+  PaperClipOutlined,
+  CameraOutlined,
+  RobotOutlined,
+} from "@ant-design/icons";
+import { useChatbot, useKnowledgeBases } from "../../hooks/evarTutorHooks";
+import MaterialsUploadAreaUpdated from "./materials-upload-area-updated";
 
 interface TutorChatPanelProps {
-  onPageJump?: (page: number) => void
+  onPageJump?: (page: number) => void;
+  onKnowledgeBaseSelected?: (kbId: number | null) => void;
 }
 
 interface ChatMessage {
-  id: string
-  type: "user" | "assistant"
-  content: string
+  id: string;
+  type: "user" | "assistant";
+  content: string;
   sources?: Array<{
-    pageNumber: number
-    snippet: string
-    similarity: number
-  }>
-  timestamp: string
+    pageNumber: number;
+    snippet: string;
+    similarity: number;
+  }>;
+  timestamp: string;
 }
 
-function renderMessageWithPageLinks(content: string, sources?: ChatMessage['sources'], onPageJump?: (page: number) => void): ReactNode {
-  if (!onPageJump || !sources) return content
+function renderMessageWithPageLinks(
+  content: string,
+  sources?: ChatMessage["sources"],
+  onPageJump?: (page: number) => void
+): ReactNode {
+  if (!onPageJump || !sources) return content;
 
-  const parts: (string | ReactNode)[] = []
-  let lastIndex = 0
+  const parts: (string | ReactNode)[] = [];
+  let lastIndex = 0;
 
   // Add source links at the end
   if (sources.length > 0) {
@@ -38,122 +50,150 @@ function renderMessageWithPageLinks(content: string, sources?: ChatMessage['sour
       >
         Trang {source.pageNumber}
       </button>
-    ))
-    
-    parts.push(content)
+    ));
+
+    parts.push(content);
     parts.push(
       <div key="sources" className="mt-2 pt-2 border-t border-gray-200">
         <p className="text-xs text-gray-500 mb-1">Nguồn tham khảo:</p>
         {sourceLinks}
       </div>
-    )
-    
-    return parts
+    );
+
+    return parts;
   }
 
-  return content
+  return content;
 }
 
-export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
+export default function TutorChatPanel({
+  onPageJump,
+  onKnowledgeBaseSelected,
+}: TutorChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
       type: "assistant",
-      content: "Xin chào! Tôi là AI Tutor của bạn. Hãy chọn một knowledge base và đặt câu hỏi để tôi có thể giúp bạn học tập.",
-      timestamp: new Date().toISOString()
-    }
-  ])
-  const [inputValue, setInputValue] = useState("")
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null)
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  
+      content:
+        "Xin chào! Tôi là AI Tutor của bạn. Hãy chọn một knowledge base và đặt câu hỏi để tôi có thể giúp bạn học tập.",
+      timestamp: new Date().toISOString(),
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<
+    number | null
+  >(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
   // Knowledge bases are derived from current user context
-  const { data: knowledgeBases, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases()
-  const { sendMessage, loading: chatLoading } = useChatbot()
+  const {
+    data: knowledgeBases,
+    loading: knowledgeBasesLoading,
+    refetch: refetchKnowledgeBases,
+  } = useKnowledgeBases();
+  const { sendMessage, loading: chatLoading } = useChatbot();
+
+  // Notify parent when KB is selected
+  const handleKnowledgeBaseChange = (kbId: number | null) => {
+    setSelectedKnowledgeBase(kbId);
+    onKnowledgeBaseSelected?.(kbId);
+  };
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim()) return;
     if (!selectedKnowledgeBase) {
-      message.warning("Vui lòng chọn knowledge base trước khi đặt câu hỏi")
-      return
+      message.warning("Vui lòng chọn knowledge base trước khi đặt câu hỏi");
+      return;
     }
 
     // Kiểm tra KB status
-    const selectedKB = knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)
-    if (selectedKB?.status !== 'READY') {
-      message.warning(`Knowledge base đang ở trạng thái: ${selectedKB?.status}. Vui lòng đợi xử lý xong (READY) trước khi chat.`)
-      return
+    const selectedKB = knowledgeBases.find(
+      (kb) => kb.id === selectedKnowledgeBase
+    );
+    if (selectedKB?.status !== "READY") {
+      message.warning(
+        `Knowledge base đang ở trạng thái: ${selectedKB?.status}. Vui lòng đợi xử lý xong (READY) trước khi chat.`
+      );
+      return;
     }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: "user",
       content: inputValue,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    };
 
-    setMessages(prev => [...prev, userMessage])
-    setInputValue("")
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
 
     try {
       const request = {
         knowledgeBaseId: selectedKnowledgeBase,
         question: inputValue,
-        topK: 5
-      }
+        topK: 5,
+      };
 
-      const response = await sendMessage(request)
-      
+      const response = await sendMessage(request);
+
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
         content: response.answer,
         sources: response.sources,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error: any) {
+      console.error("Chat error:", error);
+
+      // Lấy error message từ backend nếu có
+      let errorText = "Xin lỗi, tôi không thể trả lời câu hỏi của bạn lúc này.";
+
+      if (error.response?.data?.message) {
+        errorText += ` Lỗi: ${error.response.data.message}`;
+      } else if (error.response?.status === 500) {
+        errorText += " Lỗi server. Vui lòng kiểm tra backend logs.";
+      } else if (error.message) {
+        errorText += ` ${error.message}`;
       }
 
-      setMessages(prev => [...prev, assistantMessage])
-    } catch (error: any) {
-      console.error('Chat error:', error)
-      
-      // Lấy error message từ backend nếu có
-      let errorText = "Xin lỗi, tôi không thể trả lời câu hỏi của bạn lúc này."
-      
-      if (error.response?.data?.message) {
-        errorText += ` Lỗi: ${error.response.data.message}`
-      } else if (error.response?.status === 500) {
-        errorText += " Lỗi server. Vui lòng kiểm tra backend logs."
-      } else if (error.message) {
-        errorText += ` ${error.message}`
-      }
-      
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
         content: errorText,
-        timestamp: new Date().toISOString()
-      }
-      setMessages(prev => [...prev, errorMessage])
-      message.error(errorText)
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      message.error(errorText);
     }
-  }
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
 
   return (
     <div className="!flex !flex-col !h-full !bg-white">
       <div className="!px-4 !py-3 !border-b !border-gray-200 !flex !items-center !justify-between">
         <h3 className="!text-sm !font-semibold !text-gray-900">AI Tutor</h3>
         <div className="!flex !gap-2">
-          <Button type="default" size="small" onClick={() => setShowUploadModal(true)}>
+          <Button
+            type="default"
+            size="small"
+            onClick={() => setShowUploadModal(true)}
+          >
             Upload PDF
           </Button>
-          <Button type="text" size="small" className="!text-gray-400 !hover:text-gray-600">
+          <Button
+            type="text"
+            size="small"
+            className="!text-gray-400 !hover:text-gray-600"
+          >
             ⚙️
           </Button>
         </div>
@@ -164,38 +204,46 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
         <Select
           placeholder="Chọn knowledge base"
           value={selectedKnowledgeBase}
-          onChange={setSelectedKnowledgeBase}
+          onChange={handleKnowledgeBaseChange}
           className="!w-full"
           loading={knowledgeBasesLoading}
-          options={knowledgeBases.map(kb => ({
+          options={knowledgeBases.map((kb) => ({
             label: (
               <div className="flex items-center justify-between">
                 <span>{kb.fileName}</span>
-                <span className={`ml-2 px-2 py-0.5 text-xs rounded ${
-                  kb.status === 'READY' ? 'bg-green-100 text-green-800' :
-                  kb.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
+                <span
+                  className={`ml-2 px-2 py-0.5 text-xs rounded ${
+                    kb.status === "READY"
+                      ? "bg-green-100 text-green-800"
+                      : kb.status === "PROCESSING"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
                   {kb.status}
                 </span>
               </div>
             ),
             value: kb.id,
-            disabled: kb.status !== 'READY'
+            disabled: kb.status !== "READY",
           }))}
         />
-        {selectedKnowledgeBase && knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)?.status !== 'READY' && (
-          <div className="text-xs text-yellow-600 mt-1">
-            ⚠️ Knowledge base đang xử lý, vui lòng đợi status = READY
-          </div>
-        )}
+        {selectedKnowledgeBase &&
+          knowledgeBases.find((kb) => kb.id === selectedKnowledgeBase)
+            ?.status !== "READY" && (
+            <div className="text-xs text-yellow-600 mt-1">
+              ⚠️ Knowledge base đang xử lý, vui lòng đợi status = READY
+            </div>
+          )}
       </div>
 
       <div className="!flex-1 !overflow-y-auto !p-4 !space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`!flex !gap-3 ${message.type === "user" ? "!justify-end" : "!justify-start"}`}
+            className={`!flex !gap-3 ${
+              message.type === "user" ? "!justify-end" : "!justify-start"
+            }`}
           >
             {message.type === "assistant" && (
               <Avatar
@@ -206,13 +254,18 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
             )}
             <div
               className={`!max-w-xs !rounded-lg !p-3 !text-sm !leading-relaxed ${
-                message.type === "user" ? "!bg-blue-600 !text-white" : "!bg-gray-100 !text-gray-900"
+                message.type === "user"
+                  ? "!bg-blue-600 !text-white"
+                  : "!bg-gray-100 !text-gray-900"
               }`}
             >
-              {message.type === "assistant" ? 
-                renderMessageWithPageLinks(message.content, message.sources, onPageJump) : 
-                message.content
-              }
+              {message.type === "assistant"
+                ? renderMessageWithPageLinks(
+                    message.content,
+                    message.sources,
+                    onPageJump
+                  )
+                : message.content}
             </div>
             {message.type === "user" && (
               <Avatar
@@ -224,7 +277,7 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
             )}
           </div>
         ))}
-        
+
         {chatLoading && (
           <div className="!flex !gap-3 !justify-start">
             <Avatar
@@ -244,21 +297,21 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
         footer={null}
         onCancel={() => setShowUploadModal(false)}
         width={720}
-        destroyOnClose
       >
         <MaterialsUploadAreaUpdated
           onClose={() => setShowUploadModal(false)}
           onRefetch={refetchKnowledgeBases}
           onUploaded={(kbId: number) => {
-            setSelectedKnowledgeBase(kbId)
-            setShowUploadModal(false)
+            handleKnowledgeBaseChange(kbId);
+            setShowUploadModal(false);
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: "assistant",
-              content: "Tài liệu đã được embedding. Flashcards và hướng dẫn ôn luyện đã được tạo. Bạn có thể chọn knowledge base vừa tạo và bắt đầu đặt câu hỏi.",
-              timestamp: new Date().toISOString()
-            }
-            setMessages(prev => [...prev, assistantMessage])
+              content:
+                " Tài liệu đã được xử lý thành công! Keynotes và Flashcards đã được tự động tạo. Bạn có thể xem chúng ở tab 'Studying Guidance' và 'Flashcards', hoặc bắt đầu đặt câu hỏi ngay.",
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
           }}
         />
       </Modal>
@@ -269,35 +322,35 @@ export default function TutorChatPanel({ onPageJump }: TutorChatPanelProps) {
             placeholder="Đặt câu hỏi về tài liệu..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             rows={2}
             disabled={!selectedKnowledgeBase || chatLoading}
             className="!rounded-lg !border-gray-300 [&.ant-input]:!bg-gray-50 [&.ant-input]:!text-gray-900 [&.ant-input::placeholder]:!text-gray-400"
           />
           <Button
             type="primary"
-            icon={<SendOutlined />}
+            icon={<SendOutlined className="!text-white" />}
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || !selectedKnowledgeBase || chatLoading}
+            disabled={
+              !inputValue.trim() || !selectedKnowledgeBase || chatLoading
+            }
             loading={chatLoading}
             className="!bg-blue-600 !border-0 !rounded-lg !h-10 !px-4 hover:!bg-blue-700"
           />
         </div>
 
-        <div className="!flex !gap-2 !justify-center">
-          <Button type="text" size="small" icon={<SmileOutlined />} className="!text-gray-400 !hover:text-gray-600" />
-          <Button type="text" size="small" icon={<LinkOutlined />} className="!text-gray-400 !hover:text-gray-600" />
+        <div className="!flex !gap-2 !justify-center items-center">
           <Button
             type="text"
             size="small"
-            icon={<PaperClipOutlined />}
+            icon={<SmileOutlined />}
             className="!text-gray-400 !hover:text-gray-600"
           />
-          <Button type="text" size="small" icon={<CameraOutlined />} className="!text-gray-400 !hover:text-gray-600" />
+          <div className="!text-center !text-xs !text-gray-400">
+            Powered by EVar Tutor AI
+          </div>
         </div>
-
-        <div className="!text-center !text-xs !text-gray-400">Powered by EVar Tutor AI</div>
       </div>
     </div>
-  )
+  );
 }

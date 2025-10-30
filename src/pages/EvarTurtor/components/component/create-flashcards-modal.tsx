@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { Modal, Button, Select, Alert, Form, Input, Card, Tag, Spin, message } from "antd"
 import { UploadOutlined, ExclamationCircleOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons"
-import { useMaterials, useFlashcards } from "../../hooks"
+import { useMaterials, useFlashcardsLegacy } from "../../hooks/evarTutorHooks"
 import { StudyMaterial, Flashcard } from "../../types"
-import { DIFFICULTY_LABELS } from "../../mock/mockData"
+import { DIFFICULTY_LABELS } from "../../constants"
 
 interface CreateFlashcardsModalProps {
   open: boolean
@@ -20,7 +20,7 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   const [form] = Form.useForm()
   
   const { data: materialsData, loading: materialsLoading } = useMaterials()
-  const { createFlashcard } = useFlashcards()
+  const { createFlashcard } = useFlashcardsLegacy()
 
   const materials = materialsData?.data || []
 
@@ -29,52 +29,18 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
       setShowError(true)
       return
     }
-
-    try {
-      setGenerating(true)
-      
-      // Simulate AI generation of flashcards
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Generate mock flashcards based on selected material
-      const material = materials.find(m => m.id === selectedMaterial)
-      if (!material) return
-
-      const mockFlashcards: Omit<Flashcard, 'id' | 'createdAt' | 'reviewCount' | 'successRate'>[] = [
-        {
-          front: `What is the main topic of "${material.title}"?`,
-          back: material.description || `This material covers ${material.title}`,
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'easy',
-          tags: material.tags.slice(0, 2)
-        },
-        {
-          front: `What type of file is "${material.fileName}"?`,
-          back: `${material.type.toUpperCase()} file`,
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'easy',
-          tags: material.tags.slice(0, 2)
-        },
-        {
-          front: `When was "${material.title}" uploaded?`,
-          back: new Date(material.uploadDate).toLocaleDateString(),
-          materialId: material.id,
-          materialTitle: material.title,
-          difficulty: 'medium',
-          tags: material.tags.slice(0, 2)
-        }
-      ]
-
-      setGeneratedFlashcards(mockFlashcards)
-      
-    } catch (error) {
-      console.error('Generation error:', error)
-      message.error('Failed to generate flashcards')
-    } finally {
-      setGenerating(false)
+    // Remove mock generation: just prepare one empty flashcard for manual input
+    const material = materials.find(m => m.id === selectedMaterial)
+    if (!material) return
+    const newFlashcard: Omit<Flashcard, 'id' | 'createdAt' | 'reviewCount' | 'successRate'> = {
+      front: '',
+      back: '',
+      materialId: material.id,
+      materialTitle: material.title,
+      difficulty: 'easy',
+      tags: []
     }
+    setGeneratedFlashcards([newFlashcard])
   }
 
   const handleSaveFlashcards = async () => {

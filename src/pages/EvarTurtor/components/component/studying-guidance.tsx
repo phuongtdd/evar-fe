@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Tabs, Input, Button, message, Spin } from "antd";
+import { Card, Tabs, Input, Button, message, Spin, Alert } from "antd";
 import { SaveOutlined, FileTextOutlined, BookOutlined, EditOutlined, ReloadOutlined } from "@ant-design/icons";
-import { KnowledgeBase, KeyNotesResponse } from "../../services/evarTutorService";
+import { KnowledgeBase, KeyNotesResponse } from "../../types";
 import { knowledgeBaseService } from "../../hooks/evarTutorHooks";
 
 const { TextArea } = Input;
@@ -111,6 +111,15 @@ export default function StudyingGuidance({ knowledgeBaseId, knowledgeBase }: Stu
         <h3 className="!text-lg !font-semibold !text-gray-900">Studying Guidance</h3>
         <p className="!text-sm !text-gray-600">Manage your study guide, key notes, and personal notes</p>
       </div>
+
+      <Alert
+        message="📖 Keynotes are automatically generated from your uploaded PDF"
+        description="When you upload a PDF in the chatbot section, the system automatically extracts key information and generates study guides and keynotes for you."
+        type="info"
+        showIcon
+        closable
+        className="!mb-4"
+      />
 
       <Tabs
         activeKey={activeTab}
