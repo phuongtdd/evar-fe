@@ -7,17 +7,17 @@ import {
   LogoutOutlined, 
   SettingOutlined,
   QuestionCircleOutlined,
-  MoonOutlined,
-  SunOutlined,
   ClockCircleOutlined,
-  KeyOutlined
+  KeyOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import ChangePasswordModal from './ChangePasswordModal';
-import BuyTimeModal from './BuyTimeModal';
+import { ChangePasswordModal } from '../ChangePassword';
+import { BuyTimeModal } from '../BuyTime';
 import { getUserById } from '../userProfile/services';
 import { getUserIdFromToken } from '../userProfile/utils/auth';
+import { clearToken } from '../authen/services/authService';
 import './Header.css';
 
 interface HeaderProps {
@@ -49,16 +49,21 @@ const menuLabels: { [key: string]: string } = {
   'room': 'Phòng của tôi',
   'pomodoro': 'Pomodoro',
   'chat': 'Trò chuyện',
+  'chat-ai': 'Evar Tutor',
+  'tutor': 'Evar Tutor',
+  'material': 'Material',
+  'flashcard': 'Flash Card',
   'create-quiz': 'Tạo quiz từ ảnh',
   'test-room': 'Phòng kiểm tra',
-  'account': 'Thông tin tài khoản'
+  'account': 'Thông tin tài khoản',
+  'about': 'Giới thiệu',
+  'help': 'Trợ giúp & Hỗ trợ'
 };
 
 const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchText, setSearchText] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
   const [remainingTime, setRemainingTime] = useState(7200); // 2 hours in seconds
   const [isPremium, setIsPremium] = useState(false);
   const [isInMeeting, setIsInMeeting] = useState(false);
@@ -191,26 +196,32 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
     {
       key: 'account',
       icon: <UserOutlined className="text-blue-500" />,
-      label: <span className="font-medium">Hồ sơ cá nhân</span>,
+      label: 'Hồ sơ cá nhân',
       onClick: () => navigate('/account')
     },
     {
       key: 'change-password',
       icon: <KeyOutlined className="text-green-500" />,
-      label: <span className="font-medium">Đổi mật khẩu</span>,
+      label: 'Đổi mật khẩu',
       onClick: () => setShowChangePasswordModal(true)
     },
     {
       key: 'buy-time',
       icon: <ClockCircleOutlined className="text-purple-500" />,
-      label: <span className="font-medium">Mua thêm giờ</span>,
+      label: 'Mua thêm giờ',
       onClick: () => setShowBuyTimeModal(true)
+    },
+    {
+      key: 'about',
+      icon: <InfoCircleOutlined className="text-blue-500" />,
+      label: 'Giới thiệu',
+      onClick: () => navigate('/about')
     },
     {
       key: 'help',
       icon: <QuestionCircleOutlined className="text-orange-500" />,
-      label: <span className="font-medium">Trợ giúp & Hỗ trợ</span>,
-      onClick: () => window.open('https://help.evar.vn', '_blank')
+      label: 'Trợ giúp & Hỗ trợ',
+      onClick: () => navigate('/help')
     },
     {
       type: 'divider',
@@ -218,20 +229,18 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
     {
       key: 'logout',
       icon: <LogoutOutlined className="text-red-500" />,
-      label: <span className="font-medium">Đăng xuất</span>,
-      danger: true,
+      label: <span className="text-red-500">Đăng xuất</span>,
       onClick: () => {
-        // Clear user session
-        localStorage.removeItem('auth_token');
-        navigate('/login');
+        try {
+          clearToken();
+        } catch (e) {
+          console.error(e);
+        }
+        window.dispatchEvent(new Event('auth-changed'));
+        navigate('/auth/login');
       },
     },
   ];
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
 
   return (
     <header className="header">
@@ -314,22 +323,9 @@ const Header: React.FC<HeaderProps> = ({ activeMenu = 'home' }) => {
           {/* Upgrade Button */}
           <button 
             className="upgrade-btn"
-            onClick={() => window.location.href = '/404'}
+            onClick={() => setShowBuyTimeModal(true)}
           >
             Nâng cấp
-          </button>
-
-          {/* Dark Mode Toggle */}
-          <button 
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={darkMode ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-          >
-            {darkMode ? (
-              <SunOutlined className="text-lg text-yellow-500" />
-            ) : (
-              <MoonOutlined className="text-lg text-gray-600" />
-            )}
           </button>
           
           {/* Notifications */}

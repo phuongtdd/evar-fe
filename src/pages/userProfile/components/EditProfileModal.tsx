@@ -21,6 +21,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFaceFile, setSelectedFaceFile] = useState<File | null>(null);
+  const [faceImagePreview, setFaceImagePreview] = useState<string>('');
+  const faceFileInputRef = useRef<HTMLInputElement>(null);
+  const [deleteFaceImage, setDeleteFaceImage] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -59,6 +63,43 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
     }
     // Reset input để có thể chọn cùng file nếu cần
     e.target.value = '';
+  };
+
+  const handleFaceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Chỉ được phép tải lên file ảnh (JPEG, PNG, GIF, WebP)');
+        return;
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setError('Kích thước file không được vượt quá 5MB');
+        return;
+      }
+
+      // Lưu file để upload sau
+      setSelectedFaceFile(file);
+      setError(null);
+
+      // Tạo preview ngay lập tức
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFaceImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input để có thể chọn cùng file nếu cần
+    e.target.value = '';
+  };
+
+  const handleDeleteFaceImage = () => {
+    setDeleteFaceImage(true);
+    setSelectedFaceFile(null);
+    setFaceImagePreview('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,14 +149,26 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
         updateData.person.address = formData.address;
       }
 
-      // Nếu có file ảnh được chọn, upload lên IMGBB trước
       if (selectedFile) {
         try {
-          const imageUrl = await uploadImageToImgbb(selectedFile);
-          updateData.person.avatarUrl = imageUrl;
+          const imageResult = await uploadImageToImgbb(selectedFile);
+          updateData.person.avatarUrl = imageResult.url;
         } catch (uploadError: any) {
-          throw new Error(`Lỗi upload ảnh: ${uploadError.message}`);
+          throw new Error(`Lỗi upload ảnh đại diện: ${uploadError.message}`);
         }
+      }
+
+      if (selectedFaceFile && !deleteFaceImage) {
+        try {
+          const imageResult = await uploadImageToImgbb(selectedFaceFile);
+          updateData.person.faceUrl = imageResult.url;
+        } catch (uploadError: any) {
+          throw new Error(`Lỗi upload ảnh mặt: ${uploadError.message}`);
+        }
+      }
+
+      if (deleteFaceImage) {
+        updateData.person.faceUrl = '';
       }
 
       const updatedProfile = await updateUserProfile(updateData);
@@ -123,11 +176,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
       setSuccess(true);
       onSave(updatedProfile);
       
-      // Đóng modal sau 1 giây để user thấy thông báo thành công
       setTimeout(() => {
-        // Reset state khi đóng modal
         setSelectedFile(null);
         setImagePreview('');
+        setSelectedFaceFile(null);
+        setFaceImagePreview('');
+        setDeleteFaceImage(false);
         onHide();
       }, 1000);
       
@@ -138,11 +192,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
     }
   };
 
-  // Reset state khi modal được mở
+  useEffect(() => {
+    setFormData({ ...profile });
+  }, [profile]);
+
   useEffect(() => {
     if (show) {
       setSelectedFile(null);
       setImagePreview('');
+      setSelectedFaceFile(null);
+      setFaceImagePreview('');
+      setDeleteFaceImage(false);
       setError(null);
       setSuccess(false);
     }
@@ -212,8 +272,68 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ show, onHide, profi
                 />
               </div>
             </div>
-            <h6 className="mt-3 mb-0 fw-bold">{formData.name}</h6>
+            <h6 className="mt-3 mb-0 fw-bold">Ảnh đại diện</h6>
             {imagePreview && (
+              <div className="mt-2">
+                <small className="text-info">
+                  <i className="fas fa-info-circle me-1"></i>
+                  Ảnh mới sẽ được tải lên khi bạn lưu thay đổi
+                </small>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center mb-4">
+            <h6 className="mb-2 fw-bold">Ảnh mặt (để xác thực)</h6>
+            <div className="position-relative d-inline-block">
+              {(faceImagePreview || formData.face) && !deleteFaceImage ? (
+                <div className="text-center">
+                  <img 
+                    src={faceImagePreview || formData.face || "/placeholder-user.jpg"} 
+                    alt="Face image"
+                    className="edit-avatar"
+                    style={{ maxWidth: '200px', maxHeight: '200px' }}
+                  />
+                  <div className="mt-2">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={handleDeleteFaceImage}
+                      disabled={loading}
+                    >
+                      <i className="fas fa-trash me-1"></i>
+                      Xóa ảnh mặt
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  className="avatar-upload-container"
+                  onClick={() => !loading && faceFileInputRef.current?.click()}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <img 
+                    src="/placeholder-user.jpg" 
+                    alt="Face image"
+                    className="edit-avatar"
+                  />
+                  <div className="avatar-upload-overlay">
+                    <div className="plus-icon-container">
+                      <i className="fas fa-plus"></i>
+                    </div>
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={faceFileInputRef}
+                    onChange={handleFaceFileChange}
+                    accept="image/*"
+                    className="d-none"
+                    disabled={loading}
+                  />
+                </div>
+              )}
+            </div>
+            {faceImagePreview && (
               <div className="mt-2">
                 <small className="text-info">
                   <i className="fas fa-info-circle me-1"></i>

@@ -20,7 +20,11 @@ class ExamServiceImpl implements ExamService {
   async submitExamAnswers(
     examId: string,
     answers: { [questionId: string]: number | number[] },
-    examData?: any
+    examData?: any,
+    copyPasteAttempts?: number,
+    numTabSwitches?: number,
+    startExamFaceImage?: string,
+    faceSimilarity?: number
   ): Promise<any> {
     try {
       // Get user ID from token
@@ -66,7 +70,11 @@ class ExamServiceImpl implements ExamService {
       const requestData = {
         userId,
         examId,
-        userAnswers
+        userAnswers,
+        startExamFaceImage: startExamFaceImage || '',
+        copyPasteAttempts: copyPasteAttempts || 0,
+        numTabSwitches: numTabSwitches || 0,
+        faceSimilarity: faceSimilarity || 0
       };
 
       console.log('Submitting exam with data:', requestData);
@@ -76,22 +84,6 @@ class ExamServiceImpl implements ExamService {
     } catch (error) {
       console.error('Error submitting exam:', error);
       throw new Error('Không thể nộp bài thi. Vui lòng thử lại.');
-    }
-  }
-
-  async saveExamProgress(
-    examId: string,
-    answers: { [questionId: string]: number | number[] },
-    currentQuestionIndex: number
-  ): Promise<void> {
-    try {
-      await apiClient.post(`${this.baseURL}/${examId}/save-progress`, {
-        answers,
-        currentQuestionIndex,
-        savedAt: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error("Error saving exam progress:", error);
     }
   }
 

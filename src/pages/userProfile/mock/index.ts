@@ -9,6 +9,7 @@ export const mockUserProfile: UserProfile = {
   gender: "Nam",
   status: "Đang hoạt động",
   avatar: "/cartoon-student-avatar.jpg",
+  face: "",
   email: "LeVanA123@gmail.com",
   phone: "0983752323",
   address: "123 Tran Hung Dao, Hoa Xuan, Da Nang.",

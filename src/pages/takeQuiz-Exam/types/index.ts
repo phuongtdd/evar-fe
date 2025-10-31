@@ -70,6 +70,10 @@ export interface ExamState {
   isExamCompleted: boolean;
   userAnswers: { [questionId: string]: number | number[] };
   markedQuestions: Set<number>;
+  copyPasteAttempts: number;
+  numTabSwitches: number;
+  startExamFaceImage?: string;
+  faceSimilarity?: number;
 }
 
 export interface ExamProps {
@@ -86,6 +90,8 @@ export interface ExamResults {
   userAnswers: { [questionId: string]: number | number[] };
   submissionId?: string;
   submissionDetails?: SubmissionDetailResponse | null;
+  copyPasteAttempts: number;
+  numTabSwitches: number;
 }
 
 export interface QuestionCardProps {
@@ -151,12 +157,14 @@ export interface ExamService {
 
 export interface UseExamReturn {
   examState: ExamState;
-  startExam: () => void;
+  startExam: (faceImageUrl?: string, faceSimilarity?: number) => void;
   selectAnswer: (questionId: number, answerIndex: number, isMultiple?: boolean) => void;
   markQuestion: (questionId: number) => void;
   goToQuestion: (questionIndex: number) => void;
   submitExam: () => Promise<ExamResults>;
   resetExam: () => void;
+  incrementCopyPasteAttempts: () => void;
+  incrementTabSwitches: () => void;
   isLoading: boolean;
   error: string | null;
 }

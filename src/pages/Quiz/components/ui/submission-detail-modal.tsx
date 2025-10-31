@@ -157,67 +157,86 @@ export default function SubmissionDetailModal({
             {/* Chi tiết từng câu hỏi */}
             <div className="space-y-4">
               <Title level={5}>Chi tiết câu trả lời</Title>
-              {submission.questions?.map((question, index) => (
-                <Card key={index} size="small">
-                  <div className="mb-3">
-                    <Text strong>Câu {index + 1}:</Text>
-                    <div className="mt-2 w-full flex flex-row justify-between">
-                      <Text>
-                        <strong>Nội dung : </strong>{question.questionContent}</Text>
-                      {question.questionImg && (
-                        <Image
-                          src={question.questionImg}
-                          alt={`Câu hỏi ${index + 1}`}
-                          style={{ maxWidth: 200, maxHeight: 150 }}
-                          className="mb-2"
-                        />
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {question.answers.map((answer, answerIndex) => (
-                      <div 
-                        key={answerIndex}
-                        className={`p-2 rounded border ${
-                          answer.select 
-                            ? (answer.correct ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300')
-                            : (answer.correct ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50')
-                        }`}
-                      >
-                        <Space>
-                          {answer.select ? (
-                            answer.correct ? (
-                              <CheckCircleOutlined className="text-green-500" />
-                            ) : (
-                              <CloseCircleOutlined className="text-red-500" />
-                            )
-                          ) : answer.correct ? (
-                            <CheckCircleOutlined className="text-yellow-500" />
-                          ) : null}
-                          <Text 
-                            className={
-                              answer.select 
-                                ? (answer.correct ? 'text-green-700' : 'text-red-700')
-                                : (answer.correct ? 'text-yellow-700' : 'text-gray-700')
-                            }
-                          >
-                            {answer.answerContent}
-                          </Text>
-                          {answer.correct && (
-                            <Tag color="green">Đáp án đúng</Tag>
+              {submission.questions?.map((question, index) => {
+                // Check if user selected any answer for this question
+                const hasSelectedAnswer = question.answers.some(a => a.select);
+                // Check if user's answer is correct
+                const isCorrectAnswer = question.answers.some(a => a.select && a.correct);
+                
+                return (
+                  <Card key={index} size="small">
+                    <div className="mb-3 flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Text strong>Câu {index + 1}:</Text>
+                          {!hasSelectedAnswer && (
+                            <Tag color="red">Chưa trả lời - Sai</Tag>
                           )}
-                          {answer.select && (
-                            <Tag color={answer.correct ? "green" : "red"} >
-                              {answer.correct ? "Đúng" : "Sai"}
+                          {hasSelectedAnswer && (
+                            <Tag color={isCorrectAnswer ? "green" : "red"}>
+                              {isCorrectAnswer ? "Đúng" : "Sai"}
                             </Tag>
                           )}
-                        </Space>
+                        </div>
+                        <div className="mt-2 w-full flex flex-row justify-between">
+                          <Text>
+                            <strong>Nội dung : </strong>{question.questionContent}</Text>
+                          {question.questionImg && (
+                            <Image
+                              src={question.questionImg}
+                              alt={`Câu hỏi ${index + 1}`}
+                              style={{ maxWidth: 200, maxHeight: 150 }}
+                              className="mb-2"
+                            />
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              ))}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {question.answers.map((answer, answerIndex) => (
+                        <div 
+                          key={answerIndex}
+                          className={`p-2 rounded border ${
+                            answer.select 
+                              ? (answer.correct ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300')
+                              : (answer.correct ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50')
+                          }`}
+                        >
+                          <Space>
+                            {answer.select ? (
+                              answer.correct ? (
+                                <CheckCircleOutlined className="text-green-500" />
+                              ) : (
+                                <CloseCircleOutlined className="text-red-500" />
+                              )
+                            ) : answer.correct ? (
+                              <CheckCircleOutlined className="text-yellow-500" />
+                            ) : null}
+                            <Text 
+                              className={
+                                answer.select 
+                                  ? (answer.correct ? 'text-green-700' : 'text-red-700')
+                                  : (answer.correct ? 'text-yellow-700' : 'text-gray-700')
+                              }
+                            >
+                              {answer.answerContent}
+                            </Text>
+                            {answer.correct && (
+                              <Tag color="green">Đáp án đúng</Tag>
+                            )}
+                            {answer.select && (
+                              <Tag color={answer.correct ? "green" : "red"} >
+                                {answer.correct ? "Đúng" : "Sai"}
+                              </Tag>
+                            )}
+                          </Space>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

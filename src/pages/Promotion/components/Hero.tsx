@@ -24,6 +24,12 @@ const Hero: React.FC = () => {
 
         <Button
           className="!bg-amber-300 !text-black !border-amber-300 !hover:bg-amber-500 !px-8 !py-5 !text-[18px] !font-bold mt-3" 
+          onClick={() => {
+            const el = document.getElementById('features');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
         >
           Khám phá ngay
         </Button>

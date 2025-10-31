@@ -10,10 +10,10 @@ import RoomUI from "../pages/Room/components/RoomUI";
 import Chatmodule from "../pages/RealTimeChat";
 import AuthPage from "../pages/authen";
 import UserProfile from "../pages/userProfile";
-import CreateQuiz from "../pages/createQuiz-AI";
-import QuizCreated from "../pages/createQuiz-AI/components/layout/QuizCreated";
+import CreateQuiz from "../pages/createExam-AI";
+import QuizCreated from "../pages/createExam-AI/components/layout/QuizCreated";
 import { message } from "antd";
-import SavedQuizSuccess from "../pages/createQuiz-AI/components/layout/SavedQuizSuccess";
+import SavedQuizSuccess from "../pages/createExam-AI/components/layout/SavedQuizSuccess";
 import CreateExamManual from "../pages/createExam-Manual";
 import TakeQuizExam from "../pages/takeQuiz-Exam";
 import QuizDashboardLayout from "../pages/Quiz";
@@ -24,6 +24,13 @@ import { ExamAdminPanel } from "../pages/ExamManage";
 import AdminDashboard from "../pages/admin/index";
 import ProtectedRoute from "./ProtectedRoute";
 import PomodoroModule from "../pages/porodomo";
+import EvarTutor from "../pages/EvarTurtor";
+import ChatAI from "../pages/ChatAI";
+import LearningResources from "../pages/LearningResources";
+import Material from "../pages/Material";
+import FlashCard from "../pages/FlashCard";
+import About from "../pages/About";
+import Help from "../pages/Help";
 
 interface NotifyMessageProps {
   showMessage: (type: "success" | "error" | "warning", content: string) => void;
@@ -95,17 +102,25 @@ const AppRoutes: React.FC = () => {
           </Route>
 
           <Route path="/chat" element={<Chatmodule />} />
+          {/* <Route path="/chat-ai" element={<ChatAI />} /> */}
           <Route path="/account" element={<UserProfile />} />
           <Route path="/pomodoro" element={<PomodoroModule />} />
+          <Route path="/material" element={<Material />} />
+          <Route path="/flashcard" element={<FlashCard />} />
 
-          <Route path="/createQuiz-AI" element={<CreateQuiz />}>
+          <Route path="/createExam-AI" element={<CreateQuiz />}>
             <Route index element={<div />} />
             <Route path="result" element={<QuizCreated />} />
           </Route>
           <Route
-            path="/createQuiz-AI/savedSuccess"
+            path="/createExam-AI/savedSuccess"
             element={<SavedQuizSuccess showMessage={showMessage} />}
           />
+
+          <Route path="/evar-turtor" element={<EvarTutor />} />
+          <Route path="/learning-resources" element={<LearningResources />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/help" element={<Help />} />
         </Route>
 
         <Route

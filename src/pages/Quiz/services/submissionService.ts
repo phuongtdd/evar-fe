@@ -46,11 +46,11 @@ export interface SubmissionDetailResponse {
 
 export const fetchUserSubmissions = async (userId: string): Promise<SubmissionResponse[]> => {
   try {
-    console.log(' Fetching user submissions for userId:', userId);
-    console.log(' API URL:', `/submission/user-all?id=${userId}`);
+    // console.log(' Fetching user submissions for userId:', userId);
+    // console.log(' API URL:', `/submission/user-all?id=${userId}`);
     const response = await apiClient.get<{ data: SubmissionResponse[]; message: string }>(`/submission/user-all?id=${userId}`);
     console.log('User submissions response:', response.data);
-    console.log('Raw data from backend:', JSON.stringify(response.data.data, null, 2));
+    // console.log('Raw data from backend:', JSON.stringify(response.data.data, null, 2));
     
     if (response.data.data && response.data.data.length > 0) {
       response.data.data.forEach((submission, index) => {

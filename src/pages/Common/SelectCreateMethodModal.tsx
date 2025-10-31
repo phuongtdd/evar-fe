@@ -21,7 +21,7 @@ export default function SelectCreateMethodModal({ open, onManual, onAI, onCancel
       bodyStyle={{ padding: 40 }}
     >
       <div className="flex justify-between items-start mb-6">
-        <div className="text-3xl font-bold">Tạo bài Quiz mới</div>
+        <div className="text-3xl font-bold">Tạo bài kiểm tra mới</div>
         <Button
           type="text"
           icon={<CloseCircleFilled style={{ color: "#FF3B30", fontSize: 24 }} />}

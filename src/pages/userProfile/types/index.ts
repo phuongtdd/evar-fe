@@ -7,6 +7,7 @@ export interface UserProfile {
   gender: string
   status: string
   avatar: string
+  face: string
   email: string
   phone: string
   address: string
@@ -65,6 +66,7 @@ export interface PersonApiModel {
   description: string | null
   isAdmin: boolean
   avatarUrl: string | null
+  faceUrl: string | null
   provinceCode: string | null
   wardCode: string | null
   address: string | null
@@ -93,6 +95,7 @@ export interface UpdateUserRequest {
     email?: string
     gender?: string
     avatarUrl?: string
+    faceUrl?: string
     provinceCode?: string
     wardCode?: string
     address?: string

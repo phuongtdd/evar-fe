@@ -1,7 +1,8 @@
 import apiClient from "../../../configs/axiosConfig"
 import { API_ENDPOINT, IMGBB_API_KEY, IMGBB_UPLOAD_URL } from "../constants"
-import type { ApiEnvelope, UserApiModel, UserProfile, Activity, UpdateUserRequest, ImgbbResponse } from "../types"
 import { mockActivities } from "../mock"
+import type { ApiEnvelope, UserApiModel, UserProfile, Activity, UpdateUserRequest, ImgbbResponse } from "../types"
+
 
 // Chuyển đổi dữ liệu user từ backend sang mô hình dùng cho UI
 const mapUserApiToProfile = (id: string, api: UserApiModel): UserProfile => {
@@ -14,6 +15,7 @@ const mapUserApiToProfile = (id: string, api: UserApiModel): UserProfile => {
     gender: api.person.gender || "",
     status: String(api.status),
     avatar: api.person.avatarUrl || "",
+    face: api.person.faceUrl || "",
     email: api.person.email || "",
     phone: api.person.phone || "",
     address: api.person.address || "",
@@ -55,8 +57,8 @@ export const getUserById = async (id: string): Promise<UserProfile> => {
   }
 }
 
-// Upload ảnh lên IMGBB
-export const uploadImageToImgbb = async (file: File): Promise<string> => {
+// Upload ảnh lên IMGBB và trả về cả URL và delete URL
+export const uploadImageToImgbb = async (file: File): Promise<{url: string, deleteUrl: string}> => {
   try {
     const formData = new FormData()
     formData.append('image', file)
@@ -80,14 +82,18 @@ export const uploadImageToImgbb = async (file: File): Promise<string> => {
     }
 
     console.log(" Image uploaded successfully:", data.data.url)
-    return data.data.url
+    console.log(" Delete URL:", data.data.delete_url)
+    
+    return {
+      url: data.data.url,
+      deleteUrl: data.data.delete_url
+    }
   } catch (error: any) {
     console.error("Failed to upload image:", error)
     throw error
   }
 }
 
-// Update user profile
 export const updateUserProfile = async (updateData: UpdateUserRequest): Promise<UserProfile> => {
   try {
     console.log(" Updating user profile:", updateData)
@@ -123,6 +129,7 @@ export const getActivities = async (page = 1): Promise<Activity[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(mockActivities)
+      // console.log("hihi")
     }, 300)
   })
 }
