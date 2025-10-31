@@ -1,16 +1,11 @@
-import {
-  ClockCircleOutlined,
-  ExportOutlined,
-  SoundOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { ExportOutlined } from "@ant-design/icons";
 import { Badge, Button, Card } from "antd";
 import Live from "../../../assets/icons/dashboard/Scan_alt_2.svg";
-import { Room } from "../types";
+import { RoomResponse } from "../../Room/types";
 import User from "../../../assets/icons/dashboard/group_add_fill.png";
 import Timer from "../../../assets/icons/dashboard/Alarmclock_fill.png";
 type Props = {
-  room: Room;
+  room: RoomResponse;
 };
 
 const CustomCard = ({ room }: Props) => {
@@ -29,12 +24,12 @@ const CustomCard = ({ room }: Props) => {
 
         <div className="pt-8">
           <h3 className="text-[24px] font-semibold text-gray-900 mb-2">
-            Nhóm học Toán nâng cao
+            {room.roomName}
           </h3>
           <div className="mb-4">
-            <p className="text-sm text-[#9A9A9A] mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Người sở hữu:{" "}
-              <span className="text-blue-600 font-semibold text-[14px]">Ai mà biết</span>
+              <span className="text-blue-600 font-semibold text-[14px]">{room.createdBy || room.ownerId}</span>
             </p>
           </div>
 
@@ -43,12 +38,12 @@ const CustomCard = ({ room }: Props) => {
               {/* <UserOutlined className="text-blue-600" />
                */}
                <img src={User} alt="" />
-              <span className="font-bold text-[14px]">5 người</span>
+              <span className="font-bold text-[14px]">{room.members?.length ?? 0} người</span>
             </span>
             <span className="flex items-center gap-1.5 text-sm text-gray-700">
               {/* <ClockCircleOutlined className="text-amber-500" /> */}
               <img src={Timer} alt="" />
-              <span className="font-bold text-[14px]">60 phút</span>
+              <span className="font-bold text-[14px]">{room.subject?.subjectName || "Không rõ môn"}</span>
             </span>
           </div>
 

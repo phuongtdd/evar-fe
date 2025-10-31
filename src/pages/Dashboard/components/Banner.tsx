@@ -1,26 +1,45 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import Book3d from "../../../assets/icons/dashboard/Book3D.svg";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { dashboardService, DashboardStats } from "../services/dashboardService";
+import { dashboardService } from "../services/dashboardService";
+import { fetchUserSubmissions, SubmissionResponse } from "../../Quiz/services/submissionService";
+import { getUserIdFromToken } from "../../Room/utils/auth";
 
 const Banner = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalExams: 0,
-    totalQuestions: 0,
-    totalStudyTime: 0,
-    averageScore: 0
-  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [totalExams, setTotalExams] = useState<number>(0);
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
+  const [averageScore, setAverageScore] = useState<number>(0);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const dashboardStats = await dashboardService.getDashboardStats();
-        setStats(dashboardStats);
+        setLoading(true);
+        const userId = getUserIdFromToken();
+        const [{ exams }, submissions] = await Promise.all([
+          dashboardService.getAllExams(0, 200),
+          userId ? fetchUserSubmissions(userId) : Promise.resolve([] as SubmissionResponse[]),
+        ]);
+        const questions = exams.reduce((sum, exam) => sum + exam.questions, 0);
+        setTotalExams(exams.length);
+        setTotalQuestions(questions);
+        if (submissions && submissions.length > 0) {
+          const totalTime = submissions.reduce((acc, s) => acc + (s.timeTry || 0), 0);
+          const avg = submissions.reduce((acc, s) => acc + (s.totalScore || 0), 0) / submissions.length;
+          setTotalStudyTime(totalTime);
+          setAverageScore(Number.isFinite(avg) ? Math.round(avg) : 0);
+        } else {
+          setTotalStudyTime(0);
+          setAverageScore(0);
+        }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -51,8 +70,12 @@ const Banner = () => {
         </div>
         <div className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-6 text-[16px]">
-            <span>Thời gian đã học: {formatStudyTime(stats.totalStudyTime)}</span>
-            <span>Quiz đã tạo: {stats.totalExams}</span>
+            <span>
+              Thời gian đã học: {loading ? <Spin size="small" /> : formatStudyTime(totalStudyTime)}
+            </span>
+            <span>
+              Quiz đã tạo: {loading ? <Spin size="small" /> : totalExams}
+            </span>
           </div>
           <div className="flex gap-3">
             <Button
@@ -65,11 +88,15 @@ const Banner = () => {
             </Button>
             <Button
               type="default"
-              className="!bg-blue-400 text-white !border-none"
+              className="!bg-[#3B82F6] text-white !border-none"
               onClick={() => navigate("/createExam-AI")}
             >
               Tạo Đề Thi với AI
             </Button>
+            <div className="hidden md:flex items-center gap-4 text-[16px]">
+              <span>Điểm TB: {loading ? <Spin size="small" /> : `${averageScore}%`}</span>
+              <span>Tổng câu hỏi: {loading ? <Spin size="small" /> : totalQuestions}</span>
+            </div>
           </div>
         </div>
       </div>

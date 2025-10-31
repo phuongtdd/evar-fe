@@ -1,5 +1,5 @@
-import { EditOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Calendar, Input, Select, Tag, Spin } from "antd";
+import { EditOutlined, SearchOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Button, Input, Select, Tag, Spin, Card, Skeleton, Empty } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -50,147 +50,80 @@ const QuizList = () => {
 
   return (
     <>
-      <div className="flex flex-row gap-6">
-        <div className="flex-1">
-          <div className="flex place-items-end justify-between mb-2">
-            <div>
-              <h4 className="text-[18px] !font-extrabold">
-                Danh sách các quiz
-              </h4>
-              <p className="text-sm text-gray-500">
-                Danh sách các bài luyện tập trên hệ thống
-              </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-end justify-between">
+          <div>
+            <h4 className="text-[18px] !font-extrabold">Danh sách các quiz</h4>
+            <p className="text-sm text-gray-600">Danh sách các bài luyện tập trên hệ thống</p>
+          </div>
+          <Button type="link" className="text-blue-500" onClick={() => navigate("/quiz")}>
+            Xem tất cả <ArrowRightOutlined />
+          </Button>
+        </div>
+
+        <div className="flex gap-4">
+          <Search
+            placeholder="Tìm kiếm"
+            onSearch={onSearch}
+            value={searchTerm}
+            enterButton
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <Select value={selectedSubject} onChange={setSelectedSubject} style={{ width: 160 }}>
+            <Option value="all">Tất cả</Option>
+            <Option value="toán">Toán học</Option>
+            <Option value="vật lý">Vật lý</Option>
+            <Option value="hóa học">Hóa học</Option>
+          </Select>
+        </div>
+
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="rounded-xl border-gray-200">
+                  <Skeleton active paragraph={{ rows: 2 }} />
+                </Card>
+              ))}
             </div>
-            <Button type="link" className="text-blue-500">
-              Xem tất cả »
-            </Button>
-          </div>
-
-          <div className="flex gap-4 mb-4">
-            <Search
-              placeholder="Tìm kiếm"
-              onSearch={onSearch}
-              value={searchTerm}
-              enterButton
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-            />
-            <Select
-              value={selectedSubject}
-              onChange={setSelectedSubject}
-              style={{ width: 120 }}
-            >
-              <Option value="all">Tất cả</Option>
-              <Option value="toán">Toán học</Option>
-              <Option value="vật lý">Vật lý</Option>
-              <Option value="hóa học">Hóa học</Option>
-            </Select>
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-200">
-            {loading ? (
-              <div className="p-8 text-center">
-                <Spin size="large" />
-                <p className="mt-2 text-gray-500">
-                  Đang tải danh sách đề thi...
-                </p>
-              </div>
-            ) : filteredExams.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-500">Chưa có đề thi nào được tạo.</p>
-                <Button
-                  type="primary"
-                  className="mt-4"
-                  onClick={() => navigate("/quiz")}
-                >
-                  Tạo đề thi đầu tiên
-                </Button>
-              </div>
-            ) : (
-              filteredExams.map((exam, index) => (
-                <div
-                  key={exam.id}
-                  className={`p-4 flex items-center justify-between ${
-                    index !== filteredExams.length - 1
-                      ? "border-b border-gray-100"
-                      : ""
-                  }`}
-                >
-                  <div className="flex-1 flex flex-col gap-2">
-                    <div>
-                      <div className="flex flex-row w-full justify-between items-center gap-4 mb-1">
-                        <span>
-                          Độ Khó:{" "}
-                          <Tag
-                            color={
-                              exam.level === "Easy"
-                                ? "green"
-                                : exam.level === "Medium"
-                                ? "orange"
-                                : "red"
-                            }
-                            style={{ marginLeft: "12px" }}
-                          >
-                            {exam.level}
-                          </Tag>
-                        </span>
-                        <span className="text-[14px] text-gray-500">
-                          🔥
-                          {exam.questions} câu hỏi
-                        </span>
+          ) : filteredExams.length === 0 ? (
+            <Empty description="Chưa có đề thi nào" />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredExams.map((exam) => {
+                const color = exam.level === "Easy" ? "green" : exam.level === "Medium" ? "orange" : "red";
+                return (
+                  <Card
+                    key={exam.id}
+                    className="rounded-xl border-gray-200 hover:shadow-sm transition-shadow"
+                    title={
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-900">{exam.title}</span>
+                        <Tag color={color}>{exam.level}</Tag>
                       </div>
-                    </div>
-                    <h4 className="font-medium text-gray-800">{exam.title}</h4>
-                    <span className="text-[14px] text-gray-500">
-                      Ngày tạo:{" "}
-                      <span className="text-blue-500 font-bold">
-                        {exam.date}
-                      </span>
-                    </span>
-
-                    <div className="flex flex-row items-center justify-between ">
-                      <span className="text-[14px] text-gray-500">
-                        Môn học:{" "}
-                        <span className="text-blue-500 font-bold">
-                          {exam.subject}
-                        </span>
-                      </span>
+                    }
+                    extra={<span className="text-xs text-gray-600">{exam.date}</span>}
+                  >
+                    <div className="text-sm text-gray-700 flex items-center justify-between">
+                      <div>
+                        <div className="mb-1">Môn học: <span className="text-blue-600 font-medium">{exam.subject}</span></div>
+                        <div>{exam.questions} câu hỏi</div>
+                      </div>
                       <Button
                         type="primary"
                         size="small"
-                        className="!bg-[#4CAF50] !px-6 !py-4 !rounded-[8px]"
-                        onClick={() =>
-                          navigate(`/quiz/takeQuiz/exam/${exam.id}`)
-                        }
+                        className="!bg-[#4CAF50] !rounded-md"
+                        onClick={() => navigate(`/quiz/takeQuiz/exam/${exam.id}`)}
                       >
                         Làm
                       </Button>
                     </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="w-[26%] my-[140px]">
-          <div className="bg-white rounded-xl border border-gray-200 p-2">
-            <Calendar fullscreen={false} defaultValue={dayjs()} />
-          </div>
-          <div className="mt-4 space-y-2 flex flex-col gap-3">
-            <div className="bg-[#6392E9] rounded-[12px] !py-6 w-full !px-9 flex flex-row item-center justify-between text-white !text-[18px]">
-              <span className="font-bold">Tổng bài làm:</span>
-              <strong className="font-bold">{exams.length}</strong>
+                  </Card>
+                );
+              })}
             </div>
-            <Button
-              type="primary"
-              block
-              className="!bg-[#4CAF50] !w-[50%] !rounded-[12px] !py-6 w-full !px-9 flex flex-row items-center text-white !font-bold !text-[18px]"
-            >
-              Tạo Quiz
-              <img src={boxFill} />
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </>

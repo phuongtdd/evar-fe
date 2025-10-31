@@ -8,10 +8,12 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Spin } from "antd";
-import { mockRooms } from "../mock/mockData";
 import CustomCard from "./CustomCard";
 import type { GetProps } from "antd";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getAllRooms } from "../../Room/services/roomService";
+import { RoomResponse } from "../../Room/types";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -21,6 +23,23 @@ const onSearch: SearchProps["onSearch"] = (value, _e, info) =>
 
 const RoomSection = () => {
   const navigate = useNavigate();
+  const [rooms, setRooms] = useState<RoomResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadRooms = async () => {
+      try {
+        setLoading(true);
+        const list = await getAllRooms(0, 8);
+        setRooms(list);
+      } catch (e) {
+        console.error("Failed to load rooms", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadRooms();
+  }, []);
 
   const handleCreateRoom = () => {
    navigate("/room")
@@ -66,12 +85,20 @@ const RoomSection = () => {
             Xem tất cả »
           </Button>
         </div>
-        <div className="bg-gray-50 rounded-2xl  border-[1.2px] border-solid border-[#e3e3e3] p-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {mockRooms.map((room) => (
-              <CustomCard room={room} />
-            ))}
-          </div>
+        <div className="bg-white rounded-2xl  border border-gray-200 p-12">
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Spin size="large" />
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="text-center text-gray-500 py-10">Chưa có phòng nào hoạt động.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {rooms.map((room) => (
+                <CustomCard key={room.id} room={room} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -86,6 +86,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "EvarTutor",
     },
     {
+      key: "learning-resources",
+      icon: <BookOutlined className="text-2xl" />,
+      label: "Tài nguyên học tập",
+    },
+    {
       key: "flashcard",
       icon: <CreditCardOutlined className="text-2xl" />,
       label: "Flash Card",
@@ -100,11 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <EditOutlined className="text-2xl" />,
       label: "Luyện đề",
     },
-     {
-      key: "learning-resources",
-      icon: <BookOutlined className="text-2xl" />,
-      label: "Tài nguyên học tập",
-    },
+ 
     {
       key: "account",
       icon: <UserOutlined className="text-2xl" />,
@@ -135,8 +136,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       key: "tutor",
-      icon: <DeliveredProcedureOutlined className="text-2xl" />,
+      icon: <RobotOutlined className="text-2xl" />,
       label: "Evar Tutor",
+    },
+    {
+      key: "learning-resources",
+      icon: <BookOutlined className="text-2xl" />,
+      label: "Tài nguyên học tập",
     },
     {
       key: "create-exam-ai",
@@ -147,11 +153,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       key: "quiz",
       icon: <EditOutlined className="text-2xl" />,
       label: "Luyện đề",
-    },
-    {
-      key: "learning-resources",
-      icon: <BookOutlined className="text-2xl" />,
-      label: "Tài nguyên học tập",
     },
     {
       key: "account",
