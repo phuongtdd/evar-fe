@@ -336,7 +336,7 @@ export default function TutorChatPanel({
               id: (Date.now() + 2).toString(),
               type: "assistant",
               content:
-                "✅ Tài liệu đã được xử lý thành công! Flashcards đã được tự động tạo. Bạn có thể xem chúng ở tab 'Flashcards' bên trái, hoặc bắt đầu đặt câu hỏi ngay.",
+                "✅ Tài liệu đã được xử lý thành công! Hãy chọn số lượng flashcards muốn tạo khi được hỏi, sau đó bạn có thể xem chúng ở tab 'Flashcards' bên trái.",
               timestamp: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, assistantMessage]);

@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Trò chuyện",
     },
     {
-      key: "chat-ai",
+      key: "tutor",
       icon: <RobotOutlined className="text-2xl" />,
       label: "Evar Tutor",
     },
@@ -96,14 +96,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: "Flash Card",
     },
     {
-      key: "create-quiz",
+      key: "create-exam-ai",
       icon: <CameraOutlined className="text-2xl" />,
-      label: "Tạo quiz từ ảnh",
+      label: "Tạo đề thi với AI ",
     },
     {
       key: "quiz",
       icon: <EditOutlined className="text-2xl" />,
       label: "Luyện đề",
+    },
+     {
+      key: "learning-resources",
+      icon: <BookOutlined className="text-2xl" />,
+      label: "Tài nguyên học tập",
     },
     {
       key: "account",
@@ -229,8 +234,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       case "chat":
         navigate("/chat");
         break;
-      case "chat-ai":
-        navigate("/chat-ai");
+      case "tutor":
+        navigate("/evar-turtor");
         break;
       case "create-exam-ai":
         window.dispatchEvent(new CustomEvent("reset-quiz-info"));
@@ -241,9 +246,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         break;
       case "learning-resources":
         navigate("/learning-resources");
-        break;
-      case "tutor":
-        navigate("/evar-turtor");
         break;
       case "material":
         navigate("/material");

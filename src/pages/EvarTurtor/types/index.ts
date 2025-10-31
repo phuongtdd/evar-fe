@@ -128,6 +128,7 @@ export interface FlashcardRequest {
   front: string;
   back: string;
   knowledgeBaseId: number;
+  cardSetId?: string; // optional: explicitly target a set to avoid overwriting others
 }
 
 export interface FlashcardResponse {

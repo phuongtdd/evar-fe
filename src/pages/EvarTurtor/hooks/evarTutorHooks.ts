@@ -176,7 +176,7 @@ export const usePdfUpload = () => {
 };
 
 // ==================== FLASHCARD HOOKS ====================
-export const useFlashcards = (knowledgeBaseId?: number) => {
+export const useFlashcards = (knowledgeBaseId?: number, cardSetId?: string) => {
   const [data, setData] = useState<FlashcardResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,7 +193,7 @@ export const useFlashcards = (knowledgeBaseId?: number) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await flashcardService.getFlashcardsByKnowledgeBaseId(knowledgeBaseId);
+      const response = await flashcardService.getFlashcardsByKnowledgeBaseId(knowledgeBaseId, cardSetId);
       console.log('✅ [FLASHCARDS] Fetched', response.length, 'flashcards');
       setData(response);
     } catch (err) {
@@ -213,7 +213,7 @@ export const useFlashcards = (knowledgeBaseId?: number) => {
     } finally {
       setLoading(false);
     }
-  }, [knowledgeBaseId]);
+  }, [knowledgeBaseId, cardSetId]);
 
   const createFlashcard = useCallback(async (request: FlashcardRequest) => {
     try {

@@ -7,9 +7,9 @@ import TutorChatPanelUpdated from "../component/tutor-chat-panel-updated";
 import PdfViewerWithUpload from "../component/pdf-viewer-with-upload";
 import CreateFlashcardsModalUpdated from "../component/create-flashcards-modal-updated";
 import MaterialsUploadAreaUpdated from "../component/materials-upload-area-updated";
-import { useKnowledgeBases, useFlashcards, knowledgeBaseService } from "../../hooks/evarTutorHooks";
+import { useKnowledgeBases, useFlashcards, knowledgeBaseService, flashcardService as flashcardSvc } from "../../hooks/evarTutorHooks";
 import FlashcardViewer from "../component/flashcard-viewer";
-import NotePage from "../component/note-page";
+import NotePage from "../component/ note-page";
 
 const { Content } = Layout;
 
@@ -19,6 +19,8 @@ export default function StudyMaterialLayout() {
   const [showUploadArea, setShowUploadArea] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null);
+  const [selectedCardSetId, setSelectedCardSetId] = useState<string | undefined>(undefined);
+  const [cardSets, setCardSets] = useState<any[]>([]);
   const [viewingFlashcards, setViewingFlashcards] = useState(false);
   const [studyGuide, setStudyGuide] = useState("");
   const [keyNotes, setKeyNotes] = useState("");
@@ -34,7 +36,7 @@ export default function StudyMaterialLayout() {
   };
 
   const { data: knowledgeBasesData, loading: knowledgeBasesLoading, refetch: refetchKnowledgeBases } = useKnowledgeBases();
-  const { data: flashcardsData, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined);
+  const { data: flashcardsData, loading: flashcardsLoading, deleteFlashcard, refetch: refetchFlashcards } = useFlashcards(selectedKnowledgeBase || undefined, selectedCardSetId);
   
   const knowledgeBases = Array.isArray(knowledgeBasesData) ? knowledgeBasesData : [];
   const flashcards = Array.isArray(flashcardsData) ? flashcardsData : [];
@@ -64,6 +66,34 @@ export default function StudyMaterialLayout() {
     };
     loadContent();
   }, [selectedKnowledgeBase, knowledgeBases]);
+
+  // Load card sets for selected KB and maintain selection
+  useEffect(() => {
+    const loadSets = async () => {
+      if (!selectedKnowledgeBase) {
+        setCardSets([]);
+        setSelectedCardSetId(undefined);
+        return;
+      }
+      try {
+        const sets = await flashcardSvc.listCardSetsByKnowledgeBase(selectedKnowledgeBase);
+        setCardSets(sets);
+        // If current selection not found, default to newest set
+        if (!selectedCardSetId || !sets.find(s => s.id === selectedCardSetId)) {
+          if (sets.length > 0) {
+            const newest = [...sets].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
+            setSelectedCardSetId(newest.id);
+          } else {
+            setSelectedCardSetId(undefined);
+          }
+        }
+      } catch (e) {
+        setCardSets([]);
+        setSelectedCardSetId(undefined);
+      }
+    };
+    loadSets();
+  }, [selectedKnowledgeBase]);
 
   return (
     <div className="!flex !h-screen !w-full !bg-white mt-12 ">
@@ -138,7 +168,7 @@ export default function StudyMaterialLayout() {
                     setChatRefetchTrigger(prev => prev + 1);
                     console.log('✅ Chat panel KB list refresh triggered');
                     
-                    message.success('✅ PDF đã được tải lên và flashcards đã được tạo! Xem chúng ở tab Thẻ ghi nhớ.');
+                    message.success('✅ PDF đã được tải lên! Hãy chọn số lượng flashcards để tạo.');
                   } catch (error) {
                     console.error('❌ Failed to refresh data:', error);
                     message.error('Không thể làm mới dữ liệu. Vui lòng tải lại trang.');
@@ -175,6 +205,38 @@ export default function StudyMaterialLayout() {
                           className="!bg-blue-600 !border-blue-600 hover:!bg-blue-700 hover:!border-blue-700"
                         >
                           Tạo thẻ ghi nhớ
+                        </Button>
+                      </div>
+
+                      {/* Card Set Selector */}
+                      <div className="!flex !items-center !gap-3">
+                        <div className="!text-sm !text-gray-600">Bộ thẻ:</div>
+                        <select
+                          className="!border !border-gray-300 !rounded-lg !px-3 !py-2"
+                          value={selectedCardSetId || ''}
+                          onChange={async (e) => {
+                            setSelectedCardSetId(e.target.value || undefined);
+                            await refetchFlashcards();
+                          }}
+                        >
+                          {cardSets.length === 0 && (
+                            <option value="">Chưa có bộ thẻ</option>
+                          )}
+                          {cardSets.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name || 'Untitled'} ({s.flashcardCount || s.totalCards || 0})</option>
+                          ))}
+                        </select>
+                        <Button
+                          onClick={async () => {
+                            if (!selectedKnowledgeBase) return;
+                            const created = await flashcardSvc.createEmptySetForKnowledgeBase(selectedKnowledgeBase);
+                            const sets = await flashcardSvc.listCardSetsByKnowledgeBase(selectedKnowledgeBase);
+                            setCardSets(sets);
+                            setSelectedCardSetId(created.id);
+                            await refetchFlashcards();
+                          }}
+                        >
+                          Tạo bộ trống
                         </Button>
                       </div>
 
@@ -413,9 +475,30 @@ export default function StudyMaterialLayout() {
 
       <CreateFlashcardsModalUpdated
         open={showCreateFlashcards}
+        knowledgeBaseId={selectedKnowledgeBase || undefined}
+        onCreated={async () => {
+          await refetchFlashcards();
+          if (selectedKnowledgeBase) {
+            const sets = await flashcardSvc.listCardSetsByKnowledgeBase(selectedKnowledgeBase);
+            setCardSets(sets);
+            if (sets.length > 0 && !sets.find(s => s.id === selectedCardSetId)) {
+              const newest = [...sets].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
+              setSelectedCardSetId(newest.id);
+            }
+          }
+        }}
         onClose={() => {
           setShowCreateFlashcards(false);
           refetchFlashcards();
+          if (selectedKnowledgeBase) {
+            flashcardSvc.listCardSetsByKnowledgeBase(selectedKnowledgeBase).then((sets) => {
+              setCardSets(sets);
+              if (sets.length > 0 && !sets.find(s => s.id === selectedCardSetId)) {
+                const newest = [...sets].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
+                setSelectedCardSetId(newest.id);
+              }
+            });
+          }
         }}
       />
     </div>

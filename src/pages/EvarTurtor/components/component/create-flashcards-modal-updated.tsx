@@ -1,47 +1,47 @@
 "use client"
 
 import { useState } from "react"
-import { Modal, Button, Select, Alert, message } from "antd"
+import { Modal, Button, Alert, message, Slider, InputNumber, Space } from "antd"
 import { ExclamationCircleOutlined, ThunderboltOutlined } from "@ant-design/icons"
-import { useKnowledgeBases, useFlashcards } from "../../hooks/evarTutorHooks"
+import { useFlashcards } from "../../hooks/evarTutorHooks"
 import { flashcardService } from "../../services/evarTutorService"
 
 interface CreateFlashcardsModalProps {
   open: boolean
   onClose: () => void
+  knowledgeBaseId?: number | null
+  onCreated?: () => void | Promise<void>
 }
 
-export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcardsModalProps) {
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null)
+export default function CreateFlashcardsModal({ open, onClose, knowledgeBaseId, onCreated }: CreateFlashcardsModalProps) {
   const [showError, setShowError] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [flashcardCount, setFlashcardCount] = useState<number>(10)
   
-  const { data: knowledgeBasesData, loading: knowledgeBasesLoading } = useKnowledgeBases()
-  const { refetch } = useFlashcards(selectedKnowledgeBase || undefined)
-  
-  // Ensure knowledgeBases is always an array
-  const knowledgeBases = Array.isArray(knowledgeBasesData) ? knowledgeBasesData : []
+  const { refetch } = useFlashcards(knowledgeBaseId || undefined)
 
   const handleCreateFlashcards = async () => {
-    if (!selectedKnowledgeBase) {
+    if (!knowledgeBaseId) {
       setShowError(true)
       return
     }
 
     try {
       setGenerating(true)
-      console.log('🤖 [CREATE MODAL] Generating flashcards for KB:', selectedKnowledgeBase);
+      console.log('🤖 [CREATE MODAL] Generating flashcards for KB:', knowledgeBaseId);
       
       // Backend API /card-set/generate/ai tạo CardSet và Flashcards, lưu vào DB
-      const cardSetResponse = await flashcardService.generateFlashcards(selectedKnowledgeBase, 5)
+      const count = Math.max(1, Math.min(15, flashcardCount))
+      const cardSetResponse = await flashcardService.generateFlashcards(knowledgeBaseId, count)
       
       console.log('✅ [CREATE MODAL] Generated CardSet:', cardSetResponse);
       console.log('✅ [CREATE MODAL] Total flashcards:', cardSetResponse.totalCards || cardSetResponse.flashcards?.length);
       
       // Refetch để cập nhật UI
       await refetch()
+      await onCreated?.()
       
-      message.success(`✅ Đã tạo ${cardSetResponse.totalCards || 5} flashcards từ AI!`)
+      message.success(`✅ Đã tạo ${cardSetResponse.totalCards || count} flashcards từ AI!`)
       
       // Đóng modal và reset
       onClose()
@@ -57,8 +57,8 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
   }
 
   const resetForm = () => {
-    setSelectedKnowledgeBase(null)
     setShowError(false)
+    setFlashcardCount(10)
   }
 
   const handleClose = () => {
@@ -76,24 +76,14 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
       className="[&_.ant-modal-content]:!rounded-lg [&_.ant-modal-header]:!border-b [&_.ant-modal-header]:!border-gray-200"
     >
       <div className="!space-y-6 !py-4">
-        <div>
-          <label className="!block !text-sm !font-medium !text-gray-900 !mb-3">Select Knowledge Base:</label>
-          <Select
-            placeholder="Choose a knowledge base"
-            value={selectedKnowledgeBase}
-            onChange={(value) => {
-              setSelectedKnowledgeBase(value)
-              setShowError(false)
-            }}
-            className="!w-full [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-gray-300 [&_.ant-select-selector]:!h-10"
-            loading={knowledgeBasesLoading}
-            options={knowledgeBases.map(kb => ({
-              label: `${kb.fileName} (${kb.status})`,
-              value: kb.id,
-              disabled: kb.status !== 'READY'
-            }))}
+        {!knowledgeBaseId && (
+          <Alert
+            message="Vui lòng chọn knowledge base bên khung chat trước khi tạo flashcards."
+            type="warning"
+            showIcon
+            className="[&.ant-alert]:!border-yellow-200 [&.ant-alert]:!bg-yellow-50 [&.ant-alert-message]:!text-yellow-700"
           />
-        </div>
+        )}
 
         {showError && (
           <Alert
@@ -105,12 +95,32 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
           />
         )}
 
-        <Alert
-          message="AI sẽ tự động tạo 5 flashcards từ nội dung tài liệu"
-          description="Flashcards sẽ được tạo và lưu trực tiếp vào hệ thống. Bạn có thể xem và chỉnh sửa chúng sau khi tạo xong."
-          type="info"
-          showIcon
-        />
+        <div className="!space-y-4">
+          <Alert
+            message="Chọn số lượng flashcards muốn tạo (1–15)"
+            description="Mỗi lần tạo sẽ là một bộ thẻ (Card Set) MỚI cho tài liệu đã chọn. Bạn có thể tạo nhiều bộ cho cùng một tài liệu."
+            type="info"
+            showIcon
+          />
+          <div>
+            <label className="!block !text-sm !font-medium !text-gray-900 !mb-3">Số lượng flashcards</label>
+            <div className="!space-y-3">
+              <Slider
+                min={1}
+                max={15}
+                value={flashcardCount}
+                onChange={(v) => setFlashcardCount(v as number)}
+                marks={{ 1: '1', 5: '5', 10: '10', 15: '15' }}
+              />
+              <div className="!flex !items-center !justify-end">
+                <Space>
+                  <span className="!text-sm !text-gray-600">Nhập số lượng</span>
+                  <InputNumber min={1} max={15} value={flashcardCount} onChange={(v) => setFlashcardCount((v as number) ? Math.max(1, Math.min(15, v as number)) : 10)} />
+                </Space>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <Button
           type="primary"
@@ -118,11 +128,11 @@ export default function CreateFlashcardsModal({ open, onClose }: CreateFlashcard
           size="large"
           onClick={handleCreateFlashcards}
           loading={generating}
-          disabled={!selectedKnowledgeBase}
+          disabled={!knowledgeBaseId}
           icon={<ThunderboltOutlined />}
           className="!bg-gradient-to-r !from-blue-600 !to-blue-500 !border-0 !text-white !rounded-lg !font-medium !h-11 !hover:shadow-lg !transition-all"
         >
-          {generating ? 'Đang tạo flashcards...' : 'Tạo Flashcards với AI'}
+          {generating ? 'Đang tạo flashcards...' : `Tạo ${flashcardCount} Flashcards với AI`}
         </Button>
       </div>
     </Modal>

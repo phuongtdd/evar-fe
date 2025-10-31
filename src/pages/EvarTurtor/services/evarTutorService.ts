@@ -27,25 +27,47 @@ const getRealUserId = (): string => {
 };
 
 export const flashcardService = {
+  listMyCardSets: async (): Promise<any[]> => {
+    const userId = getRealUserId();
+    const setsResponse = await apiClient.get(`/card-set/my?userId=${userId}`);
+    return Array.isArray(setsResponse.data) ? setsResponse.data : [];
+  },
+
+  listCardSetsByKnowledgeBase: async (knowledgeBaseId: number): Promise<any[]> => {
+    const sets = await flashcardService.listMyCardSets();
+    const kbResponse = await apiClient.get(`/knowledge/${knowledgeBaseId}`);
+    const fileName = kbResponse.data?.fileName;
+    return sets.filter((s: any) => {
+      if (s.knowledgeBaseId === knowledgeBaseId) return true;
+      if (s.knowledgeBaseId === null && fileName && s.name && s.name.includes(fileName)) return true;
+      return false;
+    });
+  },
+
+  createEmptySetForKnowledgeBase: async (knowledgeBaseId: number): Promise<any> => {
+    const response = await apiClient.post('/card-set/generate/ai', null, {
+      params: { knowledgeBaseId, count: 0 }
+    });
+    return response.data;
+  },
+
   createFlashcard: async (request: FlashcardRequest): Promise<FlashcardResponse> => {
     const userId = getRealUserId();
-    
-    const setsResponse = await apiClient.get(`/card-set/my?userId=${userId}`);
-    const sets = Array.isArray(setsResponse.data) ? setsResponse.data : [];
-    
-    let targetSet = sets.find((s: any) => s.knowledgeBaseId === request.knowledgeBaseId);
-    
-    if (!targetSet) {
-      const createSetResponse = await apiClient.post('/card-set/generate/ai', null, {
-        params: {
-          knowledgeBaseId: request.knowledgeBaseId,
-          count: 0
-        }
-      });
-      targetSet = createSetResponse.data;
+
+    let targetSetId = request.cardSetId;
+    if (!targetSetId) {
+      // If no explicit set chosen, prefer newest set under this KB; if none, create empty set
+      const kbSets = await flashcardService.listCardSetsByKnowledgeBase(request.knowledgeBaseId);
+      if (kbSets.length > 0) {
+        const newest = [...kbSets].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
+        targetSetId = newest.id;
+      } else {
+        const created = await flashcardService.createEmptySetForKnowledgeBase(request.knowledgeBaseId);
+        targetSetId = created.id;
+      }
     }
-    
-    const response = await apiClient.post(`/card-set/${targetSet.id}/flashcards`, {
+
+    const response = await apiClient.post(`/card-set/${targetSetId}/flashcards`, {
       userId: userId,
       knowledgeBaseId: request.knowledgeBaseId,
       front: request.front,
@@ -58,7 +80,7 @@ export const flashcardService = {
     throw new Error('Get flashcard by ID is not available in current backend');
   },
 
-  getFlashcardsByKnowledgeBaseId: async (knowledgeBaseId: number): Promise<FlashcardResponse[]> => {
+  getFlashcardsByKnowledgeBaseId: async (knowledgeBaseId: number, cardSetId?: string): Promise<FlashcardResponse[]> => {
     const userId = getRealUserId();
     console.log('🔍 [FLASHCARDS] Fetching card sets for userId:', userId, 'KB:', knowledgeBaseId);
     
@@ -78,7 +100,7 @@ export const flashcardService = {
     })));
     
     // Lọc theo knowledgeBaseId HOẶC theo tên file (fallback nếu knowledgeBaseId null)
-    const kbSets = sets.filter((s: any) => {
+    let kbSets = sets.filter((s: any) => {
       // Ưu tiên filter theo knowledgeBaseId nếu có
       if (s.knowledgeBaseId === knowledgeBaseId) {
         return true;
@@ -89,6 +111,9 @@ export const flashcardService = {
       }
       return false;
     });
+    if (cardSetId) {
+      kbSets = kbSets.filter((s: any) => s.id === cardSetId);
+    }
     console.log('🎯 [FLASHCARDS] Found', kbSets.length, 'sets for KB', knowledgeBaseId);
     
     if (kbSets.length === 0) {
@@ -99,18 +124,18 @@ export const flashcardService = {
       return [];
     }
     
-    const allFlashcards: FlashcardResponse[] = [];
+    // Fetch details; if cardSetId provided return its cards; else aggregate across all sets
+    const allCards: FlashcardResponse[] = [];
     for (const set of kbSets) {
       console.log('📥 [FLASHCARDS] Fetching details for set:', set.id);
       const detailResponse = await apiClient.get(`/card-set/${set.id}`);
-      if (detailResponse.data && Array.isArray(detailResponse.data.flashcards)) {
-        console.log('✅ [FLASHCARDS] Set', set.id, 'has', detailResponse.data.flashcards.length, 'flashcards');
-        allFlashcards.push(...detailResponse.data.flashcards);
-      }
+      const detail = detailResponse.data || {};
+      const cards: FlashcardResponse[] = Array.isArray(detail.flashcards) ? detail.flashcards : [];
+      console.log('✅ [FLASHCARDS] Set', set.id, 'cards=', cards.length);
+      allCards.push(...cards);
     }
-    
-    console.log('✅ [FLASHCARDS] Total flashcards:', allFlashcards.length);
-    return allFlashcards;
+    console.log('✅ [FLASHCARDS] Returning aggregated flashcards:', allCards.length);
+    return allCards;
   },
 
   updateFlashcard: async (id: string, request: FlashcardUpdateRequest): Promise<FlashcardResponse> => {
@@ -135,7 +160,6 @@ export const flashcardService = {
       }
     });
     console.log('✅ Flashcard generation response:', response.data);
-    console.log('🔍 KB ID in response:', response.data.knowledgeBaseId, 'Type:', typeof response.data.knowledgeBaseId);
     // Backend returns CardSetResponse with flashcards array
     return response.data;
   },

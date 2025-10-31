@@ -1,7 +1,7 @@
 import React from 'react'
 import StudyMaterialLayout from "./components/layout/study-material-layout"
 
-const EvarTutor = () => {
+const EvarTurTor = () => {
   return (
     <div className="!h-screen !bg-white">
           <StudyMaterialLayout />
@@ -9,4 +9,4 @@ const EvarTutor = () => {
   )
 }
 
-export default EvarTutor;
+export default EvarTurTor;

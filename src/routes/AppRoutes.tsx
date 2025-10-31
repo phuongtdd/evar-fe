@@ -102,7 +102,7 @@ const AppRoutes: React.FC = () => {
           </Route>
 
           <Route path="/chat" element={<Chatmodule />} />
-          <Route path="/chat-ai" element={<ChatAI />} />
+          {/* <Route path="/chat-ai" element={<ChatAI />} /> */}
           <Route path="/account" element={<UserProfile />} />
           <Route path="/pomodoro" element={<PomodoroModule />} />
           <Route path="/material" element={<Material />} />

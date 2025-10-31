@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react"
-import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert } from "antd"
+import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert, Modal, Slider, InputNumber, Space } from "antd"
 import type { UploadFile } from "antd"
 import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/evarTutorHooks"
-import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined } from "@ant-design/icons"
+import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined, ThunderboltOutlined } from "@ant-design/icons"
 
 interface MaterialsUploadAreaProps {
   onClose: () => void
@@ -16,13 +16,22 @@ interface UploadStatus {
   status: 'uploading' | 'processing' | 'ready' | 'error'
   knowledgeBaseId?: number
   error?: string
+  fileName?: string
 }
 
-export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, autoGenerateFlashcards = true }: MaterialsUploadAreaProps) {
+interface FlashcardGenerationRequest {
+  knowledgeBaseId: number
+  fileName: string
+}
+
+export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, autoGenerateFlashcards = false }: MaterialsUploadAreaProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [uploadStatuses, setUploadStatuses] = useState<UploadStatus[]>([])
   const [form] = Form.useForm()
   const [generatingFlashcards, setGeneratingFlashcards] = useState<Record<number, boolean>>({})
+  const [showFlashcardModal, setShowFlashcardModal] = useState(false)
+  const [flashcardCount, setFlashcardCount] = useState(10)
+  const [pendingGenerations, setPendingGenerations] = useState<FlashcardGenerationRequest[]>([])
   
   const { uploadPdf, uploading, error } = usePdfUpload()
   
@@ -82,7 +91,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
             // Update status to processing
             setUploadStatuses(prev => prev.map(status => 
               status.file.uid === file.uid 
-                ? { ...status, status: 'processing', knowledgeBaseId: response.knowledgeBaseId }
+                ? { ...status, status: 'processing', knowledgeBaseId: response.knowledgeBaseId, fileName: file.name }
                 : status
             ))
 
@@ -166,26 +175,14 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 console.error('Failed to fetch latest KB detail:', error)
               }
               
-              // Auto-generate flashcards if enabled
-              let flashcardsGenerated = false;
-              if (autoGenerateFlashcards && !generatingFlashcards[kbId]) {
-                setGeneratingFlashcards(prev => ({ ...prev, [kbId]: true }))
-                try {
-                  console.log('🤖 Starting flashcard generation for KB:', kbId);
-                  message.info(`Generating flashcards for ${status.file.name}...`)
-                  const flashcardSet = await flashcardService.generateFlashcards(kbId, 10)
-                  console.log('✅ Flashcard generation complete:', flashcardSet)
-                  const count = flashcardSet?.flashcards?.length || flashcardSet?.totalCards || 10;
-                  message.success(`${count} flashcards generated for ${status.file.name}!`)
-                  flashcardsGenerated = true;
-                } catch (error: any) {
-                  console.error('❌ Flashcard generation failed:', error)
-                  console.error('Error details:', error.response?.data || error.message)
-                  message.error(`Failed to generate flashcards: ${error.response?.data?.message || error.message}`)
-                } finally {
-                  setGeneratingFlashcards(prev => ({ ...prev, [kbId]: false }))
-                }
-              }
+              // Add to pending generations list for user to choose count
+              setPendingGenerations(prev => [
+                ...prev,
+                { knowledgeBaseId: kbId, fileName: status.file.name || 'Unknown' }
+              ])
+              
+              // Show modal for user to choose flashcard count
+              setShowFlashcardModal(true)
               
               // Delay to ensure backend has committed all data
               console.log('⏳ Waiting for backend to commit all data...')
@@ -298,7 +295,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
 
       <Alert
         message="PDF Upload Information"
-        description="Only PDF files are supported. Files will be processed to extract text and create flashcards automatically. Maximum file size is 10MB."
+        description="Only PDF files are supported. After processing, you'll choose how many flashcards to generate. Maximum file size is 10MB."
         type="info"
         showIcon
         className="!mb-6"
@@ -410,7 +407,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
         </Button>
       </div>
 
-      {allFilesProcessed && (
+      {allFilesProcessed && pendingGenerations.length === 0 && (
         <div className="!mt-4">
           <Button
             type="primary"
@@ -421,6 +418,159 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
           </Button>
         </div>
       )}
+
+      {/* Flashcard Generation Modal */}
+      <Modal
+        open={showFlashcardModal}
+        onCancel={() => {
+          setShowFlashcardModal(false)
+          setPendingGenerations([])
+          setFlashcardCount(10)
+        }}
+        footer={null}
+        width={600}
+        centered
+        className="flashcard-generation-modal"
+      >
+        <div className="!space-y-6 !py-4">
+          <div className="!text-center">
+            <div className="!inline-flex !items-center !justify-center !w-16 !h-16 !bg-gradient-to-br !from-blue-500 !to-purple-600 !rounded-full !mb-4">
+              <ThunderboltOutlined className="!text-3xl !text-white" />
+            </div>
+            <h2 className="!text-2xl !font-bold !text-gray-900 !mb-2">
+              Generate AI Flashcards
+            </h2>
+            <p className="!text-gray-600">
+              Your PDF has been uploaded successfully! Now choose how many flashcards you'd like to generate.
+            </p>
+          </div>
+
+          {pendingGenerations.length > 0 && (
+            <div className="!bg-blue-50 !border !border-blue-200 !rounded-lg !p-4">
+              <p className="!text-sm !font-medium !text-blue-900 !mb-2">Files ready for flashcard generation:</p>
+              <div className="!space-y-1">
+                {pendingGenerations.map((gen, idx) => (
+                  <div key={idx} className="!flex !items-center !gap-2 !text-sm !text-blue-800">
+                    <FileTextOutlined />
+                    <span className="!font-medium">{gen.fileName}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="!space-y-4">
+            <div>
+              <label className="!block !text-sm !font-semibold !text-gray-700 !mb-3">
+                Number of Flashcards
+              </label>
+              <div className="!space-y-4">
+                <Slider
+                  min={1}
+                  max={15}
+                  value={flashcardCount}
+                  onChange={(value) => setFlashcardCount(value)}
+                  marks={{ 1: '1', 5: '5', 10: '10', 15: '15' }}
+                  className="!mb-2"
+                />
+                <div className="!flex !items-center !justify-between">
+                  <span className="!text-sm !text-gray-600">Adjust the slider or enter a number</span>
+                  <InputNumber
+                    min={1}
+                    max={15}
+                    value={flashcardCount}
+                    onChange={(value) => setFlashcardCount(value ? Math.max(1, Math.min(15, value)) : 10)}
+                    className="!w-24"
+                    size="large"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="!bg-gradient-to-r !from-purple-50 !to-blue-50 !border !border-purple-200 !rounded-lg !p-4">
+              <div className="!flex !items-start !gap-3">
+                <div className="!flex-shrink-0 !mt-0.5">
+                  <div className="!w-8 !h-8 !bg-purple-500 !rounded-full !flex !items-center !justify-center">
+                    <span className="!text-white !font-bold">💡</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="!font-semibold !text-purple-900 !mb-1">Recommendation</h4>
+                  <p className="!text-sm !text-purple-800">
+                    We recommend starting with <strong>10-20 flashcards</strong> for optimal learning. You can always generate more later!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="!flex !gap-3 !justify-end !pt-4 !border-t !border-gray-200">
+            <Button
+              size="large"
+              onClick={() => {
+                setShowFlashcardModal(false)
+                setPendingGenerations([])
+                setFlashcardCount(10)
+                message.info('Flashcard generation skipped. You can generate them later from the Flashcards tab.')
+                onClose()
+              }}
+              className="!rounded-lg !h-11 !px-6"
+            >
+              Skip for Now
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<ThunderboltOutlined />}
+              loading={Object.values(generatingFlashcards).some(v => v)}
+              onClick={async () => {
+                for (const gen of pendingGenerations) {
+                  setGeneratingFlashcards(prev => ({ ...prev, [gen.knowledgeBaseId]: true }))
+                  try {
+                    const count = Math.max(1, Math.min(15, flashcardCount))
+                    console.log('🤖 Starting flashcard generation for KB:', gen.knowledgeBaseId, 'count:', count)
+                    message.info(`Generating ${count} flashcards for ${gen.fileName}...`)
+                    const flashcardSet = await flashcardService.generateFlashcards(gen.knowledgeBaseId, count)
+                    console.log('✅ Flashcard generation complete:', flashcardSet)
+                    const generated = flashcardSet?.flashcards?.length || flashcardSet?.totalCards || count
+                    message.success(`${generated} flashcards generated for ${gen.fileName}!`)
+                    
+                    // Delay to ensure backend has committed all data
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                    
+                    // Refresh data
+                    if (onRefetch) {
+                      await onRefetch()
+                    }
+                    
+                    // Notify parent
+                    if (onUploaded) {
+                      onUploaded(gen.knowledgeBaseId)
+                    }
+                  } catch (error: any) {
+                    console.error('❌ Flashcard generation failed:', error)
+                    message.error(`Failed to generate flashcards: ${error.response?.data?.message || error.message}`)
+                  } finally {
+                    setGeneratingFlashcards(prev => ({ ...prev, [gen.knowledgeBaseId]: false }))
+                  }
+                }
+                
+                setShowFlashcardModal(false)
+                setPendingGenerations([])
+                setFlashcardCount(10)
+                onClose()
+                // Ensure UI reflects latest generated data
+                setTimeout(() => {
+                  window.location.reload();
+                }, 300);
+              }}
+              className="!bg-gradient-to-r !from-blue-600 !to-purple-600 !border-0 !rounded-lg !h-11 !px-8 hover:!from-blue-700 hover:!to-purple-700 !text-white !font-semibold !shadow-lg"
+            >
+              Generate {flashcardCount} Flashcards
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

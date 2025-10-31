@@ -299,4 +299,3 @@ export default function NotePage({ knowledgeBaseId }: NotePageProps) {
     </div>
   )
 }
-
