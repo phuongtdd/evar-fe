@@ -1,0 +1,28 @@
+.math-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.math-content thead th {
+  background-color: #f3f4f6; /* gray-100 */
+}
+
+.math-content th,
+.math-content td {
+  border: 1px solid #e5e7eb; /* gray-200 */
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.math-content tbody tr:nth-child(odd) td {
+  background-color: #fafafa;
+}
+
+.math-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  margin: 8px 0;
+  padding: 4px 8px;
+}
+
+

@@ -67,8 +67,10 @@ export const sanitizeMathContent = (content: string): string => {
 
   try {
     // Step 1: Convert escaped newlines to actual newlines
-    // Backend trả về "text\\n\\ntable" → "texttable"
-    let processed = content.replace(/\\n/g, '');
+    // Backend trả về "text\\n\\ntable" → "text\n\ntable" (giữ dòng để Markdown table hoạt động)
+    let processed = content
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '    '); // giữ tab như 4 spaces để canh cột tốt hơn
 
     // Step 2: Parse Markdown to HTML
     // "| A | B ||---|---|| 1 | 2 |" → "<table>...</table>"
@@ -153,8 +155,10 @@ export const countMathFormulas = (content: string): { inline: number; display: n
 export const hasMarkdownTable = (content: string): boolean => {
   if (!content) return false;
   
-  // Simple check for Markdown table pattern: | col1 | col2 |
-  const tableRegex = /\|.+\|[\r]+\|[-:\s|]+\|/;
+  // Simple check for Markdown table pattern: header line then separator line
+  // Matches:
+  // | A | B |\n| --- | --- |
+  const tableRegex = /\|.*\|[\r\n]+\|[-:|\s]+\|/s;
   return tableRegex.test(content);
 };
 

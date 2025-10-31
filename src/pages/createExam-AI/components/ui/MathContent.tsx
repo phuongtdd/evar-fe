@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { sanitizeMathContent } from '../../utils/mathUtils';
+import './MathContent.css';
 
 interface MathContentProps {
   content: string;
@@ -64,9 +65,9 @@ const MathContent: React.FC<MathContentProps> = ({ content, className = '' }) =>
   }, [content]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className={className}
+    <div
+      ref={containerRef}
+      className={`math-content ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
