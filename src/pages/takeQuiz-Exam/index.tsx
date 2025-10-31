@@ -91,6 +91,7 @@ const TakeQuizExam: React.FC = () => {
   const [antiCheatType, setAntiCheatType] = useState<
     "copy-paste" | "tab-switch"
   >("copy-paste");
+  const [faceMissingAttempts, setFaceMissingAttempts] = useState(0);
   const hasAutoSubmittedRef = React.useRef(false);
 
   const handleFaceVerificationStart = () => {
@@ -111,23 +112,46 @@ const TakeQuizExam: React.FC = () => {
     if (descriptor) {
       setReferenceDescriptor(descriptor);
     }
-    setTimeout(() => {
-      setShowFaceVerification(false);
-      setIsTransitioningToExam(false);
-      hasAutoSubmittedRef.current = false; // Reset khi bắt đầu thi mới
-      startExam(faceImageUrl, faceSimilarity);
-    }, 2000);
+      setTimeout(() => {
+        setShowFaceVerification(false);
+        setIsTransitioningToExam(false);
+        hasAutoSubmittedRef.current = false; // Reset khi bắt đầu thi mới
+        setFaceMissingAttempts(0); // Reset counter when starting new exam
+        startExam(faceImageUrl, faceSimilarity);
+      }, 2000);
+  };
+
+  const handleFaceMissingAttempt = () => {
+    setFaceMissingAttempts((prev) => {
+      const newCount = prev + 1;
+      console.log(`📊 Face missing attempt: ${newCount}`);
+      return newCount;
+    });
   };
 
   const handleFaceMonitorBlock = () => {
     setIsExamBlocked(true);
+    
+    // Stop face monitoring
+    if (referenceDescriptor) {
+      setReferenceDescriptor(null);
+    }
+    
     Modal.error({
       title: "🚫 Bài thi đã bị khóa",
       content:
         "Hệ thống phát hiện nhiều vi phạm về giám sát khuôn mặt. Bài thi sẽ được tự động nộp.",
       okText: "Đã hiểu",
-      onOk: () => {
-        handleConfirmSubmission();
+      onOk: async () => {
+        // Restore pointer events before submission
+        document.body.style.pointerEvents = "";
+        document.body.style.userSelect = "";
+        await handleConfirmSubmission();
+      },
+      afterClose: () => {
+        // Ensure pointer events are restored even if modal is closed without clicking
+        document.body.style.pointerEvents = "";
+        document.body.style.userSelect = "";
       },
     });
   };
@@ -153,6 +177,11 @@ const TakeQuizExam: React.FC = () => {
     setShowSubmissionModal(false);
     setIsSubmitting(true);
     setIsProcessingSubmission(true);
+    
+    // Ensure pointer events are restored before submission
+    document.body.style.pointerEvents = "";
+    document.body.style.userSelect = "";
+    
     try {
       const results = await submitExam();
       const subId = results.submissionId || null;
@@ -176,6 +205,7 @@ const TakeQuizExam: React.FC = () => {
       setTimeout(() => {
         setShowSubmitSuccess(true);
         setIsProcessingSubmission(false);
+        setIsExamBlocked(false); // Reset blocked state
       }, 1000);
     } catch (err) {
       Modal.error({
@@ -186,6 +216,11 @@ const TakeQuizExam: React.FC = () => {
       setIsProcessingSubmission(false);
     } finally {
       setIsSubmitting(false);
+      // Reset face missing attempts counter on submission
+      setFaceMissingAttempts(0);
+      // Ensure pointer events are always restored
+      document.body.style.pointerEvents = "";
+      document.body.style.userSelect = "";
     }
   }, [submitExam]);
 
@@ -282,8 +317,28 @@ const TakeQuizExam: React.FC = () => {
   };
 
   const handleBackToDashboardFromSuccess = () => {
+    // Ensure pointer events are restored before navigation
+    document.body.style.pointerEvents = "";
+    document.body.style.userSelect = "";
     navigate("/dashboard");
   };
+
+  // Cleanup effect to restore pointer events on unmount or when exam is completed
+  useEffect(() => {
+    return () => {
+      // Cleanup: restore pointer events when component unmounts
+      document.body.style.pointerEvents = "";
+      document.body.style.userSelect = "";
+    };
+  }, []);
+
+  // Restore pointer events when submission success is shown
+  useEffect(() => {
+    if (showSubmitSuccess) {
+      document.body.style.pointerEvents = "";
+      document.body.style.userSelect = "";
+    }
+  }, [showSubmitSuccess]);
 
   // Handle copy-paste detection
   useEffect(() => {
@@ -645,9 +700,12 @@ const TakeQuizExam: React.FC = () => {
             enabled={
               !showSubmissionModal && !isSubmitting && !showAutoSubmitModal
             }
+            onFaceMissingAttempt={handleFaceMissingAttempt}
+            faceMissingAttempts={faceMissingAttempts}
           />
         )}
-        <div className="p-8">
+        {/* Block exam content when blocked, but modals will still work as they render in portals */}
+        <div className="p-8" style={isExamBlocked ? { pointerEvents: 'none', userSelect: 'none', opacity: 0.5 } : {}}>
           <ExamHeader
             examName={examState.examData.examName}
             subjectName={examState.examData.subjectName}

@@ -11,6 +11,8 @@ interface ContinuousFaceMonitorProps {
   referenceDescriptor: Float32Array;
   onBlock: () => void;
   enabled: boolean;
+  onFaceMissingAttempt?: () => void;
+  faceMissingAttempts?: number;
 }
 
 type ViolationType = "NO_FACE" | "DIFFERENT_PERSON" | "MULTIPLE_FACES";
@@ -25,6 +27,8 @@ export function ContinuousFaceMonitor({
   referenceDescriptor,
   onBlock,
   enabled,
+  onFaceMissingAttempt,
+  faceMissingAttempts = 0,
 }: ContinuousFaceMonitorProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [currentViolation, setCurrentViolation] =
@@ -38,6 +42,7 @@ export function ContinuousFaceMonitor({
   const violationLogsRef = useRef<ViolationLog[]>([]);
   const consecutiveViolationsRef = useRef(0);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wasFaceMissingRef = useRef<boolean>(false);
 
   const THRESHOLD = 0.6;
   const CHECK_INTERVAL = 3000; // Kiểm tra mỗi 3 giây
@@ -103,12 +108,22 @@ export function ContinuousFaceMonitor({
 
         // Case 1: No face detected
         if (detections.length === 0) {
+          // Track face missing attempt - only increment once per missing event
+          if (!wasFaceMissingRef.current && onFaceMissingAttempt) {
+            wasFaceMissingRef.current = true;
+            onFaceMissingAttempt();
+          }
           handleViolation("NO_FACE");
           return;
         }
 
         // Case 2: Multiple faces detected
         if (detections.length > 1) {
+          // Track face missing attempt - only increment once per missing event
+          if (!wasFaceMissingRef.current && onFaceMissingAttempt) {
+            wasFaceMissingRef.current = true;
+            onFaceMissingAttempt();
+          }
           handleViolation("MULTIPLE_FACES");
           return;
         }
@@ -124,14 +139,25 @@ export function ContinuousFaceMonitor({
         console.log(`📊 Monitoring: similarity=${similarity.toFixed(1)}%`);
 
         if (distance > THRESHOLD) {
+          // Track face missing attempt - only increment once per missing event
+          if (!wasFaceMissingRef.current && onFaceMissingAttempt) {
+            wasFaceMissingRef.current = true;
+            onFaceMissingAttempt();
+          }
           handleViolation("DIFFERENT_PERSON", similarity);
           return;
         }
 
-        // All good - reset violations
-        if (consecutiveViolationsRef.current > 0) {
-          console.log("✅ Face verified - resetting violations");
-          consecutiveViolationsRef.current = 0;
+        // All good - face returned, sync consecutive count with persistent attempts
+        if (wasFaceMissingRef.current) {
+          wasFaceMissingRef.current = false;
+          // Sync consecutive violations with persistent face missing attempts
+          consecutiveViolationsRef.current = faceMissingAttempts;
+          console.log(`✅ Face verified - syncing consecutive to ${faceMissingAttempts}`);
+        }
+        
+        // Hide warning if face is back, but keep the count
+        if (consecutiveViolationsRef.current > 0 && faceMissingAttempts > 0) {
           setCurrentViolation(null);
           setShowWarning(false);
 
@@ -155,7 +181,7 @@ export function ContinuousFaceMonitor({
         clearTimeout(warningTimeoutRef.current);
       }
     };
-  }, [enabled, referenceDescriptor, isBlocked]);
+  }, [enabled, referenceDescriptor, isBlocked, faceMissingAttempts]);
 
   // Countdown effect when warning is shown
   useEffect(() => {
@@ -185,7 +211,8 @@ export function ContinuousFaceMonitor({
     };
 
     violationLogsRef.current.push(log);
-    consecutiveViolationsRef.current++;
+    // Sync consecutive violations with persistent face missing attempts count
+    consecutiveViolationsRef.current = faceMissingAttempts;
     setCurrentViolation(type);
 
     console.warn(
@@ -193,7 +220,7 @@ export function ContinuousFaceMonitor({
     );
 
     // Show warning on first violation
-    if (consecutiveViolationsRef.current === 1) {
+    if (consecutiveViolationsRef.current >= 1) {
       setShowWarning(true);
 
       // Auto block after WARNING_DURATION if not resolved
@@ -223,10 +250,8 @@ export function ContinuousFaceMonitor({
       clearInterval(monitorIntervalRef.current);
     }
 
-    // Block all user interactions
-    document.body.style.pointerEvents = "none";
-    document.body.style.userSelect = "none";
-
+    // Don't block entire body - let modal remain interactive
+    // Only block exam content by setting state - parent component will handle blocking
     onBlock();
   };
 
