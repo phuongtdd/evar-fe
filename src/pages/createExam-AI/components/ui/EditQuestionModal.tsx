@@ -164,8 +164,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                 </Button>
               </div>
 
-              {fields.map((field, index) => (
-                <div key={field.key} className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              {fields.map((field, index) => {
+                const { key, ...restField } = field;
+                return (
+                <div key={key} className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-start gap-3">
                     <span className="font-bold text-gray-700 mt-2">
                       {String.fromCharCode(65 + index)}.
@@ -173,7 +175,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                     
                     <div className="flex-1">
                       <Form.Item
-                        {...field}
+                        {...restField}
                         name={[field.name, 'content']}
                         rules={[{ required: true, message: 'Nhập nội dung đáp án' }]}
                         className="mb-2"
@@ -193,7 +195,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                       )}
 
                       <Form.Item
-                        {...field}
+                        {...restField}
                         name={[field.name, 'isCorrect']}
                         valuePropName="checked"
                         className="mb-0"
@@ -214,7 +216,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
             </>
           )}
         </Form.List>
