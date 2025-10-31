@@ -126,96 +126,133 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     }
   }, [targetPage, numPages])
 
-  // Highlight text after page is rendered
+  // Highlight text after page is rendered (fuzzy token-based like EvarTutor)
   useEffect(() => {
     if (!highlightText || pageRendering) return;
 
+    const stopwords = new Set([
+      'the','a','an','and','or','of','to','in','for','on','with','at','by','from','as','is','are','was','were','be','this','that','these','those','it','its','into','over','under','than','then','so','but','if','not','no','yes','we','you','they','i','he','she','them','his','her','their','our','your'
+    ]);
+
+    const normalize = (s: string) => s
+      .toLowerCase()
+      .replace(/\*\*/g, '')
+      .replace(/[\u2010-\u2015]/g, '-') // normalize dashes
+      .replace(/[^\p{L}\p{N}\s-]/gu, ' ') // keep letters/numbers/space/hyphen
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const tokenize = (s: string) => normalize(s)
+      .split(' ')
+      .filter(t => t && !stopwords.has(t) && t.length >= 3);
+
+    const toNGrams = (tokens: string[], n: number) => {
+      const grams: string[] = [];
+      for (let i = 0; i <= tokens.length - n; i++) {
+        grams.push(tokens.slice(i, i + n).join(' '));
+      }
+      return grams;
+    };
+
     const highlightTextInPDF = () => {
       try {
-        // Wait a bit for text layer to be fully rendered
         setTimeout(() => {
           const textLayer = pageContainerRef.current?.querySelector('.react-pdf__Page__textContent');
           if (!textLayer) {
-            console.log('⚠️ Text layer not found yet');
             return;
           }
 
-          // Remove previous highlights
-          const oldHighlights = textLayer.querySelectorAll('.keynote-highlight');
-          oldHighlights.forEach(el => {
-            const parent = el.parentNode;
-            if (parent) {
-              parent.replaceChild(document.createTextNode(el.textContent || ''), el);
-            }
+          // Clear previous visual highlights
+          const spans = Array.from(textLayer.querySelectorAll('span')) as HTMLElement[];
+          spans.forEach(s => {
+            s.style.backgroundColor = '';
+            s.style.padding = '';
+            s.style.borderRadius = '';
+            s.classList.remove('keynote-highlight');
           });
 
-          // Clean and prepare search text
-          const searchText = highlightText
-            .replace(/\*\*/g, '') // Remove markdown bold
-            .replace(/\s+/g, ' ')  // Normalize whitespace
-            .trim()
-            .substring(0, 150); // Use first 150 chars for better matching
+          // Prepare query tokens and n-grams
+          const queryTokens = tokenize(highlightText).slice(0, 10);
+          const bigrams = toNGrams(queryTokens, 2);
+          const trigrams = toNGrams(queryTokens, 3);
 
-          console.log('🔍 Searching for text:', searchText);
+          if (queryTokens.length === 0) {
+            if (onPageChanged) setTimeout(() => onPageChanged(), 500);
+            return;
+          }
 
-          // Get all text spans in the text layer
-          const textSpans = Array.from(textLayer.querySelectorAll('span'));
-          let found = false;
+          // Build normalized text per span
+          const spanTexts = spans.map(s => normalize(s.textContent || ''));
 
-          // Try to find matching text across multiple spans
-          for (let i = 0; i < textSpans.length; i++) {
-            let combinedText = '';
-            let matchingSpans: HTMLElement[] = [];
+          // Sliding window across spans to score relevance
+          const WINDOW = 25; // spans per window
+          let bestScore = 0;
+          let bestRange: [number, number] | null = null;
 
-            // Combine text from consecutive spans
-            for (let j = i; j < Math.min(i + 20, textSpans.length); j++) {
-              const span = textSpans[j] as HTMLElement;
-              combinedText += span.textContent || '';
-              matchingSpans.push(span);
+          for (let i = 0; i < spanTexts.length; i++) {
+            const end = Math.min(i + WINDOW, spanTexts.length);
+            const windowText = spanTexts.slice(i, end).join(' ');
 
-              // Check if we have a match
-              const normalizedCombined = combinedText.replace(/\s+/g, ' ').trim();
-              const normalizedSearch = searchText.replace(/\s+/g, ' ').trim();
+            // Score by token overlap + n-gram bonuses + proximity proxy (unique tokens hit)
+            let score = 0;
+            let uniqueHits = 0;
+            const seen = new Set<string>();
 
-              if (normalizedCombined.toLowerCase().includes(normalizedSearch.toLowerCase().substring(0, 50))) {
-                // Highlight all matching spans
-                matchingSpans.forEach(s => {
-                  s.style.backgroundColor = '#fef08a'; // yellow-200
-                  s.style.padding = '2px 0';
-                  s.style.borderRadius = '2px';
-                  s.classList.add('keynote-highlight');
-                });
-
-                // Scroll to the first highlighted span
-                matchingSpans[0].scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
-
-                console.log('✅ Text highlighted successfully');
-                message.success('Text highlighted in PDF');
-                found = true;
-                
-                // Clear the highlight text after successful highlight
-                if (onPageChanged) {
-                  setTimeout(() => onPageChanged(), 2000);
-                }
-                break;
+            for (const t of queryTokens) {
+              if (windowText.includes(t)) {
+                score += 1;
+                if (!seen.has(t)) { uniqueHits++; seen.add(t); }
               }
             }
+            for (const g of bigrams) if (windowText.includes(g)) score += 1.5;
+            for (const g of trigrams) if (windowText.includes(g)) score += 2.5;
 
-            if (found) break;
-          }
+            // Proximity boost: more distinct tokens → higher score
+            score += uniqueHits * 0.5;
 
-          if (!found) {
-            console.log('⚠️ Text not found in current page');
-            message.warning('Text not found on this page. Try using Ctrl+F to search.');
-            // Still clear after a delay
-            if (onPageChanged) {
-              setTimeout(() => onPageChanged(), 3000);
+            if (score > bestScore) {
+              bestScore = score;
+              bestRange = [i, end - 1];
             }
           }
-        }, 500); // Wait for text layer to render
+
+          if (!bestRange || bestScore <= 0) {
+            if (onPageChanged) setTimeout(() => onPageChanged(), 1500);
+            return;
+          }
+
+          const [startIdx, endIdx] = bestRange;
+          const windowSpans = spans.slice(startIdx, endIdx + 1);
+
+          // Highlight spans containing any query tokens or n-grams
+          const needleList = [...trigrams, ...bigrams, ...queryTokens];
+          let firstHighlighted: HTMLElement | null = null;
+
+          for (const s of windowSpans) {
+            const text = normalize(s.textContent || '');
+            const hasHit = needleList.some(n => n && text.includes(n));
+            if (hasHit) {
+              s.style.backgroundColor = 'rgba(16, 117, 196, 0.28)';
+              s.style.padding = '2px 0';
+              s.style.borderRadius = '2px';
+              s.classList.add('keynote-highlight');
+              if (!firstHighlighted) firstHighlighted = s;
+            }
+          }
+
+          // If nothing within window matched at token level, softly highlight the window for context
+          if (!textLayer.querySelector('.keynote-highlight')) {
+            for (const s of windowSpans) {
+              s.style.backgroundColor = 'rgba(16, 117, 196, 0.14)';
+            }
+            firstHighlighted = windowSpans[0] || null;
+          }
+
+          if (firstHighlighted) {
+            firstHighlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (onPageChanged) setTimeout(() => onPageChanged(), 2000);
+          }
+        }, 500);
       } catch (error) {
         console.error('❌ Error highlighting text:', error);
       }

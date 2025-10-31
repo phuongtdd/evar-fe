@@ -12,7 +12,11 @@ import NotePage from "../component/note-page";
 
 const { Content } = Layout;
 
-export default function StudyMaterialLayout() {
+interface StudyMaterialLayoutProps {
+  knowledgeBaseId?: number | string;
+}
+
+export default function StudyMaterialLayout({ knowledgeBaseId }: StudyMaterialLayoutProps) {
   const [activeTab, setActiveTab] = useState("flashcards");
   const [showCreateFlashcards, setShowCreateFlashcards] = useState(false);
   const [showUploadArea, setShowUploadArea] = useState(false);
@@ -58,23 +62,36 @@ export default function StudyMaterialLayout() {
     loadContent();
   }, [selectedKnowledgeBase, knowledgeBases]);
 
+  // Auto-select provided knowledge base id when present
+  useEffect(() => {
+    if (knowledgeBaseId !== undefined && knowledgeBaseId !== null) {
+      const parsed = typeof knowledgeBaseId === 'string' ? Number(knowledgeBaseId) : knowledgeBaseId;
+      if (!Number.isNaN(parsed)) {
+        setSelectedKnowledgeBase(parsed as number);
+        setActiveTab('pdf');
+      }
+    }
+  }, [knowledgeBaseId]);
+
   return (
     <div className="!flex !h-screen !w-full !bg-white mt-12 ">
       <div className="!flex-1 !flex !flex-col">
         <div className="!flex !items-center !justify-between !px-6 !py-4 !border-b !border-gray-200">
           <div className="!flex !items-center !gap-4">
             <h3>Tài nguyên học tập</h3>
-            <Select
-              placeholder="Chọn tài nguyên học tập"
-              style={{ width: 300 }}
-              value={selectedKnowledgeBase || undefined}
-              onChange={(value) => setSelectedKnowledgeBase(value)}
-              loading={knowledgeBasesLoading}
-              options={knowledgeBases.map(kb => ({
-                label: kb.fileName,
-                value: kb.id,
-              }))}
-            />
+            {knowledgeBaseId == null && (
+              <Select
+                placeholder="Chọn tài nguyên học tập"
+                style={{ width: 300 }}
+                value={selectedKnowledgeBase || undefined}
+                onChange={(value) => setSelectedKnowledgeBase(value)}
+                loading={knowledgeBasesLoading}
+                options={knowledgeBases.map(kb => ({
+                  label: kb.fileName,
+                  value: kb.id,
+                }))}
+              />
+            )}
           </div>
 
           <div className="!flex !gap-2">

@@ -55,7 +55,7 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     })
     
     setPdfLoading(true)
-    setSelectedKB(kb)
+    setSelectedKB(kb) 
     setLocalFile(null)
     setPdfBlob(null)
     setCurrentPage(1)

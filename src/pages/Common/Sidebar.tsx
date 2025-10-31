@@ -83,12 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       key: "tutor",
       icon: <RobotOutlined className="text-2xl" />,
-      label: "Evar Tutor",
-    },
-    {
-      key: "material",
-      icon: <BookOutlined className="text-2xl" />,
-      label: "Material",
+      label: "EvarTutor",
     },
     {
       key: "flashcard",
@@ -246,9 +241,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         break;
       case "learning-resources":
         navigate("/learning-resources");
-        break;
-      case "material":
-        navigate("/material");
         break;
       case "flashcard":
         navigate("/flashcard");
