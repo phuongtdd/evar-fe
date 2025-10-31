@@ -1,0 +1,27 @@
+/* Responsive, clear table appearance for takeQuiz UI */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  margin: 8px 0 12px 0;
+}
+
+.table-responsive .math-content {
+  justify-content: flex-start; /* align content to left inside question */
+}
+
+.table-responsive table {
+  min-width: 720px; /* prevent columns from squeezing */
+  background: #ffffff;
+}
+
+.table-responsive th,
+.table-responsive td {
+  padding: 10px 12px; /* slightly larger padding for readability */
+  font-size: 15px;
+}
+
+.table-responsive thead th {
+  background: #f5f6f8;
+}
+
+

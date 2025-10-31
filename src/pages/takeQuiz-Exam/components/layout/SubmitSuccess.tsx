@@ -7,6 +7,8 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import BackButton from "../../../Common/BackButton";
+import MathContent from "../../../createExam-AI/components/ui/MathContent";
+import "../../styles/table-fixes.css";
 
 interface SubmitSuccessProps {
   examName?: string;
@@ -510,8 +512,8 @@ const SubmitSuccess: React.FC<SubmitSuccessProps> = ({
                               </>
                             )}
                           </div>
-                          <div className="text-[18px] text-black mb-6 leading-relaxed">
-                            {question.questionContent}
+                          <div className="text-[18px] text-black mb-6 leading-relaxed table-responsive">
+                            <MathContent content={question.questionContent || ""} />
                           </div>
 
                           {userSelectedAnswers.length > 0 && (

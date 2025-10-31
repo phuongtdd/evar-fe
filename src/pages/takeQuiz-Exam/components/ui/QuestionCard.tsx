@@ -5,6 +5,7 @@ import { QuestionCardProps } from "../../types";
 import { EXAM_STYLES, EXAM_CONFIG } from "../../constants";
 import MathContent from "../../../createExam-AI/components/ui/MathContent";
 import "../../styles/mathjax-fixes.css";
+import "../../styles/table-fixes.css";
 import AnswerOption from "./AnswerOption";
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -120,10 +121,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           <div className="text-[20px] !text-black leading-relaxed">
             <strong>Nội dung : </strong>
           </div>
-          <MathContent
-            content={question.content}
-            className="text-[18px] !text-black leading-relaxed"
-          />
+          <div className="table-responsive">
+            <MathContent
+              content={question.content}
+              className="text-[18px] !text-black leading-relaxed"
+            />
+          </div>
         </div>
       </div>
 
