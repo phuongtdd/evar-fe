@@ -11,6 +11,7 @@ import { useKnowledgeBases, useFlashcards, knowledgeBaseService, flashcardServic
 import FlashcardViewer from "../component/flashcard-viewer";
 import NotePage from "../component/ note-page";
 
+
 const { Content } = Layout;
 
 export default function StudyMaterialLayout() {
@@ -207,7 +208,6 @@ export default function StudyMaterialLayout() {
                           Tạo thẻ ghi nhớ
                         </Button>
                       </div>
-
                       {/* Card Set Selector */}
                       <div className="!flex !items-center !gap-3">
                         <div className="!text-sm !text-gray-600">Bộ thẻ:</div>

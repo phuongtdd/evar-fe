@@ -79,7 +79,7 @@ function getUserRolesFromToken(token: string): string[] {
   try {
     const payload = decodeJwt(token);
     if (payload.scope && typeof payload.scope === 'string') {
-      return payload.scope.split(' ').filter(role => role.startsWith('ROLE_'));
+      return payload.scope.split(' ').filter((role: string) => role.startsWith('ROLE_'));
     }
     return [];
   } catch {
