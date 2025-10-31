@@ -3,6 +3,8 @@ import { Badge, Button, Modal, Spin, Tooltip } from "antd";
 import { StarOutlined, StarFilled, EyeOutlined } from "@ant-design/icons";
 import { QuestionCardProps } from "../../types";
 import { EXAM_STYLES, EXAM_CONFIG } from "../../constants";
+import MathContent from "../../../createExam-AI/components/ui/MathContent";
+import "../../styles/mathjax-fixes.css";
 import AnswerOption from "./AnswerOption";
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -116,9 +118,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       <div className="mb-6 flex flex-row">
         <div className="flex flex-col gap-2 flex-1">
           <div className="text-[20px] !text-black leading-relaxed">
-           <strong>Nội dung : 
-            </strong> {question.content}
+            <strong>Nội dung : </strong>
           </div>
+          <MathContent
+            content={question.content}
+            className="text-[18px] !text-black leading-relaxed"
+          />
         </div>
       </div>
 

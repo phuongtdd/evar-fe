@@ -1,7 +1,9 @@
 import React from "react";
 import { Checkbox, Radio } from "antd";
 import { AnswerOptionProps } from "../../types";
+import MathContent from "../../../createExam-AI/components/ui/MathContent";
 import { EXAM_STYLES } from "../../constants";
+import "../../styles/mathjax-fixes.css";
 
 const AnswerOption: React.FC<AnswerOptionProps> = ({
   answer,
@@ -29,8 +31,8 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
             <span className="font-bold mr-4 text-[20px] text-black">
               {letter}.
             </span>
-            <span className="text-[18px] leading-relaxed text-black">
-              {answer.content}
+            <span className="text-[18px] leading-relaxed text-black answer-content">
+              <MathContent content={answer.content} />
             </span>
           </div>
         </Checkbox>
@@ -56,9 +58,9 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
           <span
             className={`text-[18px] leading-relaxed ${
               isSelected ? "!text-blue" : "!text-black"
-            }`}
+            } answer-content`}
           >
-            {answer.content}
+            <MathContent content={answer.content} />
           </span>
         </div>
       </Radio>

@@ -1,0 +1,27 @@
+/* Center MathJax content with answer label text */
+.answer-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+.answer-content mjx-container {
+  display: inline-flex !important;
+  align-items: center;
+  vertical-align: middle !important;
+}
+
+.answer-content mjx-container[display="true"] {
+  /* For block equations inside answer text, keep baseline reasonable */
+  display: inline-flex !important;
+}
+
+.answer-content mjx-container > svg {
+  margin-top: 0 !important; /* prevent floating up */
+}
+
+/* Make sure the label line-height doesn't push MathJax off baseline */
+.answer-content {
+  line-height: 1.4;
+}
+
+

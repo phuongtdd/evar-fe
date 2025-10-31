@@ -9,7 +9,7 @@ class ExamServiceImpl implements ExamService {
   async getExamById(examId: string): Promise<ExamResponse> {
     try {
       const response = await apiClient.get(`${this.baseURL}?id=${examId}`);
-      console.log("getExamById: " + JSON.stringify(response, null, 0));
+      // console.log("getExamById: " + JSON.stringify(response, null, 0));
       return response.data;
     } catch (error) {
       console.error("Error fetching exam:", error);

@@ -14,6 +14,10 @@ interface MathContentProps {
 const MathContent: React.FC<MathContentProps> = ({ content, className = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sanitizedContent = sanitizeMathContent(content);
+  // Replace paragraph tags with span to better align inline content in quiz UI
+  const inlineContent = sanitizedContent
+    .replace(/<p(\s|>)/g, '<span$1')
+    .replace(/<\/p>/g, '</span>');
 
   useEffect(() => {
     // Load MathJax nếu chưa có
@@ -68,7 +72,7 @@ const MathContent: React.FC<MathContentProps> = ({ content, className = '' }) =>
     <div
       ref={containerRef}
       className={`math-content ${className}`}
-      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+      dangerouslySetInnerHTML={{ __html: inlineContent }}
     />
   );
 };
