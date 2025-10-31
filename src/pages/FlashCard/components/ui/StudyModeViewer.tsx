@@ -11,6 +11,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { FlashCard } from '../../types/cardSet';
+import MathContent from '../../../createExam-AI/components/ui/MathContent';
 
 interface StudyModeViewerProps {
   flashcards: FlashCard[];
@@ -288,10 +289,9 @@ const StudyModeViewer: React.FC<StudyModeViewerProps> = ({ flashcards, onBack })
                 <div className="!text-sm !text-blue-600 !font-semibold !mb-4 !uppercase">
                   Câu hỏi
                 </div>
-                <div
-                  className="!text-2xl !font-bold !text-gray-900 !text-center !leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: currentCard.front }}
-                />
+                <div className="!text-2xl !font-bold !text-gray-900 !text-center !leading-relaxed">
+                  <MathContent content={currentCard.front} />
+                </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click để lật thẻ</div>
               </div>
             </Card>
@@ -308,10 +308,9 @@ const StudyModeViewer: React.FC<StudyModeViewerProps> = ({ flashcards, onBack })
                 <div className="!text-sm !text-purple-600 !font-semibold !mb-4 !uppercase">
                   Câu trả lời
                 </div>
-                <div
-                  className="!text-xl !text-gray-800 !text-center !leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: currentCard.back }}
-                />
+                <div className="!text-xl !text-gray-800 !text-center !leading-relaxed">
+                  <MathContent content={currentCard.back} />
+                </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click để lật lại</div>
               </div>
             </Card>

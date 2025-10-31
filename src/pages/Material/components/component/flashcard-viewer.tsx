@@ -10,6 +10,7 @@ import {
   CloseOutlined,
   ArrowLeftOutlined
 } from "@ant-design/icons"
+import MathContent from "../../../createExam-AI/components/ui/MathContent"
 
 interface FlashcardViewerProps {
   flashcards: Array<{
@@ -181,7 +182,7 @@ export default function FlashcardViewer({ flashcards, onBack }: FlashcardViewerP
               <div className="!flex !flex-col !items-center !justify-center !h-full !p-8">
                 <div className="!text-sm !text-blue-600 !font-semibold !mb-4 !uppercase">Question</div>
                 <div className="!text-2xl !font-bold !text-gray-900 !text-center !leading-relaxed">
-                  {currentCard.front}
+                  <MathContent content={currentCard.front} />
                 </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click to flip</div>
               </div>
@@ -198,7 +199,7 @@ export default function FlashcardViewer({ flashcards, onBack }: FlashcardViewerP
               <div className="!flex !flex-col !items-center !justify-center !h-full !p-8">
                 <div className="!text-sm !text-purple-600 !font-semibold !mb-4 !uppercase">Answer</div>
                 <div className="!text-xl !text-gray-800 !text-center !leading-relaxed">
-                  {currentCard.back}
+                  <MathContent content={currentCard.back} />
                 </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click to flip back</div>
               </div>

@@ -3,6 +3,7 @@ import { Card, Dropdown, Button } from 'antd';
 import { EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import type { FlashCard } from '../../types/cardSet';
+import MathContent from '../../../createExam-AI/components/ui/MathContent';
 
 interface SimpleFlashCardProps {
   card: FlashCard;
@@ -125,8 +126,9 @@ const SimpleFlashCard: React.FC<SimpleFlashCardProps> = ({ card, onEdit, onDelet
                 WebkitLineClamp: 5,
                 WebkitBoxOrient: 'vertical',
               }}
-              dangerouslySetInnerHTML={{ __html: card.front }}
-            />
+            >
+              <MathContent content={card.front} />
+            </div>
           </div>
         </Card>
 
@@ -167,8 +169,9 @@ const SimpleFlashCard: React.FC<SimpleFlashCardProps> = ({ card, onEdit, onDelet
               WebkitLineClamp: 5,
               WebkitBoxOrient: 'vertical',
             }}
-            dangerouslySetInnerHTML={{ __html: card.back }}
-          />
+          >
+            <MathContent content={card.back} />
+          </div>
         </Card>
       </div>
     </div>

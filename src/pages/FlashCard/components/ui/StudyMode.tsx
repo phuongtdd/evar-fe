@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { FlashCard } from '../../types';
 import { shuffleArray } from '../../utils';
+import MathContent from '../../../createExam-AI/components/ui/MathContent';
 
 interface StudyModeProps {
   cards: FlashCard[];
@@ -135,7 +136,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ cards, onComplete, onExit, onUpda
         
         <Space size="middle">
           <Tag color="purple" style={{ fontSize: '18px', padding: '8px 16px', fontWeight: 600 }}>
-            {currentIndex + 1} / {shuffledCards.length}
+            {currentIndex + 1} / {cardList.length}
           </Tag>
           
           <Button 
@@ -186,7 +187,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ cards, onComplete, onExit, onUpda
               <div className="!flex !flex-col !items-center !justify-center !h-full !p-8">
                 <div className="!text-sm !text-blue-600 !font-semibold !mb-4 !uppercase">Câu hỏi</div>
                 <div className="!text-2xl !font-bold !text-gray-900 !text-center !leading-relaxed">
-                  {currentCard.front}
+                  <MathContent content={currentCard.front} />
                 </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click để lật thẻ</div>
               </div>
@@ -203,7 +204,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ cards, onComplete, onExit, onUpda
               <div className="!flex !flex-col !items-center !justify-center !h-full !p-8">
                 <div className="!text-sm !text-purple-600 !font-semibold !mb-4 !uppercase">Câu trả lời</div>
                 <div className="!text-xl !text-gray-800 !text-center !leading-relaxed">
-                  {currentCard.back}
+                  <MathContent content={currentCard.back} />
                 </div>
                 <div className="!mt-8 !text-sm !text-gray-400">Click để lật lại</div>
               </div>
