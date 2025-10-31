@@ -156,7 +156,7 @@ export const usePdfUpload = () => {
       }
 
       const response = await knowledgeBaseService.uploadPdf(file, userId);
-      message.success('File uploaded successfully! Processing...');
+      // Message sẽ được hiển thị sau khi TẤT CẢ files đã upload và processing xong
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';

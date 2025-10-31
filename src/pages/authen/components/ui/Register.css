@@ -194,10 +194,9 @@
 }
 .password-toggle {
   position: absolute;
-  right: 1rem;
-  /* slightly lower than exact center to visually align with input text */
-  top: calc(50% + 0.35rem);
-  transform: translateY(-8%);
+  right: calc(0.875rem - 2px);
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: #6392e9;
@@ -208,6 +207,8 @@
   justify-content: center;
   transition: color 0.2s;
   z-index: 5; /* sit above native input decorations */
+  width: 24px;
+  height: 24px;
 }
 .password-toggle:hover {
   color: #4a7fd9;

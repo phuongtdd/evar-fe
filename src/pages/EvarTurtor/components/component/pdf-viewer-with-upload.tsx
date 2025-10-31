@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useMemo, useEffect } from "react"
-import { Button, Spin, Empty, Space, Tooltip, Input, Card, Tag, Upload, message } from "antd"
+import { Button, Spin, Empty, Space, Tooltip, Input, Card, Tag, Upload, message, Progress, Modal } from "antd"
 import {
   LeftOutlined,
   RightOutlined,
@@ -40,6 +40,8 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(1.0)
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfLoadingProgress, setPdfLoadingProgress] = useState(0)
+  const [hasShownSuccessMessage, setHasShownSuccessMessage] = useState(false)
   const [pageRendering, setPageRendering] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pageContainerRef = useRef<HTMLDivElement>(null)
@@ -55,6 +57,8 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     })
     
     setPdfLoading(true)
+    setPdfLoadingProgress(0)
+    setHasShownSuccessMessage(false)
     setSelectedKB(kb) 
     setLocalFile(null)
     setPdfBlob(null)
@@ -62,41 +66,63 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     setNumPages(0)
     setZoomLevel(1.0)
 
-    // Fetch PDF as blob to avoid CORS/401 issues
+    // Fetch PDF as blob to avoid CORS/401 issues with progress tracking
     if (kb.fileUrl) {
       try {
         console.log('📥 Fetching PDF as blob from:', kb.fileUrl)
         
-        const response = await fetch(kb.fileUrl, {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-          headers: {
-            'Accept': 'application/pdf'
-          }
-        })
-
-        console.log('📡 Fetch response:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        const blob = await response.blob()
-        console.log('✅ PDF blob created:', {
-          size: blob.size,
-          type: blob.type
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          
+          xhr.open('GET', kb.fileUrl!, true)
+          xhr.setRequestHeader('Accept', 'application/pdf')
+          xhr.responseType = 'blob'
+          
+          // Track download progress
+          xhr.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = Math.round((event.loaded / event.total) * 100)
+              setPdfLoadingProgress(percentComplete)
+              console.log(`📊 Download progress: ${percentComplete}%`)
+            } else {
+              // If content-length is not available, simulate progress
+              setPdfLoadingProgress((prev) => Math.min(prev + 5, 90))
+            }
+          })
+          
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const blob = xhr.response
+              console.log('✅ PDF blob created:', {
+                size: blob.size,
+                type: blob.type
+              })
+              setPdfLoadingProgress(100)
+              resolve(blob)
+            } else {
+              reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`))
+            }
+          })
+          
+          xhr.addEventListener('error', () => {
+            reject(new Error('Network error occurred while loading PDF'))
+          })
+          
+          xhr.addEventListener('abort', () => {
+            reject(new Error('PDF loading was aborted'))
+          })
+          
+          xhr.send()
         })
         
         setPdfBlob(blob)
+        setPdfLoadingProgress(100)
+        // Keep modal open until document is loaded (will be closed in onDocumentLoadSuccess)
       } catch (error) {
         console.error('❌ Failed to fetch PDF:', error)
-        message.error('Failed to load PDF: ' + (error instanceof Error ? error.message : 'Unknown error'))
+        message.error('Không thể tải PDF: ' + (error instanceof Error ? error.message : 'Lỗi không xác định'))
         setPdfLoading(false)
+        setPdfLoadingProgress(0)
       }
     }
   }
@@ -315,12 +341,19 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
       return
     }
     setPdfLoading(true)
+    setPdfLoadingProgress(0)
+    setHasShownSuccessMessage(false)
     setLocalFile(file)
     setSelectedKB(null)
     setCurrentPage(1)
     setNumPages(0)
     setZoomLevel(1.0)
-    message.success(`Loading: ${file.name}`)
+    
+    // Simulate progress for local file (instant load)
+    setPdfLoadingProgress(50)
+    setTimeout(() => {
+      setPdfLoadingProgress(100)
+    }, 100)
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -338,6 +371,16 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     })
     setNumPages(numPages)
     setPdfLoading(false)
+    setPdfLoadingProgress(0)
+    
+    // Hiển thị thông báo thành công chỉ 1 lần sau khi đóng modal
+    if (!hasShownSuccessMessage) {
+      const fileName = localFile?.name || selectedKB?.fileName || 'PDF'
+      setTimeout(() => {
+        message.success(`Đã tải thành công: ${fileName}`)
+        setHasShownSuccessMessage(true)
+      }, 300)
+    }
   }
 
   const onDocumentLoadError = (error: Error) => {
@@ -358,6 +401,7 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
     setCurrentPage(1)
     setNumPages(0)
     setPdfLoading(false)
+    setPdfLoadingProgress(0)
     setPageRendering(false)
   }
 
@@ -515,9 +559,9 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
         {pdfSource ? (
           <div className="!relative" ref={pageContainerRef}>
             {/* Loading overlay for page rendering */}
-            {(pdfLoading || pageRendering) && (
+            {pageRendering && (
               <div className="!absolute !inset-0 !flex !items-center !justify-center !bg-white !bg-opacity-80 !z-10">
-                <Spin size="large" tip={pdfLoading ? "Loading PDF..." : "Rendering page..."} />
+                <Spin size="large" tip="Đang render trang..." />
               </div>
             )}
             
@@ -636,11 +680,88 @@ export default function PdfViewerWithUpload({ knowledgeBases, loading, selectedK
 
   if (isFullScreen) {
     return (
-      <div className="!fixed !inset-0 !z-50 !bg-black">
-        {pdfViewerContent}
-      </div>
+      <>
+        <Modal
+          open={pdfLoading}
+          closable={false}
+          maskClosable={false}
+          footer={null}
+          centered
+          width={420}
+          className="pdf-loading-modal"
+        >
+          <div className="!flex !flex-col !items-center !justify-center !py-6">
+            <Spin size="large" className="!mb-6" />
+            <div className="!w-full !px-4">
+              <Progress 
+                type="circle"
+                percent={pdfLoadingProgress} 
+                status={pdfLoadingProgress === 100 ? "success" : "active"}
+                strokeColor={{
+                  '0%': '#108ee9',
+                  '100%': '#87d068',
+                }}
+                format={(percent) => `${percent}%`}
+              />
+              <div className="!mt-6 !text-center">
+                <p className="!text-base !font-medium !text-gray-700 !mb-2">
+                  {pdfLoadingProgress < 100 
+                    ? `Đang tải PDF...` 
+                    : 'Đang xử lý PDF...'}
+                </p>
+                <p className="!text-sm !text-gray-500">
+                  {selectedKB?.fileName || localFile?.name || 'PDF file'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Modal>
+        <div className="!fixed !inset-0 !z-50 !bg-black">
+          {pdfViewerContent}
+        </div>
+      </>
     )
   }
 
-  return pdfViewerContent
-}
+  return (
+    <>
+      <Modal
+        open={pdfLoading}
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        centered
+        width={360}
+        className="pdf-loading-modal"
+        styles={{
+          body: { padding: '32px 24px' }
+        }}
+      >
+        <div className="!flex !flex-col !items-center !justify-center">
+          <Progress 
+            type="circle"
+            percent={pdfLoadingProgress} 
+            status={pdfLoadingProgress === 100 ? "success" : "active"}
+            strokeColor={{
+              '0%': '#1890ff',
+              '100%': '#52c41a',
+            }}
+            format={(percent) => `${percent}%`}
+            size={120}
+          />
+          <div className="!mt-6 !text-center">
+            <p className="!text-base !font-medium !text-gray-800 !mb-1">
+              {pdfLoadingProgress < 100 
+                ? `Đang tải PDF...` 
+                : 'Đang xử lý...'}
+            </p>
+            <p className="!text-sm !text-gray-500">
+              {selectedKB?.fileName || localFile?.name || 'PDF file'}
+            </p>
+          </div>
+        </div>
+      </Modal>
+        {pdfViewerContent}
+      </>
+    )
+  }

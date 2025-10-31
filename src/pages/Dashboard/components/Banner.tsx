@@ -55,7 +55,13 @@ const Banner = () => {
   return (
     <div>
       {" "}
-      <div className="bg-[#406AB9] text-white mb-[120px] rounded-2xl border-none p-10 ">
+      <div 
+        className="bg-[#406AB9] text-white mb-[120px] rounded-2xl p-10"
+        style={{
+          border: '2px solid #2d4f8a',
+          boxShadow: '0 8px 24px rgba(64, 106, 185, 0.3)'
+        }}
+      >
         <div className="flex items-start justify-between mb-3">
           <div>
             <p className="text-[20px] opacity-90 mb-2">Thứ 6, 20/12/2025</p>

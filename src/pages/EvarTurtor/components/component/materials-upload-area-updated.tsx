@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert, Modal, Slider, InputNumber, Space } from "antd"
+import { Upload, Button, message, Form, Input, Select, Card, Progress, Tag, Alert, Modal, Slider, InputNumber, Space, Spin } from "antd"
 import type { UploadFile } from "antd"
 import { usePdfUpload, getCurrentUserId, knowledgeBaseService, flashcardService } from "../../hooks/evarTutorHooks"
 import { CheckCircleOutlined, ExclamationCircleOutlined, FileTextOutlined, InboxOutlined, ThunderboltOutlined } from "@ant-design/icons"
@@ -32,6 +32,10 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
   const [showFlashcardModal, setShowFlashcardModal] = useState(false)
   const [flashcardCount, setFlashcardCount] = useState(10)
   const [pendingGenerations, setPendingGenerations] = useState<FlashcardGenerationRequest[]>([])
+  const [showUploadProgressModal, setShowUploadProgressModal] = useState(false)
+  const [overallProgress, setOverallProgress] = useState(0)
+  const [currentStep, setCurrentStep] = useState<'uploading' | 'processing' | 'completed'>('uploading')
+  const [hasShownUploadSuccessMessage, setHasShownUploadSuccessMessage] = useState(false)
   
   const { uploadPdf, uploading, error } = usePdfUpload()
   
@@ -73,11 +77,23 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
       return
     }
 
+    // Mở modal ngay khi click
+    setShowUploadProgressModal(true)
+    setOverallProgress(0)
+    setCurrentStep('uploading')
+    setUploadStatuses([])
+    setHasShownUploadSuccessMessage(false)
+
     try {
       // Upload each PDF file
-      for (const file of fileList) {
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i]
         if (file.originFileObj) {
           try {
+            // Cập nhật progress cho upload
+            const uploadProgress = Math.round(((i) / fileList.length) * 50)
+            setOverallProgress(uploadProgress)
+            
             // Add to upload statuses
             const uploadStatus: UploadStatus = {
               file,
@@ -85,8 +101,12 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
             }
             setUploadStatuses(prev => [...prev, uploadStatus])
             
-            // Upload the file
+            // Upload the file (không hiển thị message ở đây)
             const response = await uploadPdf(file.originFileObj, userId)
+            
+            // Update progress sau khi upload xong file này
+            const uploadCompleteProgress = Math.round(((i + 1) / fileList.length) * 50)
+            setOverallProgress(uploadCompleteProgress)
             
             // Update status to processing
             setUploadStatuses(prev => prev.map(status => 
@@ -124,11 +144,67 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
         }
       }
       
+      // Tất cả files đã upload xong, chuyển sang processing
+      setCurrentStep('processing')
+      setOverallProgress(50)
+      
     } catch (error) {
       console.error('Submit error:', error)
       message.error("Failed to upload files")
+      setShowUploadProgressModal(false)
     }
   }
+
+  // Tính toán overall progress dựa trên uploadStatuses
+  useEffect(() => {
+    if (!showUploadProgressModal || uploadStatuses.length === 0) return
+    
+    const totalFiles = uploadStatuses.length
+    const readyFiles = uploadStatuses.filter(s => s.status === 'ready').length
+    const errorFiles = uploadStatuses.filter(s => s.status === 'error').length
+    const processingFiles = uploadStatuses.filter(s => s.status === 'processing').length
+    const uploadingFiles = uploadStatuses.filter(s => s.status === 'uploading').length
+    
+    // Tính progress: 0-50% cho upload, 50-100% cho processing
+    let progress = 0
+    
+    if (uploadingFiles > 0) {
+      // Vẫn đang upload
+      const uploadedCount = totalFiles - uploadingFiles
+      progress = Math.round((uploadedCount / totalFiles) * 50)
+    } else {
+      // Đã upload xong, đang processing
+      progress = 50 + Math.round((readyFiles / totalFiles) * 50)
+      
+      if (progress > 100) progress = 100
+    }
+    
+    setOverallProgress(progress)
+    
+    // Kiểm tra nếu TẤT CẢ files đã hoàn thành (ready hoặc error)
+    const allCompleted = totalFiles > 0 && (readyFiles + errorFiles) === totalFiles
+    
+    if (allCompleted && currentStep !== 'completed') {
+      setCurrentStep('completed')
+      setOverallProgress(100)
+      
+      // Đợi một chút để hiển thị 100% và đóng modal
+      setTimeout(() => {
+        setShowUploadProgressModal(false)
+        
+        // Hiển thị message thành công chỉ 1 lần sau khi đóng modal
+        if (!hasShownUploadSuccessMessage && readyFiles > 0) {
+          const successMessage = readyFiles === 1 
+            ? `Đã tải và xử lý thành công: ${uploadStatuses.find(s => s.status === 'ready')?.fileName}`
+            : `Đã tải và xử lý thành công ${readyFiles} file PDF`
+          setTimeout(() => {
+            message.success(successMessage)
+            setHasShownUploadSuccessMessage(true)
+          }, 300)
+        }
+      }, 800)
+    }
+  }, [uploadStatuses, showUploadProgressModal, currentStep, hasShownUploadSuccessMessage])
 
   // Polling logic using useEffect
   useEffect(() => {
@@ -149,7 +225,7 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
               setUploadStatuses(prev => prev.map(u => 
                 u.file.uid === fileUid ? { ...u, status: 'ready' } : u
               ))
-              message.success(`File ${status.file.name} processed successfully!`)
+              // KHÔNG hiển thị message ở đây, sẽ hiển thị sau khi TẤT CẢ files xong
               
               // Fetch latest KB detail to ensure fresh data
               try {
@@ -175,14 +251,8 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
                 console.error('Failed to fetch latest KB detail:', error)
               }
               
-              // Add to pending generations list for user to choose count
-              setPendingGenerations(prev => [
-                ...prev,
-                { knowledgeBaseId: kbId, fileName: status.file.name || 'Unknown' }
-              ])
-              
-              // Show modal for user to choose flashcard count
-              setShowFlashcardModal(true)
+              // Không hiển thị pop-up flashcard tự động sau khi upload
+              // User có thể tạo flashcard thủ công nếu muốn
               
               // Delay to ensure backend has committed all data
               console.log('⏳ Waiting for backend to commit all data...')
@@ -418,6 +488,48 @@ export default function MaterialsUploadArea({ onClose, onUploaded, onRefetch, au
           </Button>
         </div>
       )}
+
+      {/* Upload Progress Modal */}
+      <Modal
+        open={showUploadProgressModal}
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        centered
+        width={380}
+        className="upload-progress-modal"
+        styles={{
+          body: { padding: '32px 24px' }
+        }}
+      >
+        <div className="!flex !flex-col !items-center !justify-center">
+          <Progress 
+            type="circle"
+            percent={overallProgress} 
+            status={currentStep === 'completed' ? "success" : "active"}
+            strokeColor={{
+              '0%': '#1890ff',
+              '100%': '#52c41a',
+            }}
+            format={(percent) => `${percent}%`}
+            size={120}
+          />
+          <div className="!mt-6 !text-center">
+            <p className="!text-base !font-medium !text-gray-800 !mb-1">
+              {currentStep === 'uploading' && 'Đang tải PDF lên...'}
+              {currentStep === 'processing' && 'Đang xử lý PDF...'}
+              {currentStep === 'completed' && 'Hoàn tất!'}
+            </p>
+            <p className="!text-sm !text-gray-500">
+              {uploadStatuses.length > 0 && (
+                <>
+                  {uploadStatuses.filter(s => s.status === 'ready').length} / {uploadStatuses.length} file đã sẵn sàng
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* Flashcard Generation Modal */}
       <Modal

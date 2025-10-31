@@ -86,9 +86,9 @@ export default function RoomManagementPage() {
         </Title>
         <Layout style={{ background: "transparent" }}>
           <Content>
-            <Space direction="vertical" style={{ width: "100%" }} size={32}>
+            <Space direction="vertical" style={{ width: "100%" }} size={20}>
               <div>
-                <Title level={4}>Phòng của tôi</Title>
+                <Title level={4} style={{ marginBottom: 16 }}>Phòng của tôi</Title>
                 {myRoom ? (
                   <RoomCard
                     room={myRoom}
@@ -102,8 +102,8 @@ export default function RoomManagementPage() {
                 )}
               </div>
               <div>
-                <Title level={4}>Khám phá thêm</Title>
-                <Space direction="vertical" style={{ width: "100%" }}>
+                <Title level={4} style={{ marginBottom: 16 }}>Khám phá thêm</Title>
+                <Space direction="vertical" style={{ width: "100%" }} size={16}>
                   {discoverRooms.map((room) => (
                     <RoomCard key={room.id} room={room} />
                   ))}

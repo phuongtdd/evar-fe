@@ -19,9 +19,9 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         <div className="flex flex-column item-center justify-center w-full h-full">
           <div className="auth-content">
             <AuthBg/>
-            <Container>
-              <Row className=" flex item-center justify-content-center">
-                <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <Container className="d-flex justify-content-center">
+              <Row className="w-100 justify-content-center">
+                <Col xs={12} sm={10} md={8} lg={6} xl={5} className="mx-auto">
                   <Card className="auth-card !rounded-2xl z-10">
                     <Card.Body className="p-4 p-md-5">
                       <div className="text-center mb-4 w-full flex flex-column item-center justify-center">

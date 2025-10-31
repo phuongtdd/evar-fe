@@ -9,13 +9,18 @@ interface RoomPaginationProps extends PaginationProps {
 
 const RoomPagination: React.FC<RoomPaginationProps> = (props) => {
     return (
-        <Pagination
-            defaultCurrent={1}
-            total={50} // Giá trị mặc định hoặc truyền từ props
-            pageSize={10} // Giá trị mặc định hoặc truyền từ props
-            style={{ marginTop: 24, textAlign: 'center' }}
-            {...props} // Ghi đè các giá trị mặc định bằng props được truyền vào
-        />
+        <div style={{ 
+          marginTop: 20, 
+          textAlign: 'center',
+          padding: '16px 0'
+        }}>
+          <Pagination
+              defaultCurrent={1}
+              total={50} // Giá trị mặc định hoặc truyền từ props
+              pageSize={10} // Giá trị mặc định hoặc truyền từ props
+              {...props} // Ghi đè các giá trị mặc định bằng props được truyền vào
+          />
+        </div>
     );
 };
 

@@ -200,19 +200,23 @@
 }
 .password-toggle {
   position: absolute;
-  right: 1rem;
-  /* slightly lower than exact center to visually align with input text */
-  top: calc(50% + 0.35rem);
-  transform: translateY(-8%);
+  right: 0.75rem;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
   background: none;
   border: none;
   color: #6392e9;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
+  z-index: 5; /* sit above native input decorations */
+  width: 24px;
+  height: 24px;
+  line-height: 1;
 }
 .password-toggle:hover {
   color: #4a7fd9;
@@ -228,8 +232,6 @@ input[type="password"]::-webkit-textfield-decoration-container {
   display: none !important;
 }
 
-/* ensure our toggle sits above */
-.password-toggle { z-index: 5; }
 
 /* Remember/Forgot */
 .remember-me {

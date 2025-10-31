@@ -64,16 +64,35 @@ const RoomCard: React.FC<RoomCardProps> = ({
   };
 
   return (
-    <Card bordered style={{ marginBottom: 16 }}>
-      <Space direction="vertical" style={{ width: "100%" }}>
+    <Card 
+      bordered 
+      className="rounded-2xl transition-all"
+      style={{ 
+        marginBottom: 16,
+        border: '2px solid #d1d5db',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.12)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <Space direction="vertical" style={{ width: "100%" }} size={12}>
         <Space>
           <Text
             strong
             style={{
               background: "#e6f7ff",
               color: "#1890ff",
-              padding: "2px 12px",
+              padding: "4px 16px",
               borderRadius: 16,
+              border: '1px solid #91d5ff',
+              fontSize: '14px',
+              fontWeight: 600
             }}
           >
             {room.subject?.subjectName || "Chung"}
@@ -110,7 +129,15 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 cancelText="Hủy"
                 okButtonProps={{ loading: loading, danger: true }}
               >
-                <Button danger icon={<DeleteOutlined />}>
+                <Button 
+                  danger 
+                  icon={<DeleteOutlined />}
+                  className="rounded-lg"
+                  style={{
+                    height: '36px',
+                    border: '1px solid #ff4d4f'
+                  }}
+                >
                   Xóa phòng
                 </Button>
               </Popconfirm>
@@ -121,12 +148,28 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 type="primary"
                 icon={<RocketOutlined />}
                 onClick={onUpdate}
+                className="rounded-lg"
+                style={{
+                  height: '36px',
+                  background: '#1890ff',
+                  borderColor: '#1890ff'
+                }}
               >
                 Cập nhật
               </Button>
             )}
 
-            <Button type="primary" onClick={handleJoinRoom}>
+            <Button 
+              type="primary" 
+              onClick={handleJoinRoom}
+              className="rounded-lg"
+              style={{
+                height: '36px',
+                background: '#52c41a',
+                borderColor: '#52c41a',
+                fontWeight: 600
+              }}
+            >
               Tham gia
             </Button>
           </Space>

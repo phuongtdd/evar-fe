@@ -59,8 +59,15 @@ const Dashboard: React.FC = () => {
         <Banner />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="rounded-2xl border-gray-200">
+          <div className="lg:col-span-2">
+            <Card 
+              className="rounded-2xl" 
+              style={{ 
+                border: '2px solid #d1d5db',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                marginBottom: '20px'
+              }}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Bắt đầu nhanh</h3>
@@ -81,17 +88,35 @@ const Dashboard: React.FC = () => {
               </div>
             </Card>
 
-            <RoomSection />
-            <QuizList />
+            <div style={{ marginBottom: '20px' }}>
+              <RoomSection />
+            </div>
+            <div>
+              <QuizList />
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="rounded-2xl border-gray-200">
+          <div>
+            <Card 
+              className="rounded-2xl" 
+              style={{ 
+                border: '2px solid #d1d5db',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                marginBottom: '20px'
+              }}
+            >
               <h3 className="text-lg font-bold text-gray-900 mb-3">Lịch</h3>
               <Calendar fullscreen={false} />
             </Card>
 
-            <Card className="rounded-2xl border-gray-200">
+            <Card 
+              className="rounded-2xl" 
+              style={{ 
+                border: '2px solid #d1d5db',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                marginBottom: '20px'
+              }}
+            >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-900">Hoạt động gần đây</h3>
                 {loading && <Spin size="small" />}
@@ -113,7 +138,13 @@ const Dashboard: React.FC = () => {
               )}
             </Card>
 
-            <Card className="rounded-2xl border-gray-200">
+            <Card 
+              className="rounded-2xl" 
+              style={{ 
+                border: '2px solid #d1d5db',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+              }}
+            >
               <h3 className="text-lg font-bold text-gray-900 mb-3">Gợi ý tiếp theo</h3>
               <ul className="list-disc list-inside text-sm text-gray-700 space-y-2">
                 <li>Ôn lại đề thi có điểm thấp để cải thiện</li>
@@ -132,7 +163,22 @@ export default Dashboard;
 
 function QuickAction({ title, desc, onClick }: { title: string; desc: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="text-left bg-gray-50 hover:bg-gray-100 transition-colors rounded-xl p-4 border border-gray-200">
+    <button 
+      onClick={onClick} 
+      className="text-left bg-gray-50 hover:bg-gray-100 transition-all rounded-xl p-4"
+      style={{
+        border: '2px solid #d1d5db',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.12)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
       <div className="text-sm font-semibold text-gray-900">{title}</div>
       <div className="text-xs text-gray-600">{desc}</div>
     </button>

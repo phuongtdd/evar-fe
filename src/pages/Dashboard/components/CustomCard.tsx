@@ -13,7 +13,19 @@ const CustomCard = ({ room }: Props) => {
     <>
       <Card
         key={room.id}
-        className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all relative overflow-visible !p-[20px]"
+        className="rounded-[24px] transition-all relative overflow-visible !p-[20px]"
+        style={{
+          border: '2px solid #d1d5db',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+          e.currentTarget.style.transform = 'translateY(-4px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
       >
         <div className="absolute top-6 left-10 ">
           <div className="flex items-center gap-1 bg-[#4CAF50] text-white px-3 py-1 rounded-[12px] text-xs font-medium flex flex-row item-center">

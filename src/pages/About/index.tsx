@@ -62,7 +62,7 @@ const About: React.FC = () => {
             <Paragraph style={{ fontSize: '16px', lineHeight: '1.8' }}>
               <strong>EVAR</strong> (Educational Virtual Assessment & Resources) là một nền tảng quản lý học tập toàn diện, 
               được trang bị AI, được thiết kế để cách mạng hóa giáo dục trực tuyến. Được xây dựng bằng các công nghệ web hiện đại, 
-              EVAR cung cấp cho giáo viên và học sinh các công cụ mạnh mẽ để tạo, quản lý và thực hiện đánh giá trong khi tận dụng 
+              EVAR cung cấp cho học sinh các công cụ mạnh mẽ để tạo, quản lý và thực hiện đánh giá trong khi tận dụng 
               các khả năng AI tiên tiến để nâng cao trải nghiệm học tập.
             </Paragraph>
             <Paragraph style={{ fontSize: '16px', lineHeight: '1.8' }}>

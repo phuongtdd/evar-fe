@@ -65,8 +65,26 @@ const Login: React.FC = () => {
             className="password-toggle"
             onClick={togglePasswordVisibility}
             aria-label="Toggle password visibility"
+            style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '50%',
+              transform: 'translateY(calc(-50% + 8px))',
+              background: 'none',
+              border: 'none',
+              color: '#6392e9',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '24px',
+              height: '24px',
+              zIndex: 5,
+              lineHeight: '1'
+            }}
           >
-            {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeSlash size={18} style={{ display: 'block', margin: 0, padding: 0 }} /> : <Eye size={18} style={{ display: 'block', margin: 0, padding: 0 }} />}
           </button>
         </Form.Group>
 

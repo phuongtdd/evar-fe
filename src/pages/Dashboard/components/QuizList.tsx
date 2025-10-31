@@ -50,39 +50,54 @@ const QuizList = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <h4 className="text-[18px] !font-extrabold">Danh sách các quiz</h4>
-            <p className="text-sm text-gray-600">Danh sách các bài luyện tập trên hệ thống</p>
+      <Card 
+        className="rounded-2xl"
+        style={{
+          border: '2px solid #d1d5db',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+        }}
+        bodyStyle={{ padding: '24px' }}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <h4 className="text-[18px] !font-extrabold">Danh sách các quiz</h4>
+              <p className="text-sm text-gray-600">Danh sách các bài luyện tập trên hệ thống</p>
+            </div>
+            <Button type="link" className="text-blue-500" onClick={() => navigate("/quiz")}>
+              Xem tất cả <ArrowRightOutlined />
+            </Button>
           </div>
-          <Button type="link" className="text-blue-500" onClick={() => navigate("/quiz")}>
-            Xem tất cả <ArrowRightOutlined />
-          </Button>
-        </div>
 
-        <div className="flex gap-4">
-          <Search
-            placeholder="Tìm kiếm"
-            onSearch={onSearch}
-            value={searchTerm}
-            enterButton
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
-          <Select value={selectedSubject} onChange={setSelectedSubject} style={{ width: 160 }}>
-            <Option value="all">Tất cả</Option>
-            <Option value="toán">Toán học</Option>
-            <Option value="vật lý">Vật lý</Option>
-            <Option value="hóa học">Hóa học</Option>
-          </Select>
-        </div>
+          <div className="flex gap-4">
+            <Search
+              placeholder="Tìm kiếm"
+              onSearch={onSearch}
+              value={searchTerm}
+              enterButton
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+            <Select value={selectedSubject} onChange={setSelectedSubject} style={{ width: 160 }}>
+              <Option value="all">Tất cả</Option>
+              <Option value="toán">Toán học</Option>
+              <Option value="vật lý">Vật lý</Option>
+              <Option value="hóa học">Hóa học</Option>
+            </Select>
+          </div>
 
-        <div>
+          <div>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="rounded-xl border-gray-200">
+                <Card 
+                  key={i} 
+                  className="rounded-xl"
+                  style={{
+                    border: '2px solid #d1d5db',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                  }}
+                >
                   <Skeleton active paragraph={{ rows: 2 }} />
                 </Card>
               ))}
@@ -96,7 +111,19 @@ const QuizList = () => {
                 return (
                   <Card
                     key={exam.id}
-                    className="rounded-xl border-gray-200 hover:shadow-sm transition-shadow"
+                    className="rounded-xl transition-all hover:shadow-lg"
+                    style={{
+                      border: '2px solid #d1d5db',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.12)';
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
                     title={
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-gray-900">{exam.title}</span>
@@ -124,8 +151,9 @@ const QuizList = () => {
               })}
             </div>
           )}
+          </div>
         </div>
-      </div>
+      </Card>
     </>
   );
 };
