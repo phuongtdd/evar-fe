@@ -60,8 +60,8 @@ export function ContinuousFaceMonitor({
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: 480 },
+            height: { ideal: 360 },
             facingMode: "user",
           },
           audio: false,
@@ -102,7 +102,10 @@ export function ContinuousFaceMonitor({
         const video = videoRef.current;
 
         const detections = await faceapi
-          .detectAllFaces(video, new faceapi.SsdMobilenetv1Options())
+          .detectAllFaces(
+            video,
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 })
+          )
           .withFaceLandmarks()
           .withFaceDescriptors();
 
