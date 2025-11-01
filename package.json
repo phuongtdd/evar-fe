@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ant-design/compatible": "^5.1.4",
@@ -46,6 +47,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/dompurify": "^3.0.5",
     "@types/marked": "^5.0.2",
     "@types/node": "^24.9.1",
@@ -59,11 +62,13 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
     "install": "^0.13.0",
+    "jsdom": "^27.1.0",
     "npm": "^11.6.0",
     "tailwind-scrollbar-hide": "^4.0.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.7",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^4.0.6"
   },
   "overrides": {
     "node-fetch": "^2.6.7"

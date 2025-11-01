@@ -474,6 +474,7 @@ SOFTWARE.
 ![Footer](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=100&section=footer)
 </div>
 
+[EVAR FE diagram]
+![EVAR FE diagram](../evar-fe/public/diagram.png)
 
-
-
+#### Link : https://gitdiagram.com/phuongtdd/evar-fe
