@@ -51,13 +51,126 @@ const DOMPURIFY_CONFIG = {
 // ===================================================================
 
 /**
+ * Wraps raw LaTeX expressions (without delimiters) in $...$ delimiters
+ * This fixes AI OCR responses that return LaTeX like \dfrac{x+1}{x-2} without $ delimiters
+ * 
+ * @param content - Content that may contain raw LaTeX expressions
+ * @returns Content with raw LaTeX wrapped in $ delimiters
+ */
+const wrapRawLaTeX = (content: string): string => {
+  if (!content) return '';
+  
+  // Skip if already wrapped
+  if (content.includes('$')) {
+    return content;
+  }
+
+  // Process the whole content (answers are typically single strings)
+  let processed = content;
+  
+  // Pattern to match: variable assignment followed by LaTeX or math expression
+  // Examples: "y = \dfrac{x+1}{x-2}", "y = -x-3", "y = x^3 + x^2 + 3x - 2018"
+  
+  // Find all LaTeX command matches and wrap them with their context
+  const matches: Array<{ start: number; end: number }> = [];
+  
+  // Pattern 1: Match backslash LaTeX commands with optional variable assignment
+  // Example: "y = \dfrac{x+1}{x-2}"
+  const latexCommandPattern = /([a-zA-Z]\s*=\s*)?\\(?:dfrac|frac|sqrt|int|sum|prod|lim|sin|cos|tan|log|ln|exp|vec|overline|underline|hat|bar|dot|ddot|partial|nabla|Delta|alpha|beta|gamma|delta|epsilon|pi|theta|lambda|mu|sigma|phi|omega|Gamma|Delta|Theta|Lambda|Pi|Sigma|Phi|Omega|in|notin|subset|supset|cup|cap|emptyset|exists|forall|rightarrow|leftarrow|leftrightarrow|leq|geq|neq|approx|equiv|propto|pm|mp|times|div|cdot|ast|circ|oplus|ominus|otimes|bigcup|bigcap|bigvee|bigwedge|coprod|bigoplus|bigotimes|begin|end|matrix|pmatrix|bmatrix|vmatrix|cases|align|equation|label|ref|textbf|textit|text|mathrm|mathit|mathbf|mathsf|mathtt|mathcal|mathbb|[a-zA-Z@]+)(?:\s*\{[^}]*\})*/g;
+  
+  let m;
+  latexCommandPattern.lastIndex = 0;
+  while ((m = latexCommandPattern.exec(processed)) !== null) {
+    let start = m.index;
+    let end = m.index + m[0].length;
+    
+    // Look backward for variable assignment
+    const beforeText = processed.substring(Math.max(0, start - 10), start);
+    const varMatch = beforeText.match(/([a-zA-Z]\s*=\s*)$/);
+    if (varMatch) {
+      start -= varMatch[1].length;
+    }
+    
+    // Look forward to find the end of the expression
+    // Include all braces and continue until a natural break point
+    while (end < processed.length) {
+      const char = processed[end];
+      if (char === '{') {
+        // Include balanced braces
+        let braceCount = 1;
+        end++;
+        while (braceCount > 0 && end < processed.length) {
+          if (processed[end] === '{' && processed[end - 1] !== '\\') braceCount++;
+          if (processed[end] === '}' && processed[end - 1] !== '\\') braceCount--;
+          end++;
+        }
+      } else if (char === ' ') {
+        // Check if there's more math after the space
+        const remaining = processed.substring(end + 1).trim();
+        if (/^[\+\-\*\/\=]/.test(remaining) || /^[a-zA-Z0-9\(\\]/.test(remaining)) {
+          end++; // Include the space and continue
+        } else {
+          break; // Stop if not continuing math
+        }
+      } else if (/[\n\r\.\,\;\!\?]/.test(char)) {
+        break; // Stop at punctuation or newline
+      } else if (/[\+\-\*\/\=\(\)\[\]\^\_a-zA-Z0-9]/.test(char) || char === '\\') {
+        end++; // Continue with math characters or LaTeX commands
+      } else {
+        break; // Stop at other characters
+      }
+    }
+    
+    matches.push({ start, end });
+  }
+  
+  // Pattern 2: Match expressions with superscript/subscript (like x^2, y = x^3 + x^2)
+  const supSubPattern = /([a-zA-Z]\s*=\s*)?[a-zA-Z0-9]+\s*[\^\_](\{[^}]+\}|[a-zA-Z0-9]+)(?:\s*[\+\-\*\/]\s*[a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/]+)*/g;
+  
+  supSubPattern.lastIndex = 0;
+  while ((m = supSubPattern.exec(processed)) !== null) {
+    // Check if this overlaps with an existing match
+    const overlaps = matches.some(existing => m.index < existing.end && m.index + m[0].length > existing.start);
+    if (!overlaps) {
+      matches.push({ start: m.index, end: m.index + m[0].length });
+    }
+  }
+  
+  // Pattern 3: Match simple math expressions with variable assignment
+  // Example: "y = -x-3" (expressions with operators but no LaTeX commands or superscripts)
+  const simpleMathPattern = /\b([a-zA-Z]\s*=\s*[\+\-\*\/]?[a-zA-Z0-9]+(?:\s*[\+\-\*\/]\s*[\+\-\*\/]?[a-zA-Z0-9]+)+)\b/g;
+  
+  simpleMathPattern.lastIndex = 0;
+  while ((m = simpleMathPattern.exec(processed)) !== null) {
+    // Check if this overlaps with an existing match
+    const overlaps = matches.some(existing => m.index < existing.end && m.index + m[0].length > existing.start);
+    if (!overlaps) {
+      matches.push({ start: m.index, end: m.index + m[0].length });
+    }
+  }
+  
+  // Sort matches by start position (descending) and wrap them
+  matches.sort((a, b) => b.start - a.start);
+  
+  for (const match of matches) {
+    const expr = processed.substring(match.start, match.end).trim();
+    if (expr && !expr.includes('$')) {
+      processed = processed.substring(0, match.start) + `$${expr}$` + processed.substring(match.end);
+    }
+  }
+  
+  return processed;
+};
+
+/**
  * Sanitize và convert Markdown + Math content sang HTML an toàn
  * 
  * Flow:
  * 1. Convert \\n thành actual newlines
- * 2. Parse Markdown to HTML (bao gồm tables)
- * 3. Sanitize HTML với DOMPurify
- * 4. Giữ nguyên LaTeX delimiters ($...$, $$...$$) cho MathJax
+ * 2. Wrap raw LaTeX expressions (from AI OCR) in $ delimiters
+ * 3. Parse Markdown to HTML (bao gồm tables)
+ * 4. Sanitize HTML với DOMPurify
+ * 5. Giữ nguyên LaTeX delimiters ($...$, $$...$$) cho MathJax
  * 
  * @param content - Raw content từ backend (có thể chứa \\n, Markdown, LaTeX)
  * @returns Safe HTML string ready to render
@@ -72,11 +185,14 @@ export const sanitizeMathContent = (content: string): string => {
       .replace(/\\n/g, '\n')
       .replace(/\\t/g, '    '); // giữ tab như 4 spaces để canh cột tốt hơn
 
-    // Step 2: Parse Markdown to HTML
+    // Step 2: Wrap raw LaTeX expressions in $ delimiters (fixes AI OCR responses)
+    processed = wrapRawLaTeX(processed);
+
+    // Step 3: Parse Markdown to HTML
     // "| A | B ||---|---|| 1 | 2 |" → "<table>...</table>"
 const html = marked.parse(processed, { async: false }) as string;
 
-    // Step 3: Sanitize HTML but preserve MathJax syntax
+    // Step 4: Sanitize HTML but preserve MathJax syntax
     const clean = DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
 
     return clean;
