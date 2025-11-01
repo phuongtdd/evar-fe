@@ -16,8 +16,8 @@ import {
   SettingOutlined,
   DeliveredProcedureOutlined,
   BookOutlined,
-  CreditCardOutlined,
   RobotOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../authen/services/authService";
@@ -92,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       key: "flashcard",
-      icon: <CreditCardOutlined className="text-2xl" />,
+      icon: <BulbOutlined className="text-2xl" />,
       label: "Flash Card",
     },
     {
